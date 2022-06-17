@@ -1,0 +1,22 @@
+package io.github.sergkhram.data.entity;
+
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.Type;
+
+import javax.persistence.Column;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.MappedSuperclass;
+import java.util.UUID;
+
+@MappedSuperclass
+@Getter
+@Setter
+public abstract class AbstractEntity {
+    @Id
+    @GeneratedValue
+    @Type(type = "uuid-char")
+    @Column(name = "id")
+    protected UUID id;
+}
