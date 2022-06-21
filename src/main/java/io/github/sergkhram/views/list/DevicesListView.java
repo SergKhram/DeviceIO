@@ -152,6 +152,7 @@ public class DevicesListView extends VerticalLayout {
         form.setWidth("35em");
         form.addListener(DeviceForm.ExecuteShellEvent.class, this::executeShell);
         form.addListener(DeviceForm.DownloadFileEvent.class, this::downloadFile);
+        form.addListener(DeviceForm.DeleteFilesEvent.class, this::deleteFiles);
     }
 
     private void executeShell(DeviceForm.ExecuteShellEvent executeShellEvent) {
@@ -174,6 +175,7 @@ public class DevicesListView extends VerticalLayout {
                 InputStream inputStream = new FileInputStream(
                     file);
                 resource = new StreamResource(file.getName(), () -> inputStream);
+                form.setCurrentFile(file);
             } catch (Exception e) {
                 e.printStackTrace();
                 error = e.getLocalizedMessage();
@@ -192,6 +194,7 @@ public class DevicesListView extends VerticalLayout {
                         zipFile);
                     resource = new StreamResource(zipFile.getName(), () -> inputStream);
                     FileUtils.deleteDirectory(directory);
+                    form.setCurrentFile(zipFile);
                 } else {
                     error = "Empty directory!";
                 }
@@ -206,15 +209,20 @@ public class DevicesListView extends VerticalLayout {
             link.getElement().setAttribute("download", true);
             Button downloadButton = new Button(
                 VaadinIcon.DOWNLOAD.create(),
-                click -> {
-                    click.getSource().setEnabled(false);
-                }
+                click -> click.getSource().setEnabled(false)
             );
             link.add(downloadButton);
             downloadFileEvent.dialog.getFooter().add(link);
             form.setAnchorElement(link);
         } else {
             form.setDialogText(error);
+        }
+    }
+
+    private void deleteFiles(DeviceForm.DeleteFilesEvent deleteFilesEvent) {
+        File currentFile = deleteFilesEvent.currentFile;
+        if(currentFile.exists()) {
+            FileUtils.deleteQuietly(currentFile);
         }
     }
 

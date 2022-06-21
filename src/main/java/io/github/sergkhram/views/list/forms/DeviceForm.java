@@ -26,6 +26,7 @@ import io.github.sergkhram.data.adb.AdbManager;
 import io.github.sergkhram.data.entity.Device;
 import io.github.sergkhram.data.entity.DeviceDirectoryElement;
 import io.github.sergkhram.data.providers.DeviceDirectoriesDataProvider;
+import java.io.File;
 
 public class DeviceForm extends FormLayout {
     Binder<Device> binder = new Binder<>(Device.class);
@@ -42,6 +43,7 @@ public class DeviceForm extends FormLayout {
     Anchor anchorElement;
     Text dialogText = new Text("");
     private Device device;
+    File currentFile;
 
     public DeviceForm() {
         addClassName("device-form");
@@ -71,29 +73,27 @@ public class DeviceForm extends FormLayout {
         Button cancel = new Button("Cancel");
         cancel.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
         cancel.addClickListener(
-            click -> {
-                dialog.close();
-                dialog.getFooter().remove(anchorElement);
-                anchorElement = null;
-                setDialogText();
-            }
+            click -> closeDialogAction()
         );
 
         dialog.setHeaderTitle("Confirm downloading");
         setDialogText();
         dialog.add(dialogText);
         Button closeButton = new Button(
-            new Icon("lumo", "cross"), (e) ->
-                {
-                    dialog.close();
-                    dialog.getFooter().remove(anchorElement);
-                    anchorElement = null;
-                    setDialogText();
-                }
+            new Icon("lumo", "cross"),
+            click -> closeDialogAction()
         );
         closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
         dialog.getHeader().add(closeButton);
         dialog.getFooter().add(cancel);
+    }
+
+    private void closeDialogAction() {
+        dialog.close();
+        dialog.getFooter().remove(anchorElement);
+        anchorElement = null;
+        setDialogText();
+        fireEvent(new DeleteFilesEvent(this, device, currentFile));
     }
 
     public void setAnchorElement(Anchor anchorElement) {
@@ -105,7 +105,11 @@ public class DeviceForm extends FormLayout {
     }
 
     public void setDialogText() {
-        dialogText.setText("Are you sure you want to download this file/directory?");
+        setDialogText("Are you sure you want to download this file/directory?");
+    }
+
+    public void setCurrentFile(File file) {
+        this.currentFile = file;
     }
 
     private VerticalLayout prepareDeviceFileExplorer() {
@@ -116,7 +120,7 @@ public class DeviceForm extends FormLayout {
             .setHeader("Size");
         GridContextMenu<DeviceDirectoryElement> menu = treeGrid.addContextMenu();
         menu.addItem(
-            "Share", click -> {
+            "Download", click -> {
                 setDialogText();
                 fireEvent(new DownloadFileEvent(this, device, click.getItem().get(), dialog));
                 dialog.open();
@@ -125,7 +129,6 @@ public class DeviceForm extends FormLayout {
 
         H3 gridTitle = new H3("File explorer");
         gridTitle.getStyle().set("margin", "0");
-
         deviceFileExplorer = new HorizontalLayout(gridTitle);
         deviceFileExplorer.setAlignItems(FlexComponent.Alignment.BASELINE);
         return new VerticalLayout(
@@ -220,6 +223,15 @@ public class DeviceForm extends FormLayout {
             super(source, device);
             this.deviceDirectoryElement = deviceDirectoryElement;
             this.dialog = dialog;
+        }
+    }
+
+    public static class DeleteFilesEvent extends DeviceFormEvent {
+        public File currentFile;
+
+        DeleteFilesEvent(DeviceForm source, Device device, File currentFile) {
+            super(source, device);
+            this.currentFile = currentFile;
         }
     }
 

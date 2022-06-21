@@ -210,8 +210,9 @@ class AdbManager {
         var file = File(destination + File.separator + deviceDirectoryElement.name)
         runBlocking {
             withTimeoutOrNull(30000) {
+                val parentPath = if(deviceDirectoryElement.path.equals("/")) "/" else deviceDirectoryElement.path + "/"
                 val pullDevicesRequest = PullFileRequest(
-                    deviceDirectoryElement.path + "/" + deviceDirectoryElement.name,
+                    parentPath + deviceDirectoryElement.name,
                     file,
                     coroutineContext = this.coroutineContext)
                 val channel = adb!!.execute(
@@ -232,8 +233,9 @@ class AdbManager {
         var file = File(destination + File.separator + deviceDirectoryElement.name)
         runBlocking {
             withTimeoutOrNull(30000) {
+                val parentPath = if(deviceDirectoryElement.path.equals("/")) "/" else deviceDirectoryElement.path + "/"
                 val pullRequest = PullRequest(
-                    deviceDirectoryElement.path + "/" + deviceDirectoryElement.name,
+                    parentPath + deviceDirectoryElement.name,
                     file,
                     coroutineContext = this.coroutineContext,
                     supportedFeatures = listOf()
