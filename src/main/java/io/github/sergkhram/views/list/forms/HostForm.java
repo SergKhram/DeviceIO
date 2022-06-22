@@ -16,7 +16,7 @@ import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.shared.Registration;
 import io.github.sergkhram.data.entity.Host;
 
-public class HostForm extends FormLayout {
+public final class HostForm extends FormLayout {
   public TextField name = new TextField("Host name");
   TextField address = new TextField("Address");
   IntegerField port = new IntegerField("Port");

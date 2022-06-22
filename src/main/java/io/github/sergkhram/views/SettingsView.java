@@ -29,7 +29,7 @@ import java.util.Objects;
 @Scope("prototype")
 @PageTitle("Settings | STUDIO18")
 @Route(value = "settings", layout = MainLayout.class)
-public class SettingsView extends VerticalLayout {
+public final class SettingsView extends VerticalLayout {
     TextField androidHomePath = new TextField("ANDROID_HOME path");
     IntegerField adbTimeout = new IntegerField("ADB Timeout(ms)");
     CrmService service;

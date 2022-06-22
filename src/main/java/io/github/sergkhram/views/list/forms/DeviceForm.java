@@ -28,7 +28,7 @@ import io.github.sergkhram.data.entity.DeviceDirectoryElement;
 import io.github.sergkhram.data.providers.DeviceDirectoriesDataProvider;
 import java.io.File;
 
-public class DeviceForm extends FormLayout {
+public final class DeviceForm extends FormLayout {
     Binder<Device> binder = new Binder<>(Device.class);
 
     TextField name = new TextField("Device name");

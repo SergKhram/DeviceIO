@@ -33,7 +33,7 @@ import java.util.Map;
 @Scope("prototype")
 @PageTitle("Devices | STUDIO18")
 @Route(value = "devices", layout = MainLayout.class)
-public class DevicesListView extends VerticalLayout {
+public final class DevicesListView extends VerticalLayout {
     ComboBox<Host> hosts = new ComboBox<>();
     Grid<Device> grid = new Grid<>(Device.class);
     TextField filterText = new TextField();

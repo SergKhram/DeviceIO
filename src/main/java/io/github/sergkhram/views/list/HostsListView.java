@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 @Scope("prototype")
 @PageTitle("Hosts | STUDIO18")
 @Route(value = "", layout = MainLayout.class)
-public class HostsListView extends VerticalLayout {
+public final class HostsListView extends VerticalLayout {
     Grid<Host> grid = new Grid<>(Host.class);
     TextField filterText = new TextField();
     HostForm form;
