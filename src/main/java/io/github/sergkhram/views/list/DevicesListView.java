@@ -18,6 +18,7 @@ import io.github.sergkhram.data.adb.AdbManager;
 import io.github.sergkhram.data.entity.Device;
 import io.github.sergkhram.data.entity.DeviceDirectoryElement;
 import io.github.sergkhram.data.entity.Host;
+import io.github.sergkhram.data.idb.IdbManager;
 import io.github.sergkhram.data.service.CrmService;
 import io.github.sergkhram.views.MainLayout;
 import io.github.sergkhram.views.list.forms.DeviceForm;
@@ -39,11 +40,13 @@ public final class DevicesListView extends VerticalLayout {
     TextField filterText = new TextField();
     CrmService service;
     AdbManager adbManager;
+    IdbManager idbManager;
     DeviceForm form;
 
-    public DevicesListView(CrmService service, AdbManager adbManager) {
+    public DevicesListView(CrmService service, AdbManager adbManager, IdbManager idbManager) {
         this.service = service;
         this.adbManager = adbManager;
+        this.idbManager = idbManager;
         addClassName("list-view");
         setSizeFull();
         configureGrid();
