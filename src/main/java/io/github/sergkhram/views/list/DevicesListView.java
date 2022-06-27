@@ -67,7 +67,7 @@ public final class DevicesListView extends VerticalLayout {
     }
 
     private HorizontalLayout getToolbar() {
-        filterText.setPlaceholder("Filter by device serial...");
+        filterText.setPlaceholder("Filter...");
         filterText.setClearButtonVisible(true);
         filterText.setValueChangeMode(ValueChangeMode.LAZY);
         filterText.addValueChangeListener(e -> updateList(hosts.getValue()));
@@ -118,7 +118,9 @@ public final class DevicesListView extends VerticalLayout {
                 }
                 return image;
             }
-        ).setHeader("Type");
+        ).setHeader("Type").setComparator(
+            Comparator.comparing(Device::getDeviceType)
+        );
         grid.addComponentColumn(
             device -> {
                 Button rebootButton = new Button("Reboot");
