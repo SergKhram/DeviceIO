@@ -24,11 +24,9 @@ import io.github.sergkhram.data.entity.DeviceType
 import io.github.sergkhram.data.entity.Host
 import io.github.sergkhram.utils.Const
 import io.github.sergkhram.utils.Const.LOCAL_HOST
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.ReceiveChannel
 import org.springframework.stereotype.Service
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeoutOrNull
 import java.io.File
 import java.io.IOException
 import javax.annotation.PreDestroy
@@ -114,29 +112,29 @@ class AdbManager {
     }
 
     private fun List<Device>.convert(host: Host? = null): List<DeviceEntity> {
-        return this.map {
-            return@map DeviceEntity().apply {
-                this.host = host
-                this.isActive = true
-                this.serial = it.serial
-                this.state = it.state.name
-                this.deviceType = DeviceType.ANDROID
-                var name = ""
-                runBlocking {
-                    val properties: Map<String, String>? = adb?.execute(
+        val list = this
+        return runBlocking(Dispatchers.Default) {
+            list.pmap {
+                return@pmap DeviceEntity().apply {
+                    this.host = host
+                    this.isActive = true
+                    this.serial = it.serial
+                    this.state = it.state.name
+                    this.deviceType = DeviceType.ANDROID
+                    var name: String? = null
+                    adb?.execute(
                         request = GetPropRequest(),
                         serial = it.serial
-                    )
-                    properties?.let { properties->
-                        val keys = properties.keys
-                        if(keys.contains("ro.config.marketing_name")) {
-                            name = properties["ro.config.marketing_name"]!!
-                        } else if(keys.contains("ro.kernel.qemu.avd_name")) {
-                            name = properties["ro.kernel.qemu.avd_name"]!!
+                    )?.let {
+                        val keys = it.keys
+                        if (keys.contains("ro.config.marketing_name")) {
+                            name = it["ro.config.marketing_name"]
+                        } else if (keys.contains("ro.kernel.qemu.avd_name")) {
+                            name = it["ro.kernel.qemu.avd_name"]
                         }
                     }
+                    this.name = name.orEmpty()
                 }
-                this.name = name
             }
         }
     }
@@ -226,7 +224,7 @@ class AdbManager {
     }
 
     fun downloadFile(device: DeviceEntity, deviceDirectoryElement: DeviceDirectoryElement, destination: String): File {
-        var file = File(destination + File.separator + deviceDirectoryElement.name)
+        val file = File(destination + File.separator + deviceDirectoryElement.name)
         runBlocking {
             withTimeoutOrNull(30000) {
                 val parentPath = if(deviceDirectoryElement.path.equals("/")) "/" else deviceDirectoryElement.path + "/"
@@ -249,7 +247,7 @@ class AdbManager {
     }
 
     fun downloadFolder(device: DeviceEntity, deviceDirectoryElement: DeviceDirectoryElement, destination: String): File {
-        var file = File(destination + File.separator + deviceDirectoryElement.name)
+        val file = File(destination + File.separator + deviceDirectoryElement.name)
         runBlocking {
             withTimeoutOrNull(30000) {
                 val parentPath = if(deviceDirectoryElement.path.equals("/")) "/" else deviceDirectoryElement.path + "/"
@@ -265,5 +263,9 @@ class AdbManager {
             }
         }
         return file
+    }
+
+    suspend fun <A, B> Iterable<A>.pmap(f: suspend (A) -> B): List<B> = coroutineScope {
+        map { async { f(it) } }.awaitAll()
     }
 }
