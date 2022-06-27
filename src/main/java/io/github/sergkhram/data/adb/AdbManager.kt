@@ -13,12 +13,14 @@ import com.malinskiy.adam.request.framebuffer.ScreenCaptureRequest
 import com.malinskiy.adam.request.misc.ConnectDeviceRequest
 import com.malinskiy.adam.request.misc.DisconnectDeviceRequest
 import com.malinskiy.adam.request.misc.RebootRequest
+import com.malinskiy.adam.request.prop.GetPropRequest
 import com.malinskiy.adam.request.shell.v2.ShellCommandRequest
 import com.malinskiy.adam.request.shell.v2.ShellCommandResult
 import com.malinskiy.adam.request.sync.PullRequest
 import com.malinskiy.adam.request.sync.v1.ListFileRequest
 import com.malinskiy.adam.request.sync.v1.PullFileRequest
 import io.github.sergkhram.data.entity.DeviceDirectoryElement
+import io.github.sergkhram.data.entity.DeviceType
 import io.github.sergkhram.data.entity.Host
 import io.github.sergkhram.utils.Const
 import io.github.sergkhram.utils.Const.LOCAL_HOST
@@ -113,19 +115,36 @@ class AdbManager {
 
     private fun List<Device>.convert(host: Host? = null): List<DeviceEntity> {
         return this.map {
-            val finalDevice = DeviceEntity()
-            finalDevice.host = host
-            finalDevice.isActive = true
-            finalDevice.name = it.serial
-            finalDevice.state = it.state.name
-            return@map finalDevice
+            return@map DeviceEntity().apply {
+                this.host = host
+                this.isActive = true
+                this.serial = it.serial
+                this.state = it.state.name
+                this.deviceType = DeviceType.ANDROID
+                var name = ""
+                runBlocking {
+                    val properties: Map<String, String>? = adb?.execute(
+                        request = GetPropRequest(),
+                        serial = it.serial
+                    )
+                    properties?.let { properties->
+                        val keys = properties.keys
+                        if(keys.contains("ro.config.marketing_name")) {
+                            name = properties["ro.config.marketing_name"]!!
+                        } else if(keys.contains("ro.kernel.qemu.avd_name")) {
+                            name = properties["ro.kernel.qemu.avd_name"]!!
+                        }
+                    }
+                }
+                this.name = name
+            }
         }
     }
 
     fun rebootDevice(device: DeviceEntity) {
         runBlocking {
             withTimeoutOrNull(Const.TIMEOUT.toLong()) {
-                adb?.execute(request = RebootRequest(), serial = device.name)
+                adb?.execute(request = RebootRequest(), serial = device.serial)
             }
         }
     }
@@ -136,7 +155,7 @@ class AdbManager {
             response = withTimeoutOrNull(Const.TIMEOUT.toLong()) {
                  adb?.execute(
                     request = ShellCommandRequest(cmd),
-                    serial = device.name
+                    serial = device.serial
                 )
             }
         }
@@ -189,7 +208,7 @@ class AdbManager {
                 list.addAll(
                     adb?.execute(
                         ListFileRequest(path),
-                        device.name
+                        device.serial
                     )?.filter {
                         it.name != "." && it.name != ".."
                     }?.map {
@@ -218,7 +237,7 @@ class AdbManager {
                 val channel = adb!!.execute(
                     pullDevicesRequest,
                     this,
-                    device.name
+                    device.serial
                 )
 
                 for (percentageDouble in channel) {
@@ -241,7 +260,7 @@ class AdbManager {
                     supportedFeatures = listOf()
                 )
                 adb?.let {
-                    pullRequest.execute(it, device.name)
+                    pullRequest.execute(it, device.serial)
                 }
             }
         }

@@ -6,6 +6,7 @@ import com.vaadin.flow.theme.lumo.Lumo;
 import io.github.sergkhram.data.adb.AdbManager;
 import io.github.sergkhram.data.entity.Device;
 import io.github.sergkhram.data.entity.Host;
+import io.github.sergkhram.data.idb.IdbManager;
 import io.github.sergkhram.data.service.CrmService;
 import io.github.sergkhram.views.MainLayout;
 import com.vaadin.flow.component.Component;
@@ -22,6 +23,7 @@ import org.springframework.context.annotation.Scope;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -36,10 +38,12 @@ public final class HostsListView extends VerticalLayout {
     HostForm form;
     CrmService service;
     AdbManager adbManager;
+    IdbManager idbManager;
 
-    public HostsListView(CrmService service, AdbManager adbManager) {
+    public HostsListView(CrmService service, AdbManager adbManager, IdbManager idbManager) {
         this.service = service;
         this.adbManager = adbManager;
+        this.idbManager = idbManager;
         addClassName("list-view");
         setSizeFull();
         configureGrid();
@@ -96,7 +100,10 @@ public final class HostsListView extends VerticalLayout {
             connectButton.addClickListener(
                 click -> {
                     List<Device> dbListOfDevices = service.findAllDevices("", host.getId());
-                    List<Device> currentListOfDevices = adbManager.getListOfDevices(host);
+                    List<Device> currentListOfAndroidDevices = adbManager.getListOfDevices(host);
+                    List<Device> currentListOfIOSDevices = idbManager.getListOfDevices(host);
+                    List<Device> currentListOfDevices = new ArrayList<>(currentListOfAndroidDevices);
+                    currentListOfDevices.addAll(currentListOfIOSDevices);
                     updateDeviceList(dbListOfDevices, currentListOfDevices);
                 }
             );
@@ -191,9 +198,9 @@ public final class HostsListView extends VerticalLayout {
         dbListOfDevices.stream().filter(device ->
             !currentListOfDevices
                 .stream()
-                .map(Device::getName)
+                .map(Device::getSerial)
                 .collect(Collectors.toList())
-                .contains(device.getName())
+                .contains(device.getSerial())
         ).forEach(device ->
             service.deleteDevice(device)
         );
@@ -201,9 +208,9 @@ public final class HostsListView extends VerticalLayout {
             currentListOfDevices.stream().filter(device ->
                 !dbListOfDevices
                     .stream()
-                    .map(Device::getName)
+                    .map(Device::getSerial)
                     .collect(Collectors.toList())
-                    .contains(device.getName())
+                    .contains(device.getSerial())
             ).collect(Collectors.toList())
         );
     }

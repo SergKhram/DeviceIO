@@ -10,11 +10,11 @@ import java.util.UUID;
 
 public interface DeviceRepository extends JpaRepository<Device, UUID> {
     @Query("select d from Device d LEFT JOIN Host h ON d.host=h.id " +
-        "where lower(d.name) like lower(concat('%', :searchTerm, '%')) ")
+        "where lower(d.serial) like lower(concat('%', :searchTerm, '%')) ")
     List<Device> search(@Param("searchTerm") String searchTerm);
 
     @Query("select d from Device d LEFT JOIN Host h ON d.host=h.id " +
-        "where lower(d.name) like lower(concat('%', :searchTerm, '%')) " +
+        "where lower(d.serial) like lower(concat('%', :searchTerm, '%')) " +
         "and lower(d.host) like lower(concat('%', :hostId, '%')) " +
         "and h.isActive = :isActiveHost")
     List<Device> search(
@@ -24,7 +24,7 @@ public interface DeviceRepository extends JpaRepository<Device, UUID> {
     );
 
     @Query("select d from Device d LEFT JOIN Host h ON d.host=h.id " +
-        "where lower(d.name) like lower(concat('%', :searchTerm, '%')) " +
+        "where lower(d.serial) like lower(concat('%', :searchTerm, '%')) " +
         "and lower(d.host) like lower(concat('%', :hostId, '%'))")
     List<Device> search(@Param("searchTerm") String searchTerm, @Param("hostId") String hostId);
 }

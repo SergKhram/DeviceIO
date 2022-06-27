@@ -31,7 +31,7 @@ import java.io.File;
 public final class DeviceForm extends FormLayout {
     Binder<Device> binder = new Binder<>(Device.class);
 
-    TextField name = new TextField("Device name");
+    TextField serial = new TextField("Device serial");
     TextField host = new TextField("Device host");
     TextField state = new TextField("Device state");
     TextArea shellResult = new TextArea("Shell result");
@@ -47,13 +47,13 @@ public final class DeviceForm extends FormLayout {
 
     public DeviceForm() {
         addClassName("device-form");
-        binder.forField(name)
-            .bind(Device::getName, null);
+        binder.forField(serial)
+            .bind(Device::getSerial, null);
         binder.forField(host)
             .bind(deviceData -> deviceData.getHost().getAddress(), null);
         binder.forField(state)
             .bind(Device::getState, null);
-        name.setReadOnly(true);
+        serial.setReadOnly(true);
         host.setReadOnly(true);
         state.setReadOnly(true);
         shellResult.setReadOnly(true);
@@ -61,7 +61,7 @@ public final class DeviceForm extends FormLayout {
 
         prepareDialog();
 
-        add(name,
+        add(serial,
             host,
             state,
             prepareShellCmdLayout(),

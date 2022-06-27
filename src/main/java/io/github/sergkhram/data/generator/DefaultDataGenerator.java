@@ -1,6 +1,7 @@
 package io.github.sergkhram.data.generator;
 
 import io.github.sergkhram.data.entity.Device;
+import io.github.sergkhram.data.entity.DeviceType;
 import io.github.sergkhram.data.entity.Host;
 import io.github.sergkhram.data.repository.DeviceRepository;
 import io.github.sergkhram.data.repository.HostRepository;
@@ -33,17 +34,20 @@ public class DefaultDataGenerator {
             );
             hostRepository.saveAll(hosts);
             Device defaultDevice = new Device();
-            defaultDevice.setName("default");
+            defaultDevice.setSerial("default");
             defaultDevice.setHost(hosts.get(0));
             defaultDevice.setState("");
+            defaultDevice.setDeviceType(DeviceType.ANDROID);
             Device defaultDevice2 = new Device();
-            defaultDevice2.setName("default2");
+            defaultDevice2.setSerial("default2");
             defaultDevice2.setHost(hosts.get(1));
             defaultDevice2.setState("");
+            defaultDevice2.setDeviceType(DeviceType.ANDROID);
             Device defaultDevice3 = new Device();
-            defaultDevice3.setName("default3");
+            defaultDevice3.setSerial("default3");
             defaultDevice3.setHost(hosts.get(2));
             defaultDevice3.setState("");
+            defaultDevice3.setDeviceType(DeviceType.ANDROID);
             List<Device> devices = List.of(
                 defaultDevice,
                 defaultDevice2,

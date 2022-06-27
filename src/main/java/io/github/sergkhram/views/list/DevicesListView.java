@@ -6,6 +6,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Anchor;
+import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -66,7 +67,7 @@ public final class DevicesListView extends VerticalLayout {
     }
 
     private HorizontalLayout getToolbar() {
-        filterText.setPlaceholder("Filter by device name...");
+        filterText.setPlaceholder("Filter by device serial...");
         filterText.setClearButtonVisible(true);
         filterText.setValueChangeMode(ValueChangeMode.LAZY);
         filterText.addValueChangeListener(e -> updateList(hosts.getValue()));
@@ -91,13 +92,33 @@ public final class DevicesListView extends VerticalLayout {
     private void configureGrid() {
         grid.addClassNames("devices-grid");
         grid.setSizeFull();
-        grid.setColumns("name");
+        grid.setColumns("serial");
+        grid.addColumn(Device::getName).setHeader("Name").setComparator(
+            Comparator.comparing(Device::getName)
+        );
         grid.addColumn(Device::getIsActive).setHeader("Active").setComparator(
             Comparator.comparing(Device::getIsActive)
         );
         grid.addColumn(device -> device.getHost().getName()).setHeader("Host").setComparator(
             Comparator.comparing(o -> o.getHost().getName())
         );
+        grid.addComponentColumn(
+            device -> {
+                Image image;
+                switch(device.getDeviceType()) {
+                    case ANDROID:
+                        image = new Image("images/android.png", "Android");
+                        break;
+                    case IOS:
+                        image = new Image("images/appleinc.png", "Apple");
+                        break;
+                    default:
+                        image = new Image("images/appleinc.png", "Apple");
+                        break;
+                }
+                return image;
+            }
+        ).setHeader("Type");
         grid.addComponentColumn(
             device -> {
                 Button rebootButton = new Button("Reboot");
@@ -134,7 +155,7 @@ public final class DevicesListView extends VerticalLayout {
         Map<String, String> devicesStates = adbManager.getDevicesStates();
         service.findAllDevices("").parallelStream().forEach(
             it -> {
-                String currentState = devicesStates.getOrDefault(it.getName(), null);
+                String currentState = devicesStates.getOrDefault(it.getSerial(), null);
                 if(currentState == null || currentState.equals(DeviceState.OFFLINE.name())) {
                     it.setState(DeviceState.OFFLINE.name());
                     it.setIsActive(false);
