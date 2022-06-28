@@ -3,10 +3,11 @@ package io.github.sergkhram.views.list;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.theme.lumo.Lumo;
-import io.github.sergkhram.data.adb.AdbManager;
+import io.github.sergkhram.managers.Manager;
+import io.github.sergkhram.managers.adb.AdbManager;
 import io.github.sergkhram.data.entity.Device;
 import io.github.sergkhram.data.entity.Host;
-import io.github.sergkhram.data.idb.IdbManager;
+import io.github.sergkhram.managers.idb.IdbManager;
 import io.github.sergkhram.data.service.CrmService;
 import io.github.sergkhram.views.MainLayout;
 import com.vaadin.flow.component.Component;
@@ -26,6 +27,7 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 @org.springframework.stereotype.Component
@@ -39,9 +41,11 @@ public final class HostsListView extends VerticalLayout {
     CrmService service;
     AdbManager adbManager;
     IdbManager idbManager;
+    List<Manager> managers;
 
     public HostsListView(CrmService service, AdbManager adbManager, IdbManager idbManager) {
         this.service = service;
+        managers = List.of(adbManager, idbManager);
         this.adbManager = adbManager;
         this.idbManager = idbManager;
         addClassName("list-view");
@@ -75,7 +79,16 @@ public final class HostsListView extends VerticalLayout {
         Host host = saveEvent.getHost();
         service.saveHost(host);
         updateList();
-        adbManager.connectToDevice(host.getAddress(), host.getPort());
+        managers
+            .parallelStream()
+            .forEach(
+                it -> it.connectToHost(
+                    host.getAddress(),
+                    host.getPort()
+                )
+            );
+//        adbManager.connectToHost(host.getAddress(), host.getPort());
+//        idbManager.connectToHost(host.getAddress(), host.getPort());
         closeEditor();
     }
 
@@ -83,7 +96,16 @@ public final class HostsListView extends VerticalLayout {
         Host host = deleteEvent.getHost();
         service.deleteHost(host);
         updateList();
-        adbManager.disconnectDevice(host.getAddress(), host.getPort());
+        managers
+            .parallelStream()
+            .forEach(
+                it -> it.disconnectHost(
+                    host.getAddress(),
+                    host.getPort()
+                )
+            );
+//        adbManager.disconnectHost(host.getAddress(), host.getPort());
+//        idbManager.disconnectHost(host.getAddress(), host.getPort());
         closeEditor();
     }
 
@@ -100,10 +122,17 @@ public final class HostsListView extends VerticalLayout {
             connectButton.addClickListener(
                 click -> {
                     List<Device> dbListOfDevices = service.findAllDevices("", host.getId());
-                    List<Device> currentListOfAndroidDevices = adbManager.getListOfDevices(host);
-                    List<Device> currentListOfIOSDevices = idbManager.getListOfDevices(host);
-                    List<Device> currentListOfDevices = new ArrayList<>(currentListOfAndroidDevices);
-                    currentListOfDevices.addAll(currentListOfIOSDevices);
+                    CopyOnWriteArrayList<Device> currentListOfDevices = new CopyOnWriteArrayList<>();
+                    managers
+                        .parallelStream()
+                        .forEach(
+                            it -> currentListOfDevices.addAll(it.getListOfDevices(host))
+                        );
+
+//                    List<Device> currentListOfAndroidDevices = adbManager.getListOfDevices(host);
+//                    List<Device> currentListOfIOSDevices = idbManager.getListOfDevices(host);
+//                    List<Device> currentListOfDevices = new ArrayList<>(currentListOfAndroidDevices);
+//                    currentListOfDevices.addAll(currentListOfIOSDevices);
                     updateDeviceList(dbListOfDevices, currentListOfDevices);
                 }
             );

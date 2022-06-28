@@ -2,18 +2,18 @@ package io.github.sergkhram.data.providers;
 
 import com.vaadin.flow.data.provider.hierarchy.AbstractBackEndHierarchicalDataProvider;
 import com.vaadin.flow.data.provider.hierarchy.HierarchicalQuery;
-import io.github.sergkhram.data.adb.AdbManager;
+import io.github.sergkhram.managers.adb.AdbManager;
 import io.github.sergkhram.data.entity.Device;
 import io.github.sergkhram.data.entity.DeviceDirectoryElement;
 
 import java.util.List;
 import java.util.stream.Stream;
 
-public class DeviceDirectoriesDataProvider extends AbstractBackEndHierarchicalDataProvider<DeviceDirectoryElement, Void> {
+public class AndroidDeviceDirectoriesDataProvider extends AbstractBackEndHierarchicalDataProvider<DeviceDirectoryElement, Void> {
     Device device;
     AdbManager adbManager;
 
-    public DeviceDirectoriesDataProvider(Device device, AdbManager adbManager) {
+    public AndroidDeviceDirectoriesDataProvider(Device device, AdbManager adbManager) {
         this.device = device;
         this.adbManager = adbManager;
     }

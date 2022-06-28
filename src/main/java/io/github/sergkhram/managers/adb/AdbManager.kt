@@ -1,4 +1,4 @@
-package io.github.sergkhram.data.adb
+package io.github.sergkhram.managers.adb
 
 import com.malinskiy.adam.AndroidDebugBridgeClient
 import com.malinskiy.adam.AndroidDebugBridgeClientFactory
@@ -20,8 +20,9 @@ import com.malinskiy.adam.request.sync.PullRequest
 import com.malinskiy.adam.request.sync.v1.ListFileRequest
 import com.malinskiy.adam.request.sync.v1.PullFileRequest
 import io.github.sergkhram.data.entity.DeviceDirectoryElement
-import io.github.sergkhram.data.entity.DeviceType
+import io.github.sergkhram.data.enums.DeviceType
 import io.github.sergkhram.data.entity.Host
+import io.github.sergkhram.managers.Manager
 import io.github.sergkhram.utils.Const
 import io.github.sergkhram.utils.Const.LOCAL_HOST
 import kotlinx.coroutines.*
@@ -34,7 +35,7 @@ import javax.imageio.ImageIO
 import io.github.sergkhram.data.entity.Device as DeviceEntity
 
 @Service
-class AdbManager {
+class AdbManager: Manager {
     private var adb: AndroidDebugBridgeClient? = null
     private val DEFAULT_PORT: Int = 5555
     private val supportedFeatures = listOf(Feature.STAT_V2, Feature.LS_V2, Feature.SENDRECV_V2)
@@ -70,27 +71,31 @@ class AdbManager {
         startAdb(adbPath)
     }
 
-    fun connectToDevice(address: String, port: Integer?) {
-        runBlocking {
-            if(address != LOCAL_HOST) {
-                withTimeoutOrNull(Const.TIMEOUT.toLong()) {
-                    adb?.execute(ConnectDeviceRequest(address, port?.toInt() ?: DEFAULT_PORT))
+    override fun connectToHost(host: String?, port: Int?) {
+        host?.let {
+            runBlocking {
+                if(host != LOCAL_HOST) {
+                    withTimeoutOrNull(Const.TIMEOUT.toLong()) {
+                        adb?.execute(ConnectDeviceRequest(host, port ?: DEFAULT_PORT))
+                    }
                 }
             }
         }
     }
 
-    fun disconnectDevice(address: String, port: Integer?) {
-        runBlocking {
-            if(address != LOCAL_HOST) {
-                withTimeoutOrNull(Const.TIMEOUT.toLong()) {
-                    adb?.execute(DisconnectDeviceRequest(address, port?.toInt() ?: DEFAULT_PORT))
+    override fun disconnectHost(host: String?, port: Int?) {
+        host?.let {
+            runBlocking {
+                if(host != LOCAL_HOST) {
+                    withTimeoutOrNull(Const.TIMEOUT.toLong()) {
+                        adb?.execute(DisconnectDeviceRequest(host, port ?: DEFAULT_PORT))
+                    }
                 }
             }
         }
     }
 
-    fun getListOfDevices(host: Host? = null): List<DeviceEntity> {
+    override fun getListOfDevices(host: Host?): List<DeviceEntity> {
         lateinit var listOfDevices: List<Device>
         runBlocking {
             withTimeoutOrNull(Const.TIMEOUT.toLong()) {
@@ -139,7 +144,7 @@ class AdbManager {
         }
     }
 
-    fun rebootDevice(device: DeviceEntity) {
+    override fun rebootDevice(device: DeviceEntity) {
         runBlocking {
             withTimeoutOrNull(Const.TIMEOUT.toLong()) {
                 adb?.execute(request = RebootRequest(), serial = device.serial)
@@ -168,7 +173,7 @@ class AdbManager {
         )
     }
 
-    fun getDevicesStates(): Map<String, String> {
+    override fun getDevicesStates(): Map<String, String> {
         val devicesMap = mutableMapOf<String, String>()
         runBlocking {
             withTimeoutOrNull(Const.TIMEOUT.toLong()) {

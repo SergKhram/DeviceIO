@@ -1,7 +1,7 @@
 package io.github.sergkhram.data.generator;
 
 import io.github.sergkhram.data.entity.Device;
-import io.github.sergkhram.data.entity.DeviceType;
+import io.github.sergkhram.data.enums.DeviceType;
 import io.github.sergkhram.data.entity.Host;
 import io.github.sergkhram.data.repository.DeviceRepository;
 import io.github.sergkhram.data.repository.HostRepository;

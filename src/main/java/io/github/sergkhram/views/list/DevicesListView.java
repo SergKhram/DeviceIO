@@ -15,11 +15,14 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.theme.lumo.Lumo;
-import io.github.sergkhram.data.adb.AdbManager;
+import io.github.sergkhram.data.enums.DeviceType;
+import io.github.sergkhram.data.providers.IOSDeviceDirectoriesDataProvider;
+import io.github.sergkhram.managers.Manager;
+import io.github.sergkhram.managers.adb.AdbManager;
 import io.github.sergkhram.data.entity.Device;
 import io.github.sergkhram.data.entity.DeviceDirectoryElement;
 import io.github.sergkhram.data.entity.Host;
-import io.github.sergkhram.data.idb.IdbManager;
+import io.github.sergkhram.managers.idb.IdbManager;
 import io.github.sergkhram.data.service.CrmService;
 import io.github.sergkhram.views.MainLayout;
 import io.github.sergkhram.views.list.forms.DeviceForm;
@@ -29,7 +32,10 @@ import org.zeroturnaround.zip.ZipUtil;
 
 import java.io.*;
 import java.util.Comparator;
-import java.util.Map;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static io.github.sergkhram.utils.Const.IOS_OFFLINE_STATE;
 
 @org.springframework.stereotype.Component
 @Scope("prototype")
@@ -43,11 +49,13 @@ public final class DevicesListView extends VerticalLayout {
     AdbManager adbManager;
     IdbManager idbManager;
     DeviceForm form;
+    List<Manager> managers;
 
     public DevicesListView(CrmService service, AdbManager adbManager, IdbManager idbManager) {
         this.service = service;
         this.adbManager = adbManager;
         this.idbManager = idbManager;
+        managers = List.of(adbManager, idbManager);
         addClassName("list-view");
         setSizeFull();
         configureGrid();
@@ -113,7 +121,7 @@ public final class DevicesListView extends VerticalLayout {
                         image = new Image("images/appleinc.png", "Apple");
                         break;
                     default:
-                        image = new Image("images/appleinc.png", "Apple");
+                        image = new Image();
                         break;
                 }
                 return image;
@@ -126,7 +134,12 @@ public final class DevicesListView extends VerticalLayout {
                 Button rebootButton = new Button("Reboot");
                 rebootButton.setThemeName(Lumo.DARK);
                 rebootButton.addClickListener(
-                    click -> adbManager.rebootDevice(device)
+                    click -> {
+                        switch (device.getDeviceType()) {
+                            case ANDROID: adbManager.rebootDevice(device);
+                            case IOS: idbManager.rebootDevice(device);
+                        }
+                    }
                 );
                 return rebootButton;
             }
@@ -154,12 +167,24 @@ public final class DevicesListView extends VerticalLayout {
     }
 
     private void updateDevicesState() {
-        Map<String, String> devicesStates = adbManager.getDevicesStates();
+        ConcurrentHashMap<String, String> devicesStates = new ConcurrentHashMap<>();
+        managers
+            .parallelStream()
+            .forEach(
+                it -> devicesStates.putAll(it.getDevicesStates())
+            );
+//      Map<String, String> devicesStates = adbManager.getDevicesStates();
         service.findAllDevices("").parallelStream().forEach(
             it -> {
                 String currentState = devicesStates.getOrDefault(it.getSerial(), null);
-                if(currentState == null || currentState.equals(DeviceState.OFFLINE.name())) {
-                    it.setState(DeviceState.OFFLINE.name());
+                if(
+                    currentState == null
+                        || currentState.equals(DeviceState.OFFLINE.name())
+                        || currentState.equalsIgnoreCase(IOS_OFFLINE_STATE)
+                ) {
+                    it.setState(
+                        currentState!=null ? currentState : DeviceState.OFFLINE.name()
+                    );
                     it.setIsActive(false);
                 } else {
                     if(!it.getState().equals(currentState)) {
@@ -179,6 +204,7 @@ public final class DevicesListView extends VerticalLayout {
         form.addListener(DeviceForm.ExecuteShellEvent.class, this::executeShell);
         form.addListener(DeviceForm.DownloadFileEvent.class, this::downloadFile);
         form.addListener(DeviceForm.DeleteFilesEvent.class, this::deleteFiles);
+        form.addListener(DeviceForm.ReinitFileExplorerEvent.class, this::reinitExplorer);
     }
 
     private void executeShell(DeviceForm.ExecuteShellEvent executeShellEvent) {
@@ -252,6 +278,14 @@ public final class DevicesListView extends VerticalLayout {
         }
     }
 
+    private void reinitExplorer(DeviceForm.ReinitFileExplorerEvent reinitFileExplorerEvent) {
+        form.setNewDataProviderFileExplorer(
+            new IOSDeviceDirectoriesDataProvider(
+                reinitFileExplorerEvent.getDevice(), idbManager, reinitFileExplorerEvent.bundle, reinitFileExplorerEvent.iosPackage
+            )
+        );
+    }
+
     private void closeEditor() {
         form.setDevice(null);
         form.setVisible(false);
@@ -267,7 +301,14 @@ public final class DevicesListView extends VerticalLayout {
         } else {
             form.setDevice(device);
             form.setVisible(true);
-            form.initDeviceExplorer(adbManager);
+            if(device.getDeviceType().equals(DeviceType.IOS)) {
+                form.setVisibleIOSLayoutForExplorer(true);
+                form.setVisibleShellLayout(false);
+            } else {
+                form.setVisibleIOSLayoutForExplorer(false);
+                form.setVisibleShellLayout(true);
+            }
+            form.initDeviceExplorer(adbManager, idbManager);
             addClassName("device-interact");
         }
     }

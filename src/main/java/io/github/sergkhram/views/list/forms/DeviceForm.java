@@ -5,6 +5,7 @@ import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
@@ -22,10 +23,15 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.provider.hierarchy.HierarchicalDataProvider;
 import com.vaadin.flow.shared.Registration;
 import com.vaadin.flow.theme.lumo.Lumo;
-import io.github.sergkhram.data.adb.AdbManager;
+import io.github.sergkhram.data.enums.DeviceType;
+import io.github.sergkhram.data.enums.IOSPackageType;
+import io.github.sergkhram.data.providers.IOSDeviceDirectoriesDataProvider;
+import io.github.sergkhram.managers.adb.AdbManager;
 import io.github.sergkhram.data.entity.Device;
 import io.github.sergkhram.data.entity.DeviceDirectoryElement;
-import io.github.sergkhram.data.providers.DeviceDirectoriesDataProvider;
+import io.github.sergkhram.data.providers.AndroidDeviceDirectoriesDataProvider;
+import io.github.sergkhram.managers.idb.IdbManager;
+
 import java.io.File;
 
 public final class DeviceForm extends FormLayout {
@@ -36,14 +42,18 @@ public final class DeviceForm extends FormLayout {
     TextField state = new TextField("Device state");
     TextArea shellResult = new TextArea("Shell result");
     TextField shellRequest = new TextField("Type your shell request");
+    HorizontalLayout shellEnterLayout;
     TreeGrid<DeviceDirectoryElement> treeGrid = new TreeGrid<>();
-    HierarchicalDataProvider<DeviceDirectoryElement, Void> dataProvider;
+    HierarchicalDataProvider dataProvider;
     Dialog dialog = new Dialog();
     HorizontalLayout deviceFileExplorer;
     Anchor anchorElement;
     Text dialogText = new Text("");
     private Device device;
     File currentFile;
+    ComboBox<IOSPackageType> iosPackageTypeComboBox;
+    TextField bundle = new TextField("Type your bundle");
+    VerticalLayout iosLayoutForExplorer;
 
     public DeviceForm() {
         addClassName("device-form");
@@ -65,6 +75,7 @@ public final class DeviceForm extends FormLayout {
             host,
             state,
             prepareShellCmdLayout(),
+            prepareIosFileExplorerHelper(),
             prepareDeviceFileExplorer()
         );
     }
@@ -171,9 +182,23 @@ public final class DeviceForm extends FormLayout {
         anchorElement = null;
     }
 
-    public void initDeviceExplorer(AdbManager adbManager) {
+    public void setVisibleShellLayout(boolean visible) {
+        visible = visible && device.getIsActive();
+        shellEnterLayout.setVisible(visible);
+    }
+
+    public void setVisibleIOSLayoutForExplorer(boolean visible) {
+        visible = visible && device.getIsActive();
+        iosLayoutForExplorer.setVisible(visible);
+    }
+
+    public void initDeviceExplorer(AdbManager adbManager, IdbManager idbManager) {
         if(device.getIsActive()) {
-            dataProvider = new DeviceDirectoriesDataProvider(device, adbManager);
+            dataProvider = device.getDeviceType().equals(DeviceType.ANDROID)
+                ? new AndroidDeviceDirectoriesDataProvider(device, adbManager)
+                : new IOSDeviceDirectoriesDataProvider(
+                    device, idbManager, "", iosPackageTypeComboBox.getValue()
+                );
             treeGrid.setDataProvider(dataProvider);
             treeGrid.setVisible(true);
             deviceFileExplorer.setVisible(true);
@@ -185,15 +210,43 @@ public final class DeviceForm extends FormLayout {
         executeButton.setThemeName(Lumo.DARK);
         executeButton.addClickListener(click -> executeShellCmd());
         shellRequest.setClearButtonVisible(true);
-        HorizontalLayout shellEnterLayout = new HorizontalLayout(shellRequest, executeButton);
+        shellEnterLayout = new HorizontalLayout(shellRequest, executeButton);
         shellEnterLayout.setAlignItems(FlexComponent.Alignment.BASELINE);
         VerticalLayout shellCmdLayout = new VerticalLayout(shellEnterLayout, shellResult);
         shellCmdLayout.addClassName("shellCmd");
         return shellCmdLayout;
     }
 
+    private VerticalLayout prepareIosFileExplorerHelper() {
+        Button executeButton = new Button("Open");
+        executeButton.setThemeName(Lumo.DARK);
+        executeButton.addClickListener(click ->
+            fireEvent(
+                new ReinitFileExplorerEvent(this, device, bundle.getValue(), iosPackageTypeComboBox.getValue())
+            )
+        );
+        bundle.setClearButtonVisible(true);
+        HorizontalLayout hl = new HorizontalLayout(bundle, executeButton);
+        hl.setAlignItems(FlexComponent.Alignment.BASELINE);
+        iosPackageTypeComboBox = new ComboBox<>("iOS Package Type");
+        iosPackageTypeComboBox.setItems(IOSPackageType.values());
+        iosPackageTypeComboBox.setItemLabelGenerator(IOSPackageType::name);
+        iosPackageTypeComboBox.setValue(IOSPackageType.ROOT);
+        iosLayoutForExplorer = new VerticalLayout(
+            iosPackageTypeComboBox,
+            hl
+        );
+        iosLayoutForExplorer.setVisible(false);
+        return iosLayoutForExplorer;
+    }
+
     private void executeShellCmd() {
         fireEvent(new ExecuteShellEvent(this, device));
+    }
+
+    public void setNewDataProviderFileExplorer(HierarchicalDataProvider newDataProvider) {
+        dataProvider = newDataProvider;
+        treeGrid.setDataProvider(dataProvider);
     }
 
     public static abstract class DeviceFormEvent extends ComponentEvent<DeviceForm> {
@@ -234,6 +287,18 @@ public final class DeviceForm extends FormLayout {
             this.currentFile = currentFile;
         }
     }
+
+    public static class ReinitFileExplorerEvent extends DeviceFormEvent {
+        public String bundle;
+        public IOSPackageType iosPackage;
+
+        ReinitFileExplorerEvent(DeviceForm source, Device device, String bundle, IOSPackageType iosPackage) {
+            super(source, device);
+            this.bundle = bundle;
+            this.iosPackage = iosPackage;
+        }
+    }
+
 
     public <T extends ComponentEvent<?>> Registration addListener(Class<T> eventType,
                                                                   ComponentEventListener<T> listener) {

@@ -1,6 +1,7 @@
 package io.github.sergkhram.data.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.github.sergkhram.data.enums.DeviceType;
 import lombok.EqualsAndHashCode;
 
 import javax.persistence.*;
