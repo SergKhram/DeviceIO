@@ -4,6 +4,7 @@ import com.malinskiy.adam.request.device.DeviceState;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Image;
@@ -17,6 +18,7 @@ import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.theme.lumo.Lumo;
 import io.github.sergkhram.data.enums.DeviceType;
 import io.github.sergkhram.data.providers.IOSDeviceDirectoriesDataProvider;
+import io.github.sergkhram.data.service.DownloadService;
 import io.github.sergkhram.managers.Manager;
 import io.github.sergkhram.managers.adb.AdbManager;
 import io.github.sergkhram.data.entity.Device;
@@ -28,7 +30,6 @@ import io.github.sergkhram.views.MainLayout;
 import io.github.sergkhram.views.list.forms.DeviceForm;
 import org.apache.commons.io.FileUtils;
 import org.springframework.context.annotation.Scope;
-import org.zeroturnaround.zip.ZipUtil;
 
 import java.io.*;
 import java.util.Comparator;
@@ -50,11 +51,18 @@ public final class DevicesListView extends VerticalLayout {
     IdbManager idbManager;
     DeviceForm form;
     List<Manager> managers;
+    DownloadService downloadService;
 
-    public DevicesListView(CrmService service, AdbManager adbManager, IdbManager idbManager) {
+    public DevicesListView(
+            CrmService service,
+            AdbManager adbManager,
+            IdbManager idbManager,
+            DownloadService downloadService
+    ) {
         this.service = service;
         this.adbManager = adbManager;
         this.idbManager = idbManager;
+        this.downloadService = downloadService;
         managers = List.of(adbManager, idbManager);
         addClassName("list-view");
         setSizeFull();
@@ -209,66 +217,60 @@ public final class DevicesListView extends VerticalLayout {
 
     private void executeShell(DeviceForm.ExecuteShellEvent executeShellEvent) {
         form.clearShellResult();
-        String result = adbManager.executeShell(executeShellEvent.getDevice(), form.getShellRequest());
+        String result = adbManager.executeShell(
+            executeShellEvent.getDevice(),
+            executeShellEvent.getShellRequestValue()
+        );
         form.setShellResult(result);
     }
 
     private void downloadFile(DeviceForm.DownloadFileEvent downloadFileEvent) {
-        DeviceDirectoryElement currentDeviceDirectoryElement = downloadFileEvent.deviceDirectoryElement;
+        DeviceDirectoryElement currentDeviceDirectoryElement = downloadFileEvent.getDeviceDirectoryElement();
         StreamResource resource = null;
         String error = "";
-        if(!currentDeviceDirectoryElement.isDirectory) {
+
+        if(currentDeviceDirectoryElement.isDirectory != null && currentDeviceDirectoryElement.isDirectory) {
             try {
-                File file = adbManager.downloadFile(
-                    downloadFileEvent.getDevice(),
-                    currentDeviceDirectoryElement,
-                    "./target"
-                );
-                InputStream inputStream = new FileInputStream(
-                    file);
-                resource = new StreamResource(file.getName(), () -> inputStream);
-                form.setCurrentFile(file);
+                DownloadService.DownloadData data = downloadService.downloadFolder(downloadFileEvent);
+                if(data.error != null) {
+                    error = data.error;
+                } else {
+                    resource = data.resource;
+                    form.setCurrentFile(data.file);
+                }
             } catch (Exception e) {
                 e.printStackTrace();
                 error = e.getLocalizedMessage();
             }
         } else {
             try {
-                File directory = adbManager.downloadFolder(
-                    downloadFileEvent.getDevice(),
-                    currentDeviceDirectoryElement,
-                    "./target"
-                );
-                if(directory.exists()) {
-                    File zipFile = new File(directory + ".zip");
-                    ZipUtil.pack(directory, zipFile);
-                    InputStream inputStream = new FileInputStream(
-                        zipFile);
-                    resource = new StreamResource(zipFile.getName(), () -> inputStream);
-                    FileUtils.deleteDirectory(directory);
-                    form.setCurrentFile(zipFile);
-                } else {
-                    error = "Empty directory!";
-                }
+                DownloadService.DownloadData data = downloadService.downloadFile(downloadFileEvent);
+                resource = data.resource;
+                form.setCurrentFile(data.file);
             } catch (Exception e) {
                 e.printStackTrace();
                 error = e.getLocalizedMessage();
             }
         }
         if(error.isEmpty()) {
-            Anchor link = new Anchor();
-            link.setHref(resource);
-            link.getElement().setAttribute("download", true);
-            Button downloadButton = new Button(
-                VaadinIcon.DOWNLOAD.create(),
-                click -> click.getSource().setEnabled(false)
-            );
-            link.add(downloadButton);
-            downloadFileEvent.dialog.getFooter().add(link);
+            Anchor link = prepareAnchor(resource, downloadFileEvent.getDialog());
             form.setAnchorElement(link);
         } else {
             form.setDialogText(error);
         }
+    }
+
+    private Anchor prepareAnchor(StreamResource resource, Dialog dialog) {
+        Anchor link = new Anchor();
+        link.setHref(resource);
+        link.getElement().setAttribute("download", true);
+        Button downloadButton = new Button(
+            VaadinIcon.DOWNLOAD.create(),
+            click -> click.getSource().setEnabled(false)
+        );
+        link.add(downloadButton);
+        dialog.getFooter().add(link);
+        return link;
     }
 
     private void deleteFiles(DeviceForm.DeleteFilesEvent deleteFilesEvent) {
@@ -281,7 +283,10 @@ public final class DevicesListView extends VerticalLayout {
     private void reinitExplorer(DeviceForm.ReinitFileExplorerEvent reinitFileExplorerEvent) {
         form.setNewDataProviderFileExplorer(
             new IOSDeviceDirectoriesDataProvider(
-                reinitFileExplorerEvent.getDevice(), idbManager, reinitFileExplorerEvent.bundle, reinitFileExplorerEvent.iosPackage
+                reinitFileExplorerEvent.getDevice(),
+                idbManager,
+                reinitFileExplorerEvent.getBundle(),
+                reinitFileExplorerEvent.getIosPackageType()
             )
         );
     }
@@ -289,8 +294,7 @@ public final class DevicesListView extends VerticalLayout {
     private void closeEditor() {
         form.setDevice(null);
         form.setVisible(false);
-        form.clearShellRequest();
-        form.clearShellResult();
+        form.clearShellLayout();
         form.clearDeviceExplorer();
         removeClassName("device-interact");
     }

@@ -37,9 +37,14 @@ public class IOSDeviceDirectoriesDataProvider extends AbstractBackEndHierarchica
 
     @Override
     public boolean hasChildren(final DeviceDirectoryElement deviceDirectoryElement) {
-        return deviceDirectoryElement != null
-            ? getChildrenElements(deviceDirectoryElement).size() > 0
-            : idbManager.getListFiles(device, bundle, iosPackageType).size() > 0;
+        boolean hasChildren;
+        if (deviceDirectoryElement != null) {
+            hasChildren = getChildrenElements(deviceDirectoryElement).size() > 0;
+            if(hasChildren) deviceDirectoryElement.isDirectory = true;
+        } else {
+            hasChildren = idbManager.getListFiles(device, bundle, iosPackageType).size() > 0;
+        }
+        return hasChildren;
     }
 
     @Override

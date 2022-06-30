@@ -42,14 +42,14 @@ public final class DeviceForm extends FormLayout {
     TextField state = new TextField("Device state");
     TextArea shellResult = new TextArea("Shell result");
     TextField shellRequest = new TextField("Type your shell request");
-    HorizontalLayout shellEnterLayout;
+    VerticalLayout shellCmdLayout;
     TreeGrid<DeviceDirectoryElement> treeGrid = new TreeGrid<>();
     HierarchicalDataProvider dataProvider;
     Dialog dialog = new Dialog();
     HorizontalLayout deviceFileExplorer;
     Anchor anchorElement;
     Text dialogText = new Text("");
-    private Device device;
+    Device device;
     File currentFile;
     ComboBox<IOSPackageType> iosPackageTypeComboBox;
     TextField bundle = new TextField("Type your bundle");
@@ -66,8 +66,6 @@ public final class DeviceForm extends FormLayout {
         serial.setReadOnly(true);
         host.setReadOnly(true);
         state.setReadOnly(true);
-        shellResult.setReadOnly(true);
-        shellResult.setVisible(false);
 
         prepareDialog();
 
@@ -133,7 +131,11 @@ public final class DeviceForm extends FormLayout {
         menu.addItem(
             "Download", click -> {
                 setDialogText();
-                fireEvent(new DownloadFileEvent(this, device, click.getItem().get(), dialog));
+                fireEvent(
+                    new DownloadFileEvent(
+                        this, device, click.getItem().get(), dialog, iosPackageTypeComboBox.getValue()
+                    )
+                );
                 dialog.open();
             }
         );
@@ -162,12 +164,9 @@ public final class DeviceForm extends FormLayout {
         }
     }
 
-    public String getShellRequest() {
-        return shellRequest.getValue();
-    }
-
-    public void clearShellRequest() {
+    public void clearShellLayout() {
         shellRequest.clear();
+        clearShellResult();
     }
 
     public void clearShellResult() {
@@ -184,7 +183,7 @@ public final class DeviceForm extends FormLayout {
 
     public void setVisibleShellLayout(boolean visible) {
         visible = visible && device.getIsActive();
-        shellEnterLayout.setVisible(visible);
+        shellCmdLayout.setVisible(visible);
     }
 
     public void setVisibleIOSLayoutForExplorer(boolean visible) {
@@ -206,13 +205,15 @@ public final class DeviceForm extends FormLayout {
     }
 
     private VerticalLayout prepareShellCmdLayout() {
+        shellResult.setReadOnly(true);
+        shellResult.setVisible(false);
         Button executeButton = new Button("Execute");
         executeButton.setThemeName(Lumo.DARK);
         executeButton.addClickListener(click -> executeShellCmd());
         shellRequest.setClearButtonVisible(true);
-        shellEnterLayout = new HorizontalLayout(shellRequest, executeButton);
+        HorizontalLayout shellEnterLayout = new HorizontalLayout(shellRequest, executeButton);
         shellEnterLayout.setAlignItems(FlexComponent.Alignment.BASELINE);
-        VerticalLayout shellCmdLayout = new VerticalLayout(shellEnterLayout, shellResult);
+        shellCmdLayout = new VerticalLayout(shellEnterLayout, shellResult);
         shellCmdLayout.addClassName("shellCmd");
         return shellCmdLayout;
     }
@@ -241,7 +242,7 @@ public final class DeviceForm extends FormLayout {
     }
 
     private void executeShellCmd() {
-        fireEvent(new ExecuteShellEvent(this, device));
+        fireEvent(new ExecuteShellEvent(this, device, shellRequest));
     }
 
     public void setNewDataProviderFileExplorer(HierarchicalDataProvider newDataProvider) {
@@ -263,19 +264,46 @@ public final class DeviceForm extends FormLayout {
     }
 
     public static class ExecuteShellEvent extends DeviceFormEvent {
-        ExecuteShellEvent(DeviceForm source, Device device) {
+        private final TextField shellRequest;
+
+        ExecuteShellEvent(DeviceForm source, Device device, TextField shellRequest) {
             super(source, device);
+            this.shellRequest = shellRequest;
+        }
+
+        public String getShellRequestValue() {
+            return shellRequest.getValue();
         }
     }
 
     public static class DownloadFileEvent extends DeviceFormEvent {
-        public DeviceDirectoryElement deviceDirectoryElement;
-        public Dialog dialog;
+        private DeviceDirectoryElement deviceDirectoryElement;
+        private Dialog dialog;
+        private IOSPackageType iosPackageType;
 
-        DownloadFileEvent(DeviceForm source, Device device, DeviceDirectoryElement deviceDirectoryElement, Dialog dialog) {
+        DownloadFileEvent(
+            DeviceForm source,
+            Device device,
+            DeviceDirectoryElement deviceDirectoryElement,
+            Dialog dialog,
+            IOSPackageType iosPackageType
+        ) {
             super(source, device);
             this.deviceDirectoryElement = deviceDirectoryElement;
             this.dialog = dialog;
+            this.iosPackageType = iosPackageType;
+        }
+
+        public DeviceDirectoryElement getDeviceDirectoryElement() {
+            return deviceDirectoryElement;
+        }
+
+        public Dialog getDialog() {
+            return dialog;
+        }
+
+        public IOSPackageType getIosPackageType() {
+            return iosPackageType;
         }
     }
 
@@ -289,13 +317,21 @@ public final class DeviceForm extends FormLayout {
     }
 
     public static class ReinitFileExplorerEvent extends DeviceFormEvent {
-        public String bundle;
-        public IOSPackageType iosPackage;
+        private final String bundle;
+        private final IOSPackageType iosPackage;
 
         ReinitFileExplorerEvent(DeviceForm source, Device device, String bundle, IOSPackageType iosPackage) {
             super(source, device);
             this.bundle = bundle;
             this.iosPackage = iosPackage;
+        }
+
+        public String getBundle() {
+            return bundle;
+        }
+
+        public IOSPackageType getIosPackageType() {
+            return iosPackage;
         }
     }
 

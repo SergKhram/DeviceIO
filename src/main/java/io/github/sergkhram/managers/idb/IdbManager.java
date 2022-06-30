@@ -31,6 +31,7 @@ public class IdbManager implements Manager {
     private final List<String> remoteHostDisconnectCmd = List.of(idbCmdPrefix, "disconnect");
     private final List<String> deviceInfoCmd = List.of(idbCmdPrefix, "describe", "--json", "--udid");
     private final List<String> listOfFilesCmd = List.of(idbCmdPrefix, "file", "ls", "--udid");
+    private final List<String> pullFileCmd = List.of(idbCmdPrefix, "file", "pull", "--udid");
 
     @SneakyThrows
     @Override
@@ -304,5 +305,72 @@ public class IdbManager implements Manager {
             if(p != null) p.destroy();
         }
         return list;
+    }
+
+    public File download(
+        Device device,
+        DeviceDirectoryElement deviceDirectoryElement,
+        IOSPackageType iosPackageType,
+        String destination,
+        AfterDownloadAction action
+    ) {
+        File file = new File(destination + File.separator + deviceDirectoryElement.name);
+        List<String> cmd = new ArrayList<>(pullFileCmd);
+        String parentPath = deviceDirectoryElement.path.equals("") ? "" : deviceDirectoryElement.path + "/";
+        cmd.addAll(
+            List.of(
+                device.getSerial(),
+                iosPackageType!=null
+                    ? iosPackageType.value
+                    : IOSPackageType.APPLICATION.value,
+                parentPath + deviceDirectoryElement.name,
+                file.getAbsolutePath()
+            )
+        );
+        ProcessBuilder pB = new ProcessBuilder(cmd);
+        pB.directory(directory);
+        Process p = null;
+        try {
+            p = pB.start();
+            int exitCode = p.waitFor();
+            System.out.println("\nExited with error code : " + exitCode);
+            file = action.prepareFile(file);
+        } catch (IOException|InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            if(p != null) p.destroy();
+        }
+        return file;
+    }
+
+    public File downloadFile(Device device,
+                   DeviceDirectoryElement deviceDirectoryElement,
+                   IOSPackageType iosPackageType,
+                   String destination) {
+        return download(
+            device,
+            deviceDirectoryElement,
+            iosPackageType,
+            destination,
+            (file) -> new File(file, deviceDirectoryElement.name)
+        );
+    }
+
+    public File downloadFolder(Device device,
+                               DeviceDirectoryElement deviceDirectoryElement,
+                               IOSPackageType iosPackageType,
+                               String destination) {
+        return download(
+            device,
+            deviceDirectoryElement,
+            iosPackageType,
+            destination,
+            (file) -> file
+        );
+    }
+
+    @FunctionalInterface
+    public interface AfterDownloadAction {
+        File prepareFile(File file);
     }
 }
