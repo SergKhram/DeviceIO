@@ -27,6 +27,7 @@ import com.vaadin.flow.theme.lumo.Lumo;
 import io.github.sergkhram.data.enums.DeviceType;
 import io.github.sergkhram.data.enums.IOSPackageType;
 import io.github.sergkhram.data.providers.IOSDeviceDirectoriesDataProvider;
+import io.github.sergkhram.managers.Manager;
 import io.github.sergkhram.managers.adb.AdbManager;
 import io.github.sergkhram.data.entity.Device;
 import io.github.sergkhram.data.entity.DeviceDirectoryElement;
@@ -34,6 +35,9 @@ import io.github.sergkhram.data.providers.AndroidDeviceDirectoriesDataProvider;
 import io.github.sergkhram.managers.idb.IdbManager;
 
 import java.io.File;
+import java.util.List;
+
+import static io.github.sergkhram.utils.Utils.getManagerByType;
 
 public final class DeviceForm extends FormLayout {
     Binder<Device> binder = new Binder<>(Device.class);
@@ -198,12 +202,18 @@ public final class DeviceForm extends FormLayout {
         iosExplorerTunerLayout.setVisible(visible);
     }
 
-    public void initDeviceExplorer(AdbManager adbManager, IdbManager idbManager) {
+    public void initDeviceExplorer(List<Manager> managers) {
         if(device.getIsActive()) {
             dataProvider = device.getDeviceType().equals(DeviceType.ANDROID)
-                ? new AndroidDeviceDirectoriesDataProvider(device, adbManager)
+                ? new AndroidDeviceDirectoriesDataProvider(
+                    device,
+                    getManagerByType(managers, AdbManager.class)
+                )
                 : new IOSDeviceDirectoriesDataProvider(
-                    device, idbManager, "", iosPackageTypeComboBox.getValue()
+                    device,
+                    getManagerByType(managers, IdbManager.class),
+                    "",
+                    iosPackageTypeComboBox.getValue()
                 );
             fileExplorerGrid.setDataProvider(dataProvider);
             fileExplorerGrid.setVisible(true);

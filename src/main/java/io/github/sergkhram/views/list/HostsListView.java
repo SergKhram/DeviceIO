@@ -39,15 +39,11 @@ public final class HostsListView extends VerticalLayout {
     TextField filterText = new TextField();
     HostForm form;
     CrmService service;
-    AdbManager adbManager;
-    IdbManager idbManager;
     List<Manager> managers;
 
     public HostsListView(CrmService service, AdbManager adbManager, IdbManager idbManager) {
         this.service = service;
         managers = List.of(adbManager, idbManager);
-        this.adbManager = adbManager;
-        this.idbManager = idbManager;
         addClassName("list-view");
         setSizeFull();
         configureGrid();

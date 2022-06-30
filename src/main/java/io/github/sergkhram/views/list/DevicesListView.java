@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static io.github.sergkhram.utils.Const.IOS_OFFLINE_STATE;
+import static io.github.sergkhram.utils.Utils.getManagerByType;
 
 @org.springframework.stereotype.Component
 @Scope("prototype")
@@ -47,8 +48,6 @@ public final class DevicesListView extends VerticalLayout {
     Grid<Device> grid = new Grid<>(Device.class);
     TextField filterText = new TextField();
     CrmService service;
-    AdbManager adbManager;
-    IdbManager idbManager;
     DeviceForm form;
     List<Manager> managers;
     DownloadService downloadService;
@@ -60,8 +59,6 @@ public final class DevicesListView extends VerticalLayout {
             DownloadService downloadService
     ) {
         this.service = service;
-        this.adbManager = adbManager;
-        this.idbManager = idbManager;
         this.downloadService = downloadService;
         managers = List.of(adbManager, idbManager);
         addClassName("list-view");
@@ -144,8 +141,8 @@ public final class DevicesListView extends VerticalLayout {
                 rebootButton.addClickListener(
                     click -> {
                         switch (device.getDeviceType()) {
-                            case ANDROID: adbManager.rebootDevice(device);
-                            case IOS: idbManager.rebootDevice(device);
+                            case ANDROID: getManagerByType(managers, AdbManager.class).rebootDevice(device);
+                            case IOS: getManagerByType(managers, IdbManager.class).rebootDevice(device);
                         }
                     }
                 );
@@ -217,7 +214,7 @@ public final class DevicesListView extends VerticalLayout {
 
     private void executeShell(DeviceForm.ExecuteShellEvent executeShellEvent) {
         form.clearShellResult();
-        String result = adbManager.executeShell(
+        String result = getManagerByType(managers, AdbManager.class).executeShell(
             executeShellEvent.getDevice(),
             executeShellEvent.getShellRequestValue()
         );
@@ -284,7 +281,7 @@ public final class DevicesListView extends VerticalLayout {
         form.setNewDataProviderFileExplorer(
             new IOSDeviceDirectoriesDataProvider(
                 reinitFileExplorerEvent.getDevice(),
-                idbManager,
+                getManagerByType(managers, IdbManager.class),
                 reinitFileExplorerEvent.getBundle(),
                 reinitFileExplorerEvent.getIosPackageType()
             )
@@ -312,7 +309,7 @@ public final class DevicesListView extends VerticalLayout {
                 form.setVisibleIOSLayoutForExplorer(false);
                 form.setVisibleShellLayout(true);
             }
-            form.initDeviceExplorer(adbManager, idbManager);
+            form.initDeviceExplorer(managers);
             addClassName("device-interact");
         }
     }
