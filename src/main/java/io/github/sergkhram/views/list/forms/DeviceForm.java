@@ -53,7 +53,7 @@ public final class DeviceForm extends FormLayout {
     Device device;
     File currentFile;
     ComboBox<IOSPackageType> iosPackageTypeComboBox;
-    TextField bundle = new TextField("Type your bundle");
+    TextField iosBundle = new TextField("Type your bundle");
     VerticalLayout iosLayoutForExplorer;
 
     public DeviceForm() {
@@ -134,8 +134,8 @@ public final class DeviceForm extends FormLayout {
             .setAutoWidth(true)
             .setFlexGrow(0)
             .setTextAlign(ColumnTextAlign.END);
-        GridContextMenu<DeviceDirectoryElement> menu = fileExplorerGrid.addContextMenu();
-        menu.addItem(
+        GridContextMenu<DeviceDirectoryElement> contextMenu = fileExplorerGrid.addContextMenu();
+        contextMenu.addItem(
             "Download", click -> {
                 setDialogText();
                 fireEvent(
@@ -230,11 +230,11 @@ public final class DeviceForm extends FormLayout {
         executeButton.setThemeName(Lumo.DARK);
         executeButton.addClickListener(click ->
             fireEvent(
-                new ReinitFileExplorerEvent(this, device, bundle.getValue(), iosPackageTypeComboBox.getValue())
+                new ReinitFileExplorerEvent(this, device, iosBundle.getValue(), iosPackageTypeComboBox.getValue())
             )
         );
-        bundle.setClearButtonVisible(true);
-        HorizontalLayout hl = new HorizontalLayout(bundle, executeButton);
+        iosBundle.setClearButtonVisible(true);
+        HorizontalLayout hl = new HorizontalLayout(iosBundle, executeButton);
         hl.setAlignItems(FlexComponent.Alignment.BASELINE);
         iosPackageTypeComboBox = new ComboBox<>("iOS Package Type");
         iosPackageTypeComboBox.setItems(IOSPackageType.values());
