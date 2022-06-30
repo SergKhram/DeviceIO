@@ -46,7 +46,7 @@ public final class DeviceForm extends FormLayout {
     VerticalLayout shellCmdLayout;
     TreeGrid<DeviceDirectoryElement> fileExplorerGrid = new TreeGrid<>();
     HierarchicalDataProvider dataProvider;
-    Dialog dialog = new Dialog();
+    Dialog downloadDialog = new Dialog();
     HorizontalLayout deviceFileExplorer;
     Anchor anchorElement;
     Text downloadDialogText = new Text("");
@@ -54,7 +54,7 @@ public final class DeviceForm extends FormLayout {
     File currentFile;
     ComboBox<IOSPackageType> iosPackageTypeComboBox;
     TextField iosBundle = new TextField("Type your bundle");
-    VerticalLayout iosLayoutForExplorer;
+    VerticalLayout iosExplorerTunerLayout;
 
     public DeviceForm() {
         addClassName("device-form");
@@ -74,7 +74,7 @@ public final class DeviceForm extends FormLayout {
             host,
             state,
             prepareShellCmdLayout(),
-            prepareIosFileExplorerHelper(),
+            prepareIosFileExplorerTuner(),
             prepareDeviceFileExplorer()
         );
     }
@@ -86,21 +86,21 @@ public final class DeviceForm extends FormLayout {
             click -> closeDialogAction()
         );
 
-        dialog.setHeaderTitle("Confirm downloading");
+        downloadDialog.setHeaderTitle("Confirm downloading");
         setDialogText();
-        dialog.add(downloadDialogText);
+        downloadDialog.add(downloadDialogText);
         Button closeButton = new Button(
             new Icon("lumo", "cross"),
             click -> closeDialogAction()
         );
         closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-        dialog.getHeader().add(closeButton);
-        dialog.getFooter().add(cancel);
+        downloadDialog.getHeader().add(closeButton);
+        downloadDialog.getFooter().add(cancel);
     }
 
     private void closeDialogAction() {
-        dialog.close();
-        dialog.getFooter().remove(anchorElement);
+        downloadDialog.close();
+        downloadDialog.getFooter().remove(anchorElement);
         anchorElement = null;
         setDialogText();
         fireEvent(new DeleteFilesEvent(this, device, currentFile));
@@ -140,10 +140,10 @@ public final class DeviceForm extends FormLayout {
                 setDialogText();
                 fireEvent(
                     new DownloadFileEvent(
-                        this, device, click.getItem().get(), dialog, iosPackageTypeComboBox.getValue()
+                        this, device, click.getItem().get(), downloadDialog, iosPackageTypeComboBox.getValue()
                     )
                 );
-                dialog.open();
+                downloadDialog.open();
             }
         );
 
@@ -195,7 +195,7 @@ public final class DeviceForm extends FormLayout {
 
     public void setVisibleIOSLayoutForExplorer(boolean visible) {
         visible = visible && device.getIsActive();
-        iosLayoutForExplorer.setVisible(visible);
+        iosExplorerTunerLayout.setVisible(visible);
     }
 
     public void initDeviceExplorer(AdbManager adbManager, IdbManager idbManager) {
@@ -225,7 +225,7 @@ public final class DeviceForm extends FormLayout {
         return shellCmdLayout;
     }
 
-    private VerticalLayout prepareIosFileExplorerHelper() {
+    private VerticalLayout prepareIosFileExplorerTuner() {
         Button executeButton = new Button("Open");
         executeButton.setThemeName(Lumo.DARK);
         executeButton.addClickListener(click ->
@@ -240,12 +240,12 @@ public final class DeviceForm extends FormLayout {
         iosPackageTypeComboBox.setItems(IOSPackageType.values());
         iosPackageTypeComboBox.setItemLabelGenerator(IOSPackageType::name);
         iosPackageTypeComboBox.setValue(IOSPackageType.ROOT);
-        iosLayoutForExplorer = new VerticalLayout(
+        iosExplorerTunerLayout = new VerticalLayout(
             iosPackageTypeComboBox,
             hl
         );
-        iosLayoutForExplorer.setVisible(false);
-        return iosLayoutForExplorer;
+        iosExplorerTunerLayout.setVisible(false);
+        return iosExplorerTunerLayout;
     }
 
     private void executeShellCmd() {
