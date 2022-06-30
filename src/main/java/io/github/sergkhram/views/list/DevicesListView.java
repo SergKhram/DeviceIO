@@ -256,7 +256,7 @@ public final class DevicesListView extends VerticalLayout {
             Anchor link = prepareAnchor(resource, downloadFileEvent.getDialog());
             form.setAnchorElement(link);
         } else {
-            form.setDialogText(error);
+            form.setDownloadDialogText(error);
         }
     }
 

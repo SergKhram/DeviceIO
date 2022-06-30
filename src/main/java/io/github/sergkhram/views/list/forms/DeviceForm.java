@@ -8,6 +8,7 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.contextmenu.GridContextMenu;
 import com.vaadin.flow.component.html.Anchor;
@@ -43,12 +44,12 @@ public final class DeviceForm extends FormLayout {
     TextArea shellResult = new TextArea("Shell result");
     TextField shellRequest = new TextField("Type your shell request");
     VerticalLayout shellCmdLayout;
-    TreeGrid<DeviceDirectoryElement> treeGrid = new TreeGrid<>();
+    TreeGrid<DeviceDirectoryElement> fileExplorerGrid = new TreeGrid<>();
     HierarchicalDataProvider dataProvider;
     Dialog dialog = new Dialog();
     HorizontalLayout deviceFileExplorer;
     Anchor anchorElement;
-    Text dialogText = new Text("");
+    Text downloadDialogText = new Text("");
     Device device;
     File currentFile;
     ComboBox<IOSPackageType> iosPackageTypeComboBox;
@@ -87,7 +88,7 @@ public final class DeviceForm extends FormLayout {
 
         dialog.setHeaderTitle("Confirm downloading");
         setDialogText();
-        dialog.add(dialogText);
+        dialog.add(downloadDialogText);
         Button closeButton = new Button(
             new Icon("lumo", "cross"),
             click -> closeDialogAction()
@@ -109,12 +110,12 @@ public final class DeviceForm extends FormLayout {
         this.anchorElement = anchorElement;
     }
 
-    public void setDialogText(String text) {
-        dialogText.setText(text);
+    public void setDownloadDialogText(String text) {
+        downloadDialogText.setText(text);
     }
 
     public void setDialogText() {
-        setDialogText("Are you sure you want to download this file/directory?");
+        setDownloadDialogText("Are you sure you want to download this file/directory?");
     }
 
     public void setCurrentFile(File file) {
@@ -122,12 +123,18 @@ public final class DeviceForm extends FormLayout {
     }
 
     private VerticalLayout prepareDeviceFileExplorer() {
-        treeGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
-        treeGrid.addHierarchyColumn(DeviceDirectoryElement::getName)
+        fileExplorerGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
+        fileExplorerGrid.addHierarchyColumn(DeviceDirectoryElement::getName)
+            .setAutoWidth(true)
+            .setFlexGrow(0)
+            .setResizable(true)
             .setHeader("Name");
-        treeGrid.addColumn(DeviceDirectoryElement::getSize)
-            .setHeader("Size");
-        GridContextMenu<DeviceDirectoryElement> menu = treeGrid.addContextMenu();
+        fileExplorerGrid.addColumn(DeviceDirectoryElement::getSize)
+            .setHeader("Size")
+            .setAutoWidth(true)
+            .setFlexGrow(0)
+            .setTextAlign(ColumnTextAlign.END);
+        GridContextMenu<DeviceDirectoryElement> menu = fileExplorerGrid.addContextMenu();
         menu.addItem(
             "Download", click -> {
                 setDialogText();
@@ -146,7 +153,7 @@ public final class DeviceForm extends FormLayout {
         deviceFileExplorer.setAlignItems(FlexComponent.Alignment.BASELINE);
         return new VerticalLayout(
             deviceFileExplorer,
-            treeGrid
+            fileExplorerGrid
         );
     }
 
@@ -175,7 +182,7 @@ public final class DeviceForm extends FormLayout {
     }
 
     public void clearDeviceExplorer() {
-        treeGrid.setVisible(false);
+        fileExplorerGrid.setVisible(false);
         dataProvider = null;
         deviceFileExplorer.setVisible(false);
         anchorElement = null;
@@ -198,8 +205,8 @@ public final class DeviceForm extends FormLayout {
                 : new IOSDeviceDirectoriesDataProvider(
                     device, idbManager, "", iosPackageTypeComboBox.getValue()
                 );
-            treeGrid.setDataProvider(dataProvider);
-            treeGrid.setVisible(true);
+            fileExplorerGrid.setDataProvider(dataProvider);
+            fileExplorerGrid.setVisible(true);
             deviceFileExplorer.setVisible(true);
         }
     }
@@ -247,7 +254,7 @@ public final class DeviceForm extends FormLayout {
 
     public void setNewDataProviderFileExplorer(HierarchicalDataProvider newDataProvider) {
         dataProvider = newDataProvider;
-        treeGrid.setDataProvider(dataProvider);
+        fileExplorerGrid.setDataProvider(dataProvider);
     }
 
     public static abstract class DeviceFormEvent extends ComponentEvent<DeviceForm> {
