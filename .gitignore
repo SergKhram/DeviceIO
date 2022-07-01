@@ -12,5 +12,5 @@ buildNumber.properties
 frontend/generated
 frontend/index.html
 .idea
-studio18.iml
+deviceio.iml
 node_modules
