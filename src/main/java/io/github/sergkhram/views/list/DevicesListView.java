@@ -16,7 +16,7 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.theme.lumo.Lumo;
-import io.github.sergkhram.data.enums.DeviceType;
+import io.github.sergkhram.data.enums.OsType;
 import io.github.sergkhram.data.providers.IOSDeviceDirectoriesDataProvider;
 import io.github.sergkhram.data.service.DownloadService;
 import io.github.sergkhram.managers.Manager;
@@ -118,7 +118,7 @@ public final class DevicesListView extends VerticalLayout {
         grid.addComponentColumn(
             device -> {
                 Image image;
-                switch(device.getDeviceType()) {
+                switch(device.getOsType()) {
                     case ANDROID:
                         image = new Image("images/android.png", "Android");
                         break;
@@ -132,7 +132,7 @@ public final class DevicesListView extends VerticalLayout {
                 return image;
             }
         ).setHeader("Type").setComparator(
-            Comparator.comparing(Device::getDeviceType)
+            Comparator.comparing(Device::getOsType)
         );
         grid.addComponentColumn(
             device -> {
@@ -140,7 +140,7 @@ public final class DevicesListView extends VerticalLayout {
                 rebootButton.setThemeName(Lumo.DARK);
                 rebootButton.addClickListener(
                     click -> {
-                        switch (device.getDeviceType()) {
+                        switch (device.getOsType()) {
                             case ANDROID: getManagerByType(managers, AdbManager.class).rebootDevice(device);
                             case IOS: getManagerByType(managers, IdbManager.class).rebootDevice(device);
                         }
@@ -302,7 +302,7 @@ public final class DevicesListView extends VerticalLayout {
         } else {
             form.setDevice(device);
             form.setVisible(true);
-            if(device.getDeviceType().equals(DeviceType.IOS)) {
+            if(device.getOsType().equals(OsType.IOS)) {
                 form.setVisibleIOSLayoutForExplorer(true);
                 form.setVisibleShellLayout(false);
             } else {

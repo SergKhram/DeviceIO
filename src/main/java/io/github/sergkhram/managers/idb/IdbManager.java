@@ -2,8 +2,8 @@ package io.github.sergkhram.managers.idb;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import io.github.sergkhram.data.entity.*;
+import io.github.sergkhram.data.enums.OsType;
 import io.github.sergkhram.data.enums.DeviceType;
-import io.github.sergkhram.data.enums.IOSDeviceType;
 import io.github.sergkhram.data.enums.IOSPackageType;
 import io.github.sergkhram.managers.Manager;
 import lombok.SneakyThrows;
@@ -132,8 +132,9 @@ public class IdbManager implements Manager {
                 device.setState(it.getState());
                 device.setIsActive(!it.getState().equals("Shutdown"));
                 device.setHost(host);
-                device.setDeviceType(DeviceType.IOS);
+                device.setOsType(OsType.IOS);
                 device.setName(it.getName());
+                device.setDeviceType(it.getType());
                 return device;
             }
         ).collect(Collectors.toList());
@@ -145,7 +146,7 @@ public class IdbManager implements Manager {
         device.setName(json.get("name").asText());
         device.setSerial(json.get("udid").asText());
         device.setState(json.get("state").asText());
-        device.setType(IOSDeviceType.valueOf(json.get("type").asText().toUpperCase()));
+        device.setType(DeviceType.valueOf(json.get("type").asText().toUpperCase()));
         device.setIosVersion(json.get("os_version").asText());
         device.setArchitecture(json.get("architecture").asText());
         return device;
@@ -157,7 +158,7 @@ public class IdbManager implements Manager {
         device.setName(json.get("name").asText());
         device.setSerial(json.get("udid").asText());
         device.setState(json.get("state").asText());
-        device.setType(IOSDeviceType.valueOf(json.get("target_type").asText().toUpperCase()));
+        device.setType(DeviceType.valueOf(json.get("target_type").asText().toUpperCase()));
         device.setIosVersion(json.get("os_version").asText());
         device.setArchitecture(json.get("architecture").asText());
         return device;
@@ -329,6 +330,7 @@ public class IdbManager implements Manager {
     }
 
     public List<DeviceDirectoryElement> getListFiles(Device device, String path, IOSPackageType iosPackageType) {
+        UUID processUuid = UUID.randomUUID();
         List<DeviceDirectoryElement> list = new ArrayList<>();
         List<String> cmd = new ArrayList<>(listOfFilesCmd);
         cmd.addAll(
@@ -357,7 +359,15 @@ public class IdbManager implements Manager {
                 list.add(element);
             }
             int exitCode = p.waitFor();
-            System.out.println("\nExited with error code : " + exitCode);
+            log.info(
+                String.format(
+                    "[%s] Get list files process for '%s' path and '%s' package finished with exit code %s",
+                    processUuid,
+                    path,
+                    iosPackageType.name(),
+                    exitCode
+                )
+            );
         } catch (IOException|InterruptedException e) {
             e.printStackTrace();
         } finally {
@@ -373,6 +383,7 @@ public class IdbManager implements Manager {
         String destination,
         AfterDownloadAction action
     ) {
+        UUID processUuid = UUID.randomUUID();
         File file = new File(destination + File.separator + deviceDirectoryElement.name);
         List<String> cmd = new ArrayList<>(pullFileCmd);
         String parentPath = deviceDirectoryElement.path.equals("") ? "" : deviceDirectoryElement.path + "/";
@@ -386,17 +397,39 @@ public class IdbManager implements Manager {
                 file.getAbsolutePath()
             )
         );
+        log.info(
+            String.format(
+                "[%s] Pull file/folder %s process started", processUuid, file.getName()
+            )
+        );
         ProcessBuilder pB = new ProcessBuilder(cmd);
         pB.directory(directory);
         Process p = null;
         try {
+            log.info(
+                String.format(
+                    "[%s] Executing '%s'", processUuid, cmd
+                )
+            );
             p = pB.start();
+            BufferedReader readOutput =
+                new BufferedReader(new InputStreamReader(p.getErrorStream()));
+
+            String outputCommandLine;
+            StringBuilder errorText = new StringBuilder();
+            while ((outputCommandLine = readOutput.readLine()) != null) {
+                errorText.append(outputCommandLine);
+            }
             int exitCode = p.waitFor();
-            System.out.println("\nExited with error code : " + exitCode);
-            IOSDevice iosDevice = new IOSDevice();
-            iosDevice.setSerial(device.getSerial());
-            getCompanionInfoBySerial(iosDevice);
+            log.info(
+                String.format("[%s] Process finished with exit code %s and message '%s'", processUuid, exitCode, errorText)
+            );
             file = action.prepareFile(file);
+            log.info(
+                String.format(
+                    "[%s] Pull file/folder %s process finished", processUuid, file.getName()
+                )
+            );
         } catch (IOException|InterruptedException e) {
             e.printStackTrace();
         } finally {
@@ -414,7 +447,7 @@ public class IdbManager implements Manager {
             deviceDirectoryElement,
             iosPackageType,
             destination,
-            (file) -> getDeviceInfo(device).getType().equals(IOSDeviceType.SIMULATOR)
+            (file) -> device.getDeviceType().equals(DeviceType.SIMULATOR)
                 ? new File(file, deviceDirectoryElement.name)
                 : file
         );

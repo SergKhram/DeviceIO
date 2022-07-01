@@ -24,7 +24,7 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.provider.hierarchy.HierarchicalDataProvider;
 import com.vaadin.flow.shared.Registration;
 import com.vaadin.flow.theme.lumo.Lumo;
-import io.github.sergkhram.data.enums.DeviceType;
+import io.github.sergkhram.data.enums.OsType;
 import io.github.sergkhram.data.enums.IOSPackageType;
 import io.github.sergkhram.data.providers.IOSDeviceDirectoriesDataProvider;
 import io.github.sergkhram.managers.Manager;
@@ -100,12 +100,17 @@ public final class DeviceForm extends FormLayout {
         closeButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
         downloadDialog.getHeader().add(closeButton);
         downloadDialog.getFooter().add(cancel);
+        downloadDialog.addDialogCloseActionListener(
+            click -> closeDialogAction()
+        );
     }
 
     private void closeDialogAction() {
         downloadDialog.close();
-        downloadDialog.getFooter().remove(anchorElement);
-        anchorElement = null;
+        if(anchorElement != null) {
+            downloadDialog.getFooter().remove(anchorElement);
+            anchorElement = null;
+        }
         setDialogText();
         fireEvent(new DeleteFilesEvent(this, device, currentFile));
     }
@@ -204,7 +209,7 @@ public final class DeviceForm extends FormLayout {
 
     public void initDeviceExplorer(List<Manager> managers) {
         if(device.getIsActive()) {
-            dataProvider = device.getDeviceType().equals(DeviceType.ANDROID)
+            dataProvider = device.getOsType().equals(OsType.ANDROID)
                 ? new AndroidDeviceDirectoriesDataProvider(
                     device,
                     getManagerByType(managers, AdbManager.class)

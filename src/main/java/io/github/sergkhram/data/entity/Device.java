@@ -2,6 +2,7 @@ package io.github.sergkhram.data.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.github.sergkhram.data.enums.DeviceType;
+import io.github.sergkhram.data.enums.OsType;
 import lombok.EqualsAndHashCode;
 
 import javax.persistence.*;
@@ -20,12 +21,14 @@ public class Device extends AbstractEntity {
     @NotNull
     @JsonIgnoreProperties({"devices"})
     private Host host;
-    @Column(name = "deviceType")
-    private DeviceType deviceType;
+    @Column(name = "osType")
+    private OsType osType;
     @Column(name = "state")
     private String state;
     @Column(name = "name")
     private String name;
+    @Column(name = "deviceType")
+    private DeviceType deviceType;
 
     public void setSerial(String serial) {
         this.serial = serial;
@@ -59,12 +62,12 @@ public class Device extends AbstractEntity {
         return state;
     }
 
-    public DeviceType getDeviceType() {
-        return deviceType;
+    public OsType getOsType() {
+        return osType;
     }
 
-    public void setDeviceType(DeviceType deviceType) {
-        this.deviceType = deviceType;
+    public void setOsType(OsType osType) {
+        this.osType = osType;
     }
 
     public String getName() {
@@ -73,5 +76,13 @@ public class Device extends AbstractEntity {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public DeviceType getDeviceType() {
+        return deviceType;
+    }
+
+    public void setDeviceType(DeviceType deviceType) {
+        this.deviceType = deviceType;
     }
 }

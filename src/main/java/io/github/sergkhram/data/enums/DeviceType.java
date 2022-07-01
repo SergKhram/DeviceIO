@@ -1,5 +1,11 @@
 package io.github.sergkhram.data.enums;
 
 public enum DeviceType {
-    ANDROID, IOS
+    DEVICE("device"),
+    SIMULATOR("simulator");
+
+    public String value;
+    DeviceType(String value) {
+        this.value = value;
+    }
 }

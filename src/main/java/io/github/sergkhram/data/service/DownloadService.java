@@ -1,7 +1,7 @@
 package io.github.sergkhram.data.service;
 
 import com.vaadin.flow.server.StreamResource;
-import io.github.sergkhram.data.enums.DeviceType;
+import io.github.sergkhram.data.enums.OsType;
 import io.github.sergkhram.managers.adb.AdbManager;
 import io.github.sergkhram.managers.idb.IdbManager;
 import io.github.sergkhram.views.list.forms.DeviceForm;
@@ -33,7 +33,7 @@ public class DownloadService {
     }
 
     public DownloadData downloadFile(DeviceForm.DownloadFileEvent downloadFileEvent) throws FileNotFoundException {
-        File file = downloadFileEvent.getDevice().getDeviceType().equals(DeviceType.ANDROID)
+        File file = downloadFileEvent.getDevice().getOsType().equals(OsType.ANDROID)
             ? adbManager.downloadFile(
                 downloadFileEvent.getDevice(),
                 downloadFileEvent.getDeviceDirectoryElement(),
@@ -53,7 +53,7 @@ public class DownloadService {
 
     public DownloadData downloadFolder(DeviceForm.DownloadFileEvent downloadFileEvent) throws IOException {
         DownloadData downloadData = new DownloadData();
-        File directory = downloadFileEvent.getDevice().getDeviceType().equals(DeviceType.ANDROID)
+        File directory = downloadFileEvent.getDevice().getOsType().equals(OsType.ANDROID)
             ? adbManager.downloadFolder(
                 downloadFileEvent.getDevice(),
                 downloadFileEvent.getDeviceDirectoryElement(),
