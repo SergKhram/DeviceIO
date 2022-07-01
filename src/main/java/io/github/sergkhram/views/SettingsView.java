@@ -27,7 +27,7 @@ import java.util.Objects;
 
 @org.springframework.stereotype.Component
 @Scope("prototype")
-@PageTitle("Settings | STUDIO18")
+@PageTitle("Settings | DeviceIO")
 @Route(value = "settings", layout = MainLayout.class)
 public final class SettingsView extends VerticalLayout {
     TextField androidHomePath = new TextField("ANDROID_HOME path");

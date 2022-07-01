@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 
 @org.springframework.stereotype.Component
 @Scope("prototype")
-@PageTitle("Hosts | STUDIO18")
+@PageTitle("Hosts | DeviceIO")
 @Route(value = "", layout = MainLayout.class)
 public final class HostsListView extends VerticalLayout {
     Grid<Host> grid = new Grid<>(Host.class);

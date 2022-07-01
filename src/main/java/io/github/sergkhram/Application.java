@@ -16,8 +16,8 @@ import org.springframework.boot.web.servlet.support.SpringBootServletInitializer
  *
  */
 @SpringBootApplication
-@Theme(value = "studio18")
-@PWA(name = "STUDIO18", shortName = "STUDIO18", offlineResources = {})
+@Theme(value = "deviceio")
+@PWA(name = "DeviceIO", shortName = "DeviceIO", offlineResources = {})
 @NpmPackage(value = "line-awesome", version = "1.3.0")
 public class Application extends SpringBootServletInitializer implements AppShellConfigurator {
 

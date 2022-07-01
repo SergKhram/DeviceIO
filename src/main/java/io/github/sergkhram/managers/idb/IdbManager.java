@@ -3,25 +3,25 @@ package io.github.sergkhram.managers.idb;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.github.sergkhram.data.entity.*;
 import io.github.sergkhram.data.enums.DeviceType;
+import io.github.sergkhram.data.enums.IOSDeviceType;
 import io.github.sergkhram.data.enums.IOSPackageType;
 import io.github.sergkhram.managers.Manager;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static io.github.sergkhram.data.converters.Converters.convertStringToJsonNode;
 import static io.github.sergkhram.utils.Const.LOCAL_HOST;
 
 @Service
+@Slf4j
 public class IdbManager implements Manager {
     private final File directory = new File(System.getProperty("user.home"));
     private final String idbCmdPrefix = "idb";
@@ -36,11 +36,14 @@ public class IdbManager implements Manager {
     @SneakyThrows
     @Override
     public List<Device> getListOfDevices(Host host) {
+        UUID processUuid = UUID.randomUUID();
         List<IOSDevice> iosDeviceList = new ArrayList();
+        log.info(String.format("[%s] Get list of devices process started", processUuid));
         ProcessBuilder pB = new ProcessBuilder(devicesListCmd);
         pB.directory(directory);
         Process p = null;
         try {
+            log.info(String.format("[%s] Executing '%s'", processUuid, devicesListCmd));
             p = pB.start();
             BufferedReader readOutput =
                 new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -48,12 +51,13 @@ public class IdbManager implements Manager {
             String outputCommandLine;
 
             while ((outputCommandLine = readOutput.readLine()) != null) {
+                log.debug(String.format("[%s] Received device info:" + outputCommandLine, processUuid));
                 iosDeviceList.add(
                     parseToIOSDevice(outputCommandLine)
                 );
             }
             int exitCode = p.waitFor();
-            System.out.println("\nExited with error code : " + exitCode);
+            log.info(String.format("[%s] Get list of devices process finished with exit code: " + exitCode, processUuid));
         } catch (IOException|InterruptedException e) {
             e.printStackTrace();
         } finally {
@@ -93,15 +97,26 @@ public class IdbManager implements Manager {
 
     @Override
     public void rebootDevice(Device device) {
+        UUID processUuid = UUID.randomUUID();
         List<String> cmd = new ArrayList<>(bootDeviceCmd);
         cmd.add(device.getSerial());
+        log.info(
+            String.format("[%s] Reboot/boot device %s process started", processUuid, device.getSerial())
+        );
         ProcessBuilder pB = new ProcessBuilder(cmd);
         pB.directory(directory);
         Process p = null;
         try {
+            log.info(String.format("[%s] Executing '%s'", processUuid, cmd));
             p = pB.start();
             int exitCode = p.waitFor();
-            System.out.println("\nExited with error code : " + exitCode);
+            log.info(
+                String.format(
+                    "[%s] Reboot/boot device %s process finished with exit code " + exitCode,
+                    processUuid,
+                    device.getSerial()
+                )
+            );
         } catch (IOException|InterruptedException e) {
             e.printStackTrace();
         } finally {
@@ -110,7 +125,7 @@ public class IdbManager implements Manager {
     }
 
     private List<Device> convert(List<IOSDevice> iosDevices, Host host) {
-        return iosDevices.stream().map(
+        return iosDevices.parallelStream().map(
             it -> {
                 Device device = new Device();
                 device.setSerial(it.getSerial());
@@ -130,7 +145,19 @@ public class IdbManager implements Manager {
         device.setName(json.get("name").asText());
         device.setSerial(json.get("udid").asText());
         device.setState(json.get("state").asText());
-        device.setType(json.get("type").asText());
+        device.setType(IOSDeviceType.valueOf(json.get("type").asText().toUpperCase()));
+        device.setIosVersion(json.get("os_version").asText());
+        device.setArchitecture(json.get("architecture").asText());
+        return device;
+    }
+
+    private IOSDevice parseDescribeToIOSDevice(String output) {
+        JsonNode json = convertStringToJsonNode(output);
+        IOSDevice device = new IOSDevice();
+        device.setName(json.get("name").asText());
+        device.setSerial(json.get("udid").asText());
+        device.setState(json.get("state").asText());
+        device.setType(IOSDeviceType.valueOf(json.get("target_type").asText().toUpperCase()));
         device.setIosVersion(json.get("os_version").asText());
         device.setArchitecture(json.get("architecture").asText());
         return device;
@@ -139,15 +166,26 @@ public class IdbManager implements Manager {
     @Override
     public void connectToHost(String host, Integer port) {
         if(!host.equals(LOCAL_HOST)) {
+            UUID processUuid = UUID.randomUUID();
             List<String> cmd = new ArrayList<>(remoteHostConnectCmd);
             cmd.addAll(List.of(host, port.toString()));
+            log.info(
+                String.format(
+                    "[%s] Connecting to host %s process started", processUuid, host + port
+                )
+            );
             ProcessBuilder pB = new ProcessBuilder(cmd);
             pB.directory(directory);
             Process p = null;
             try {
+                log.info(String.format("[%s] Executing '%s'", processUuid, cmd));
                 p = pB.start();
                 int exitCode = p.waitFor();
-                System.out.println("\nExited with error code : " + exitCode);
+                log.info(
+                    String.format(
+                        "[%s] Connecting to host %s process finished with exit code " + exitCode, processUuid
+                    )
+                );
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
             } finally {
@@ -159,15 +197,26 @@ public class IdbManager implements Manager {
     @Override
     public void disconnectHost(String host, Integer port) {
         if(!host.equals(LOCAL_HOST)) {
+            UUID processUuid = UUID.randomUUID();
             List<String> cmd = new ArrayList<>(remoteHostDisconnectCmd);
             cmd.addAll(List.of(host, port.toString()));
+            log.info(
+                String.format(
+                    "[%s] Disconnecting host %s process started", processUuid, host + port
+                )
+            );
             ProcessBuilder pB = new ProcessBuilder(cmd);
             pB.directory(directory);
             Process p = null;
             try {
+                log.info(String.format("[%s] Executing '%s'", processUuid, cmd));
                 p = pB.start();
                 int exitCode = p.waitFor();
-                System.out.println("\nExited with error code : " + exitCode);
+                log.info(
+                    String.format(
+                        "[%s] Disconnecting host %s process finished with exit code " + exitCode, processUuid
+                    )
+                );
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
             } finally {
@@ -191,7 +240,7 @@ public class IdbManager implements Manager {
             String outputCommandLine;
 
             while ((outputCommandLine = readOutput.readLine()) != null) {
-                iosDevice = parseToIOSDevice(outputCommandLine);
+                iosDevice = parseDescribeToIOSDevice(outputCommandLine);
             }
             int exitCode = p.waitFor();
             System.out.println("\nExited with error code : " + exitCode);
@@ -207,10 +256,16 @@ public class IdbManager implements Manager {
         List<String> cmd = new ArrayList<>(deviceInfoCmd);
         cmd.add(device.getSerial());
         ProcessBuilder pB = new ProcessBuilder(cmd);
+        log.info(
+            String.format(
+                "Receiving %s device companion info started", device.getSerial()
+            )
+        );
         pB.directory(directory);
         Process p = null;
         IOSCompanionInfo iosCompanionInfo = null;
         try {
+            log.info(String.format("Executing '%s'", cmd));
             p = pB.start();
             BufferedReader readOutput =
                 new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -221,7 +276,11 @@ public class IdbManager implements Manager {
                 iosCompanionInfo = parseToCompanionInfo(outputCommandLine);
             }
             int exitCode = p.waitFor();
-            System.out.println("\nExited with error code : " + exitCode);
+            log.info(
+                String.format(
+                    "Receiving %s device companion info finished with exit code " + exitCode, device.getSerial()
+                )
+            );
         } catch (IOException|InterruptedException e) {
             e.printStackTrace();
         } finally {
@@ -334,6 +393,9 @@ public class IdbManager implements Manager {
             p = pB.start();
             int exitCode = p.waitFor();
             System.out.println("\nExited with error code : " + exitCode);
+            IOSDevice iosDevice = new IOSDevice();
+            iosDevice.setSerial(device.getSerial());
+            getCompanionInfoBySerial(iosDevice);
             file = action.prepareFile(file);
         } catch (IOException|InterruptedException e) {
             e.printStackTrace();
@@ -352,7 +414,9 @@ public class IdbManager implements Manager {
             deviceDirectoryElement,
             iosPackageType,
             destination,
-            (file) -> new File(file, deviceDirectoryElement.name)
+            (file) -> getDeviceInfo(device).getType().equals(IOSDeviceType.SIMULATOR)
+                ? new File(file, deviceDirectoryElement.name)
+                : file
         );
     }
 

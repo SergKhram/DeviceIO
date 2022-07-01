@@ -20,25 +20,29 @@ import com.malinskiy.adam.request.sync.PullRequest
 import com.malinskiy.adam.request.sync.v1.ListFileRequest
 import com.malinskiy.adam.request.sync.v1.PullFileRequest
 import io.github.sergkhram.data.entity.DeviceDirectoryElement
-import io.github.sergkhram.data.enums.DeviceType
 import io.github.sergkhram.data.entity.Host
+import io.github.sergkhram.data.enums.DeviceType
 import io.github.sergkhram.managers.Manager
 import io.github.sergkhram.utils.Const
 import io.github.sergkhram.utils.Const.LOCAL_HOST
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.ReceiveChannel
+import lombok.extern.slf4j.Slf4j
 import org.springframework.stereotype.Service
 import java.io.File
 import java.io.IOException
+import java.util.*
 import javax.annotation.PreDestroy
 import javax.imageio.ImageIO
 import io.github.sergkhram.data.entity.Device as DeviceEntity
 
 @Service
+@Slf4j
 class AdbManager: Manager {
     private var adb: AndroidDebugBridgeClient? = null
     private val DEFAULT_PORT: Int = 5555
     private val supportedFeatures = listOf(Feature.STAT_V2, Feature.LS_V2, Feature.SENDRECV_V2)
+    companion object : Logger()
 
     init {
         initAdbClient()
@@ -48,14 +52,14 @@ class AdbManager: Manager {
     @PreDestroy
     fun stopAdb() {
         runBlocking {
-            println("Stopping adb")
+            logger.info("Stopping adb")
             StopAdbInteractor().execute()
         }
     }
 
     fun startAdb(androidHomePath: String? = null) {
         runBlocking {
-            println("Starting adb")
+            logger.info("Starting adb")
             androidHomePath?.let {
                 StartAdbInteractor().execute(androidHome = File(androidHomePath))
             } ?: StartAdbInteractor().execute()
@@ -76,7 +80,10 @@ class AdbManager: Manager {
             runBlocking {
                 if(host != LOCAL_HOST) {
                     withTimeoutOrNull(Const.TIMEOUT.toLong()) {
+                        val processUuid = UUID.randomUUID()
+                        logger.info("[$processUuid] Connecting to host ${host + port} process started")
                         adb?.execute(ConnectDeviceRequest(host, port ?: DEFAULT_PORT))
+                        logger.info("[$processUuid] Connecting to host ${host + port} process finished")
                     }
                 }
             }
@@ -88,7 +95,10 @@ class AdbManager: Manager {
             runBlocking {
                 if(host != LOCAL_HOST) {
                     withTimeoutOrNull(Const.TIMEOUT.toLong()) {
+                        val processUuid = UUID.randomUUID()
+                        logger.info("[$processUuid] Disconnecting host ${host + port} process started")
                         adb?.execute(DisconnectDeviceRequest(host, port ?: DEFAULT_PORT))
+                        logger.info("[$processUuid] Disconnecting host ${host + port} process finished")
                     }
                 }
             }
@@ -99,7 +109,11 @@ class AdbManager: Manager {
         lateinit var listOfDevices: List<Device>
         runBlocking {
             withTimeoutOrNull(Const.TIMEOUT.toLong()) {
+                val processUuid = UUID.randomUUID()
+                logger.info("[$processUuid] Get list of devices process started")
                 val devices: List<Device>? = adb?.execute(request = ListDevicesRequest())
+                logger.info("[$processUuid] Get list of devices process finished")
+
                 listOfDevices = host?.let { host ->
                     if (!host.address.equals(LOCAL_HOST)) {
                         devices?.filter {
@@ -127,6 +141,7 @@ class AdbManager: Manager {
                     this.state = it.state.name
                     this.deviceType = DeviceType.ANDROID
                     var name: String? = null
+                    logger.info("Receiving ${it.serial} device info started")
                     adb?.execute(
                         request = GetPropRequest(),
                         serial = it.serial
@@ -138,6 +153,7 @@ class AdbManager: Manager {
                             name = it["ro.kernel.qemu.avd_name"]
                         }
                     }
+                    logger.info("Receiving ${it.serial} device info finished")
                     this.name = name.orEmpty()
                 }
             }
@@ -147,7 +163,10 @@ class AdbManager: Manager {
     override fun rebootDevice(device: DeviceEntity) {
         runBlocking {
             withTimeoutOrNull(Const.TIMEOUT.toLong()) {
+                val processUuid = UUID.randomUUID()
+                logger.info("[$processUuid] Reboot/boot device ${device.serial} process started")
                 adb?.execute(request = RebootRequest(), serial = device.serial)
+                logger.info("[$processUuid] Reboot/boot device ${device.serial} process finished")
             }
         }
     }
@@ -156,7 +175,9 @@ class AdbManager: Manager {
         var response: ShellCommandResult?
         runBlocking {
             response = withTimeoutOrNull(Const.TIMEOUT.toLong()) {
-                 adb?.execute(
+                val processUuid = UUID.randomUUID()
+                logger.info("[$processUuid] Executing shell request '$cmd' for device ${device.serial}")
+                return@withTimeoutOrNull adb?.execute(
                     request = ShellCommandRequest(cmd),
                     serial = device.serial
                 )
@@ -177,12 +198,15 @@ class AdbManager: Manager {
         val devicesMap = mutableMapOf<String, String>()
         runBlocking {
             withTimeoutOrNull(Const.TIMEOUT.toLong()) {
+                val processUuid = UUID.randomUUID()
+                logger.info("[$processUuid] Get devices states process started")
                 val channel = getDeviceMonitoringChannel()
                 val devices = channel?.receive()
                 devices?.forEach {
                     devicesMap[it.serial] = it.state.name
                 }
                 channel?.cancel()
+                logger.info("[$processUuid] Get devices states process finished")
             }
         }
         return devicesMap
@@ -208,6 +232,8 @@ class AdbManager: Manager {
         val list: MutableList<DeviceDirectoryElement> = mutableListOf()
         runBlocking {
             withTimeoutOrNull(Const.TIMEOUT.toLong()) {
+                val processUuid = UUID.randomUUID()
+                logger.debug("[$processUuid] Get list of files process for path '$path' of device ${device.serial} started")
                 list.addAll(
                     adb?.execute(
                         ListFileRequest(path),
@@ -223,6 +249,7 @@ class AdbManager: Manager {
                         }
                     } ?: emptyList()
                 )
+                logger.debug("[$processUuid] Get list of files process for path '$path' of device ${device.serial} finished")
             }
         }
         return list
@@ -232,7 +259,12 @@ class AdbManager: Manager {
         val file = File(destination + File.separator + deviceDirectoryElement.name)
         runBlocking {
             withTimeoutOrNull(30000) {
+                val processUuid = UUID.randomUUID()
                 val parentPath = if(deviceDirectoryElement.path.equals("/")) "/" else deviceDirectoryElement.path + "/"
+                logger.info(
+                    "[$processUuid] Download '${parentPath + deviceDirectoryElement.name }' file process for " +
+                            "device ${device.serial} started"
+                )
                 val pullDevicesRequest = PullFileRequest(
                     parentPath + deviceDirectoryElement.name,
                     file,
@@ -244,8 +276,12 @@ class AdbManager: Manager {
                 )
 
                 for (percentageDouble in channel) {
-                    println("Downloading ${file.name}==========${percentageDouble * 100}")
+                    logger.info("[$processUuid] Downloading ${file.name}==========${percentageDouble * 100}")
                 }
+                logger.info(
+                    "[$processUuid] Download '${parentPath + deviceDirectoryElement.name }' file process for " +
+                            "device ${device.serial} finished"
+                )
             }
         }
         return file
@@ -255,7 +291,12 @@ class AdbManager: Manager {
         val file = File(destination + File.separator + deviceDirectoryElement.name)
         runBlocking {
             withTimeoutOrNull(30000) {
+                val processUuid = UUID.randomUUID()
                 val parentPath = if(deviceDirectoryElement.path.equals("/")) "/" else deviceDirectoryElement.path + "/"
+                logger.info(
+                    "[$processUuid] Download '${parentPath + deviceDirectoryElement.name }' folder process for " +
+                            "device ${device.serial} started"
+                )
                 val pullRequest = PullRequest(
                     parentPath + deviceDirectoryElement.name,
                     file,
@@ -265,6 +306,10 @@ class AdbManager: Manager {
                 adb?.let {
                     pullRequest.execute(it, device.serial)
                 }
+                logger.info(
+                    "[$processUuid] Download '${parentPath + deviceDirectoryElement.name }' folder process for " +
+                            "device ${device.serial} finished"
+                )
             }
         }
         return file

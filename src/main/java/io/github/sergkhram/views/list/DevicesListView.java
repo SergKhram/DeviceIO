@@ -41,7 +41,7 @@ import static io.github.sergkhram.utils.Utils.getManagerByType;
 
 @org.springframework.stereotype.Component
 @Scope("prototype")
-@PageTitle("Devices | STUDIO18")
+@PageTitle("Devices | DeviceIO")
 @Route(value = "devices", layout = MainLayout.class)
 public final class DevicesListView extends VerticalLayout {
     ComboBox<Host> hosts = new ComboBox<>();
