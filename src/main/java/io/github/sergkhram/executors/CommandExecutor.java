@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class CommandExecutor {
     private final ProcessBuilder pB;
@@ -17,8 +18,8 @@ public class CommandExecutor {
     }
 
     public void execute(
-        LogAction logAtStart,
-        LogAction logAtFinish
+        Consumer<Integer> logAtStart,
+        Consumer<Integer> logAtFinish
     ) {
         execute(
             logAtStart,
@@ -29,45 +30,35 @@ public class CommandExecutor {
     }
 
     public void execute(
-        LogAction logAtStart,
-        ProcessStreamAction inputStreamAction,
-        ProcessStreamAction errorStreamAction,
-        LogAction logAtFinish
+        Consumer<Integer> logAtStart,
+        Consumer<String> inputStreamAction,
+        Consumer<String> errorStreamAction,
+        Consumer<Integer> logAtFinish
     ) {
         try {
-            logAtStart.print(null);
+            logAtStart.accept(null);
             p = pB.start();
 
             BufferedReader readOutput =
                 new BufferedReader(new InputStreamReader(p.getInputStream()));
             String outputCommandLine;
             while ((outputCommandLine = readOutput.readLine()) != null) {
-                inputStreamAction.apply(outputCommandLine);
+                inputStreamAction.accept(outputCommandLine);
             }
 
             BufferedReader errorOutput =
                 new BufferedReader(new InputStreamReader(p.getErrorStream()));
             String errorCommandLine;
             while ((errorCommandLine = errorOutput.readLine()) != null) {
-                errorStreamAction.apply(errorCommandLine);
+                errorStreamAction.accept(errorCommandLine);
             }
 
             int exitCode = p.waitFor();
-            logAtFinish.print(exitCode);
+            logAtFinish.accept(exitCode);
         } catch (IOException |InterruptedException e) {
             e.printStackTrace();
         } finally {
             if(p != null) p.destroy();
         }
-    }
-
-    @FunctionalInterface
-    public interface LogAction {
-        void print(Integer code);
-    }
-
-    @FunctionalInterface
-    public interface ProcessStreamAction {
-        void apply(String data);
     }
 }
