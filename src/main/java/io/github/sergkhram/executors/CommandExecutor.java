@@ -18,6 +18,18 @@ public class CommandExecutor {
 
     public void execute(
         LogAction logAtStart,
+        LogAction logAtFinish
+    ) {
+        execute(
+            logAtStart,
+            (outputCmdLine) -> {},
+            (errorCmdLine) -> {},
+            logAtFinish
+        );
+    }
+
+    public void execute(
+        LogAction logAtStart,
         ProcessStreamAction inputStreamAction,
         ProcessStreamAction errorStreamAction,
         LogAction logAtFinish

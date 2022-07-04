@@ -11,11 +11,9 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
@@ -25,7 +23,6 @@ import static io.github.sergkhram.utils.Const.LOCAL_HOST;
 @Service
 @Slf4j
 public class IdbManager implements Manager {
-    private final File directory = new File(System.getProperty("user.home"));
     private final String idbCmdPrefix = "idb";
     private final List<String> devicesListCmd = List.of(idbCmdPrefix, "list-targets", "--json");
     private final List<String> bootDeviceCmd = List.of(idbCmdPrefix, "boot");
@@ -100,8 +97,6 @@ public class IdbManager implements Manager {
         CommandExecutor cmdExecutor = new CommandExecutor(cmd);
         cmdExecutor.execute(
             (code) -> log.info(String.format("[%s] Executing '%s'", processUuid, cmd)),
-            (outputCmdLine) -> {},
-            (errorCmdLine) -> {},
             (code) -> log.info(
                 String.format(
                     "[%s] Reboot/boot device %s process finished with exit code " + code,
@@ -166,8 +161,6 @@ public class IdbManager implements Manager {
             CommandExecutor cmdExecutor = new CommandExecutor(cmd);
             cmdExecutor.execute(
                 (code) -> log.info(String.format("[%s] Executing '%s'", processUuid, cmd)),
-                (outputCmdLine) -> {},
-                (errorCmdLine) -> {},
                 (code) -> log.info(
                     String.format(
                         "[%s] Connecting to host %s process finished with exit code " + code, processUuid
@@ -191,8 +184,6 @@ public class IdbManager implements Manager {
             CommandExecutor cmdExecutor = new CommandExecutor(cmd);
             cmdExecutor.execute(
                 (code) -> log.info(String.format("[%s] Executing '%s'", processUuid, cmd)),
-                (outputCmdLine) -> {},
-                (errorCmdLine) -> {},
                 (code) -> log.info(
                     String.format(
                         "[%s] Disconnecting host %s process finished with exit code " + code, processUuid
@@ -205,18 +196,18 @@ public class IdbManager implements Manager {
     public IOSDevice getDeviceInfo(Device device) {
         List<String> cmd = new ArrayList<>(deviceInfoCmd);
         cmd.add(device.getSerial());
-        List<IOSDevice> iosDevices = new ArrayList<>();
+        AtomicReference<IOSDevice> iosDevice = new AtomicReference<>(new IOSDevice());
 
         CommandExecutor cmdExecutor = new CommandExecutor(cmd);
         cmdExecutor.execute(
             (code) -> log.info(String.format("Executing '%s'", cmd)),
             (outputCmdLine) -> {
-                iosDevices.add(parseDescribeToIOSDevice(outputCmdLine));
+                iosDevice.set(parseDescribeToIOSDevice(outputCmdLine));
             },
             (errorCmdLine) -> {},
             (code) -> log.info("Get device info process finished with exit code " + code)
         );
-        return iosDevices.get(0);
+        return iosDevice.get();
     }
 
     public IOSCompanionInfo getCompanionInfoBySerial(IOSDevice device) {
@@ -227,20 +218,20 @@ public class IdbManager implements Manager {
                 "Receiving %s device companion info started", device.getSerial()
             )
         );
-        List<IOSCompanionInfo> iosCompanionInfo = new ArrayList<>();
+        AtomicReference<IOSCompanionInfo> iosCompanionInfo = new AtomicReference<>(new IOSCompanionInfo());
 
         CommandExecutor cmdExecutor = new CommandExecutor(cmd);
         cmdExecutor.execute(
             (code) -> log.info(String.format("Executing '%s'", cmd)),
             (outputCmdLine) -> {
-                iosCompanionInfo.add(parseToCompanionInfo(outputCmdLine));
+                iosCompanionInfo.set(parseToCompanionInfo(outputCmdLine));
             },
             (errorCmdLine) -> {},
             (code) -> log.info(
                 String.format("Receiving %s device companion info finished with exit code " + code, device.getSerial())
             )
         );
-        return iosCompanionInfo.get(0);
+        return iosCompanionInfo.get();
     }
 
     private IOSCompanionInfo parseToCompanionInfo(String output) {
@@ -336,39 +327,27 @@ public class IdbManager implements Manager {
                 "[%s] Pull file/folder %s process started", processUuid, file.getName()
             )
         );
-        ProcessBuilder pB = new ProcessBuilder(cmd);
-        pB.directory(directory);
-        Process p = null;
-        try {
-            log.info(
-                String.format(
-                    "[%s] Executing '%s'", processUuid, cmd
-                )
-            );
-            p = pB.start();
-            BufferedReader readOutput =
-                new BufferedReader(new InputStreamReader(p.getErrorStream()));
-
-            String outputCommandLine;
-            StringBuilder errorText = new StringBuilder();
-            while ((outputCommandLine = readOutput.readLine()) != null) {
-                errorText.append(outputCommandLine);
+        StringBuilder errorText = new StringBuilder();
+        CommandExecutor cmdExecutor = new CommandExecutor(cmd);
+        File finalFile = file;
+        cmdExecutor.execute(
+            (code) -> log.info(String.format("[%s] Executing '%s'", processUuid, cmd)),
+            (outputCmdLine) -> {},
+            errorText::append,
+            (code) -> {
+                log.info(
+                    String.format(
+                        "[%s] Process finished with exit code %s and message '%s'", processUuid, code, errorText
+                    )
+                );
+                log.info(
+                    String.format(
+                        "[%s] Pull file/folder %s process finished", processUuid, finalFile.getName()
+                    )
+                );
             }
-            int exitCode = p.waitFor();
-            log.info(
-                String.format("[%s] Process finished with exit code %s and message '%s'", processUuid, exitCode, errorText)
-            );
-            file = action.apply(file);
-            log.info(
-                String.format(
-                    "[%s] Pull file/folder %s process finished", processUuid, file.getName()
-                )
-            );
-        } catch (IOException|InterruptedException e) {
-            e.printStackTrace();
-        } finally {
-            if(p != null) p.destroy();
-        }
+        );
+        file = action.apply(file);
         return file;
     }
 
