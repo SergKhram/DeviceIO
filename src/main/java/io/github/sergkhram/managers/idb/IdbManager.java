@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 import static io.github.sergkhram.data.converters.Converters.convertStringToJsonNode;
@@ -381,7 +382,7 @@ public class IdbManager implements Manager {
         DeviceDirectoryElement deviceDirectoryElement,
         IOSPackageType iosPackageType,
         String destination,
-        AfterDownloadAction action
+        UnaryOperator<File> action
     ) {
         UUID processUuid = UUID.randomUUID();
         File file = new File(destination + File.separator + deviceDirectoryElement.name);
@@ -424,7 +425,7 @@ public class IdbManager implements Manager {
             log.info(
                 String.format("[%s] Process finished with exit code %s and message '%s'", processUuid, exitCode, errorText)
             );
-            file = action.prepareFile(file);
+            file = action.apply(file);
             log.info(
                 String.format(
                     "[%s] Pull file/folder %s process finished", processUuid, file.getName()
@@ -464,10 +465,5 @@ public class IdbManager implements Manager {
             destination,
             (file) -> file
         );
-    }
-
-    @FunctionalInterface
-    public interface AfterDownloadAction {
-        File prepareFile(File file);
     }
 }

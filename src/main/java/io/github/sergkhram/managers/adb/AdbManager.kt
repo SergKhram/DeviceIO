@@ -106,15 +106,14 @@ class AdbManager: Manager {
     }
 
     override fun getListOfDevices(host: Host?): List<DeviceEntity> {
-        lateinit var listOfDevices: List<Device>
-        runBlocking {
-            withTimeoutOrNull(Const.TIMEOUT.toLong()) {
+        return runBlocking {
+            return@runBlocking withTimeoutOrNull(Const.TIMEOUT.toLong()) {
                 val processUuid = UUID.randomUUID()
                 log.info("[$processUuid] Get list of devices process started")
                 val devices: List<Device>? = adb?.execute(request = ListDevicesRequest())
                 log.info("[$processUuid] Get list of devices process finished")
 
-                listOfDevices = host?.let { host ->
+                return@withTimeoutOrNull host?.let { host ->
                     if (!host.address.equals(LOCAL_HOST)) {
                         devices?.filter {
                             it.serial.contains(host.address)
@@ -125,9 +124,8 @@ class AdbManager: Manager {
                         }
                     }
                 } ?: devices ?: emptyList()
-            }
+            }?.convert(host) ?: emptyList()
         }
-        return listOfDevices.convert(host)
     }
 
     private fun List<Device>.convert(host: Host? = null): List<DeviceEntity> {
