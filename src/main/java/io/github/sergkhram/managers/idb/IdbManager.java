@@ -5,6 +5,7 @@ import io.github.sergkhram.data.entity.*;
 import io.github.sergkhram.data.enums.OsType;
 import io.github.sergkhram.data.enums.DeviceType;
 import io.github.sergkhram.data.enums.IOSPackageType;
+import io.github.sergkhram.executors.CommandExecutor;
 import io.github.sergkhram.managers.Manager;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -40,30 +41,21 @@ public class IdbManager implements Manager {
         UUID processUuid = UUID.randomUUID();
         List<IOSDevice> iosDeviceList = new ArrayList();
         log.info(String.format("[%s] Get list of devices process started", processUuid));
-        ProcessBuilder pB = new ProcessBuilder(devicesListCmd);
-        pB.directory(directory);
-        Process p = null;
-        try {
-            log.info(String.format("[%s] Executing '%s'", processUuid, devicesListCmd));
-            p = pB.start();
-            BufferedReader readOutput =
-                new BufferedReader(new InputStreamReader(p.getInputStream()));
 
-            String outputCommandLine;
-
-            while ((outputCommandLine = readOutput.readLine()) != null) {
-                log.debug(String.format("[%s] Received device info:" + outputCommandLine, processUuid));
+        CommandExecutor cmdExecutor = new CommandExecutor(devicesListCmd);
+        cmdExecutor.execute(
+            (code) -> log.info(String.format("[%s] Executing '%s'", processUuid, devicesListCmd)),
+            (outputCmdLine) -> {
+                log.debug(String.format("[%s] Received device info:" + outputCmdLine, processUuid));
                 iosDeviceList.add(
-                    parseToIOSDevice(outputCommandLine)
+                    parseToIOSDevice(outputCmdLine)
                 );
-            }
-            int exitCode = p.waitFor();
-            log.info(String.format("[%s] Get list of devices process finished with exit code: " + exitCode, processUuid));
-        } catch (IOException|InterruptedException e) {
-            e.printStackTrace();
-        } finally {
-            if(p != null) p.destroy();
-        }
+            },
+            (errorCmdLine) -> {},
+            (code) -> log.info(
+                String.format("[%s] Get list of devices process finished with exit code: " + code, processUuid)
+            )
+        );
         if (!host.getAddress().equals(LOCAL_HOST)) {
             return convert(
                 iosDeviceList
@@ -104,25 +96,20 @@ public class IdbManager implements Manager {
         log.info(
             String.format("[%s] Reboot/boot device %s process started", processUuid, device.getSerial())
         );
-        ProcessBuilder pB = new ProcessBuilder(cmd);
-        pB.directory(directory);
-        Process p = null;
-        try {
-            log.info(String.format("[%s] Executing '%s'", processUuid, cmd));
-            p = pB.start();
-            int exitCode = p.waitFor();
-            log.info(
+
+        CommandExecutor cmdExecutor = new CommandExecutor(cmd);
+        cmdExecutor.execute(
+            (code) -> log.info(String.format("[%s] Executing '%s'", processUuid, cmd)),
+            (outputCmdLine) -> {},
+            (errorCmdLine) -> {},
+            (code) -> log.info(
                 String.format(
-                    "[%s] Reboot/boot device %s process finished with exit code " + exitCode,
+                    "[%s] Reboot/boot device %s process finished with exit code " + code,
                     processUuid,
                     device.getSerial()
                 )
-            );
-        } catch (IOException|InterruptedException e) {
-            e.printStackTrace();
-        } finally {
-            if(p != null) p.destroy();
-        }
+            )
+        );
     }
 
     private List<Device> convert(List<IOSDevice> iosDevices, Host host) {
@@ -176,23 +163,17 @@ public class IdbManager implements Manager {
                     "[%s] Connecting to host %s process started", processUuid, host + port
                 )
             );
-            ProcessBuilder pB = new ProcessBuilder(cmd);
-            pB.directory(directory);
-            Process p = null;
-            try {
-                log.info(String.format("[%s] Executing '%s'", processUuid, cmd));
-                p = pB.start();
-                int exitCode = p.waitFor();
-                log.info(
+            CommandExecutor cmdExecutor = new CommandExecutor(cmd);
+            cmdExecutor.execute(
+                (code) -> log.info(String.format("[%s] Executing '%s'", processUuid, cmd)),
+                (outputCmdLine) -> {},
+                (errorCmdLine) -> {},
+                (code) -> log.info(
                     String.format(
-                        "[%s] Connecting to host %s process finished with exit code " + exitCode, processUuid
+                        "[%s] Connecting to host %s process finished with exit code " + code, processUuid
                     )
-                );
-            } catch (IOException | InterruptedException e) {
-                e.printStackTrace();
-            } finally {
-                if (p != null) p.destroy();
-            }
+                )
+            );
         }
     }
 
@@ -207,88 +188,59 @@ public class IdbManager implements Manager {
                     "[%s] Disconnecting host %s process started", processUuid, host + port
                 )
             );
-            ProcessBuilder pB = new ProcessBuilder(cmd);
-            pB.directory(directory);
-            Process p = null;
-            try {
-                log.info(String.format("[%s] Executing '%s'", processUuid, cmd));
-                p = pB.start();
-                int exitCode = p.waitFor();
-                log.info(
+            CommandExecutor cmdExecutor = new CommandExecutor(cmd);
+            cmdExecutor.execute(
+                (code) -> log.info(String.format("[%s] Executing '%s'", processUuid, cmd)),
+                (outputCmdLine) -> {},
+                (errorCmdLine) -> {},
+                (code) -> log.info(
                     String.format(
-                        "[%s] Disconnecting host %s process finished with exit code " + exitCode, processUuid
+                        "[%s] Disconnecting host %s process finished with exit code " + code, processUuid
                     )
-                );
-            } catch (IOException | InterruptedException e) {
-                e.printStackTrace();
-            } finally {
-                if (p != null) p.destroy();
-            }
+                )
+            );
         }
     }
 
     public IOSDevice getDeviceInfo(Device device) {
         List<String> cmd = new ArrayList<>(deviceInfoCmd);
         cmd.add(device.getSerial());
-        ProcessBuilder pB = new ProcessBuilder(cmd);
-        pB.directory(directory);
-        Process p = null;
-        IOSDevice iosDevice = null;
-        try {
-            p = pB.start();
-            BufferedReader readOutput =
-                new BufferedReader(new InputStreamReader(p.getInputStream()));
+        List<IOSDevice> iosDevices = new ArrayList<>();
 
-            String outputCommandLine;
-
-            while ((outputCommandLine = readOutput.readLine()) != null) {
-                iosDevice = parseDescribeToIOSDevice(outputCommandLine);
-            }
-            int exitCode = p.waitFor();
-            System.out.println("\nExited with error code : " + exitCode);
-        } catch (IOException|InterruptedException e) {
-            e.printStackTrace();
-        } finally {
-            if(p != null) p.destroy();
-        }
-        return iosDevice;
+        CommandExecutor cmdExecutor = new CommandExecutor(cmd);
+        cmdExecutor.execute(
+            (code) -> log.info(String.format("Executing '%s'", cmd)),
+            (outputCmdLine) -> {
+                iosDevices.add(parseDescribeToIOSDevice(outputCmdLine));
+            },
+            (errorCmdLine) -> {},
+            (code) -> log.info("Get device info process finished with exit code " + code)
+        );
+        return iosDevices.get(0);
     }
 
     public IOSCompanionInfo getCompanionInfoBySerial(IOSDevice device) {
         List<String> cmd = new ArrayList<>(deviceInfoCmd);
         cmd.add(device.getSerial());
-        ProcessBuilder pB = new ProcessBuilder(cmd);
         log.info(
             String.format(
                 "Receiving %s device companion info started", device.getSerial()
             )
         );
-        pB.directory(directory);
-        Process p = null;
-        IOSCompanionInfo iosCompanionInfo = null;
-        try {
-            log.info(String.format("Executing '%s'", cmd));
-            p = pB.start();
-            BufferedReader readOutput =
-                new BufferedReader(new InputStreamReader(p.getInputStream()));
+        List<IOSCompanionInfo> iosCompanionInfo = new ArrayList<>();
 
-            String outputCommandLine;
-
-            while ((outputCommandLine = readOutput.readLine()) != null) {
-                iosCompanionInfo = parseToCompanionInfo(outputCommandLine);
-            }
-            int exitCode = p.waitFor();
-            log.info(
-                String.format(
-                    "Receiving %s device companion info finished with exit code " + exitCode, device.getSerial()
-                )
-            );
-        } catch (IOException|InterruptedException e) {
-            e.printStackTrace();
-        } finally {
-            if(p != null) p.destroy();
-        }
-        return iosCompanionInfo;
+        CommandExecutor cmdExecutor = new CommandExecutor(cmd);
+        cmdExecutor.execute(
+            (code) -> log.info(String.format("Executing '%s'", cmd)),
+            (outputCmdLine) -> {
+                iosCompanionInfo.add(parseToCompanionInfo(outputCmdLine));
+            },
+            (errorCmdLine) -> {},
+            (code) -> log.info(
+                String.format("Receiving %s device companion info finished with exit code " + code, device.getSerial())
+            )
+        );
+        return iosCompanionInfo.get(0);
     }
 
     private IOSCompanionInfo parseToCompanionInfo(String output) {
@@ -305,28 +257,20 @@ public class IdbManager implements Manager {
 
     @Override
     public Map<String, String> getDevicesStates() {
+        UUID processUuid = UUID.randomUUID();
         Map<String, String> devicesMap = new HashMap<>();
-        ProcessBuilder pB = new ProcessBuilder(devicesListCmd);
-        pB.directory(directory);
-        Process p = null;
-        try {
-            p = pB.start();
-            BufferedReader readOutput =
-                new BufferedReader(new InputStreamReader(p.getInputStream()));
-
-            String outputCommandLine;
-
-            while ((outputCommandLine = readOutput.readLine()) != null) {
-                IOSDevice device = parseToIOSDevice(outputCommandLine);
+        CommandExecutor cmdExecutor = new CommandExecutor(devicesListCmd);
+        cmdExecutor.execute(
+            (code) -> log.info(String.format("[%s] Executing '%s'", processUuid, devicesListCmd)),
+            (outputCmdLine) -> {
+                IOSDevice device = parseToIOSDevice(outputCmdLine);
                 devicesMap.put(device.getSerial(), device.getState());
-            }
-            int exitCode = p.waitFor();
-            System.out.println("\nExited with error code : " + exitCode);
-        } catch (IOException|InterruptedException e) {
-            e.printStackTrace();
-        } finally {
-            if(p != null) p.destroy();
-        }
+            },
+            (errorCmdLine) -> {},
+            (code) -> log.info(
+                String.format("[%s] Get devices states process finished with exit code " + code, processUuid)
+            )
+        );
         return devicesMap;
     }
 
@@ -343,37 +287,26 @@ public class IdbManager implements Manager {
                 path
             )
         );
-        ProcessBuilder pB = new ProcessBuilder(cmd);
-        pB.directory(directory);
-        Process p = null;
-        try {
-            p = pB.start();
-            BufferedReader readOutput =
-                new BufferedReader(new InputStreamReader(p.getInputStream()));
-
-            String outputCommandLine;
-
-            while ((outputCommandLine = readOutput.readLine()) != null) {
+        CommandExecutor cmdExecutor = new CommandExecutor(cmd);
+        cmdExecutor.execute(
+            (code) -> log.info(String.format("[%s] Executing '%s'", processUuid, cmd)),
+            (outputCmdLine) -> {
                 DeviceDirectoryElement element = new DeviceDirectoryElement();
-                element.name = outputCommandLine;
+                element.name = outputCmdLine;
                 element.path = path;
                 list.add(element);
-            }
-            int exitCode = p.waitFor();
-            log.info(
+            },
+            (errorCmdLine) -> {},
+            (code) -> log.info(
                 String.format(
                     "[%s] Get list files process for '%s' path and '%s' package finished with exit code %s",
                     processUuid,
                     path,
                     iosPackageType.name(),
-                    exitCode
+                    code
                 )
-            );
-        } catch (IOException|InterruptedException e) {
-            e.printStackTrace();
-        } finally {
-            if(p != null) p.destroy();
-        }
+            )
+        );
         return list;
     }
 
