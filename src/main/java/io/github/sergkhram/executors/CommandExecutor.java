@@ -1,16 +1,17 @@
 package io.github.sergkhram.executors;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import lombok.SneakyThrows;
+
+import java.io.*;
 import java.util.List;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 public class CommandExecutor {
     private final ProcessBuilder pB;
     private Process p = null;
     private static final File directory = new File(System.getProperty("user.home"));
+//    private ExecutorService executor = Executors.newFixedThreadPool(2);
 
     public CommandExecutor(List<String> cmd) {
         this.pB = new ProcessBuilder(cmd);
@@ -39,6 +40,19 @@ public class CommandExecutor {
             logAtStart.accept(null);
             p = pB.start();
 
+//            Callable<Void> outputTask = createTask(p.getInputStream(), inputStreamAction);
+//            Callable<Void> errorTask = createTask(p.getErrorStream(), errorStreamAction);
+//
+//            List<Future<Void>> futures = executor.invokeAll(List.of(outputTask, errorTask));
+//
+//            futures.stream().parallel().forEach(it -> {
+//                try {
+//                    it.get(5000, TimeUnit.MILLISECONDS);
+//                } catch (InterruptedException | ExecutionException | TimeoutException e) {
+//                    e.printStackTrace();
+//                }
+//            });
+
             BufferedReader readOutput =
                 new BufferedReader(new InputStreamReader(p.getInputStream()));
             String outputCommandLine;
@@ -55,10 +69,26 @@ public class CommandExecutor {
 
             int exitCode = p.waitFor();
             logAtFinish.accept(exitCode);
-        } catch (IOException |InterruptedException e) {
+        } catch (IOException|InterruptedException e) {
             e.printStackTrace();
         } finally {
             if(p != null) p.destroy();
         }
     }
+
+//    private Callable<Void> createTask(
+//        InputStream stream,
+//        Consumer<String> action
+//    ) {
+//        return () -> {
+//            BufferedReader readOutput = new BufferedReader(new InputStreamReader(stream));
+//            String outputCommandLine;
+//            try {
+//                while ((outputCommandLine = readOutput.readLine()) != null) {
+//                    action.accept(outputCommandLine);
+//                }
+//            } catch (IOException e) {}
+//            return null;
+//        };
+//    }
 }

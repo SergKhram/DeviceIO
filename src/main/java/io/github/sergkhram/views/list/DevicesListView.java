@@ -272,7 +272,7 @@ public final class DevicesListView extends VerticalLayout {
 
     private void deleteFiles(DeviceForm.DeleteFilesEvent deleteFilesEvent) {
         File currentFile = deleteFilesEvent.currentFile;
-        if(currentFile.exists()) {
+        if(currentFile != null && currentFile.exists()) {
             FileUtils.deleteQuietly(currentFile);
         }
     }
