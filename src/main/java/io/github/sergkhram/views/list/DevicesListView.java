@@ -178,7 +178,6 @@ public final class DevicesListView extends VerticalLayout {
             .forEach(
                 it -> devicesStates.putAll(it.getDevicesStates())
             );
-//      Map<String, String> devicesStates = adbManager.getDevicesStates();
         service.findAllDevices("").parallelStream().forEach(
             it -> {
                 String currentState = devicesStates.getOrDefault(it.getSerial(), null);

@@ -370,12 +370,64 @@ public class IdbManager implements Manager {
                                DeviceDirectoryElement deviceDirectoryElement,
                                IOSPackageType iosPackageType,
                                String destination) {
-        return download(
-            device,
-            deviceDirectoryElement,
-            iosPackageType,
-            destination,
-            (file) -> file
+        return device.getDeviceType().equals(DeviceType.SIMULATOR)
+            ? download(
+                device,
+                deviceDirectoryElement,
+                iosPackageType,
+                destination,
+                (file) -> file
+            )
+            : recursivelyDownload(
+                device,
+                deviceDirectoryElement,
+                iosPackageType,
+                destination
         );
+    }
+
+    public File recursivelyDownload(
+        Device device,
+        DeviceDirectoryElement deviceDirectoryElement,
+        IOSPackageType iosPackageType,
+        String destination
+    ) {
+        AtomicReference<File> createdFile = new AtomicReference<>();
+        var listOfFiles = getListFiles(
+            device,
+            deviceDirectoryElement.path + "/" + deviceDirectoryElement.name,
+            iosPackageType
+        );
+        if(
+            listOfFiles.size()>0
+        ) {
+            listOfFiles.parallelStream().forEach(
+                it -> {
+                    String path = destination + File.separator + deviceDirectoryElement.name;
+                    File file = new File(path);
+                    file.mkdir();
+                    createdFile.set(file);
+                    recursivelyDownload(
+                        device,
+                        new DeviceDirectoryElement(it.name, it.path),
+                        iosPackageType,
+                        path
+                    );
+                }
+            );
+        } else {
+            createdFile.set(
+                download(
+                    device,
+                    deviceDirectoryElement,
+                    iosPackageType,
+                    destination,
+                    (file) -> device.getDeviceType().equals(DeviceType.SIMULATOR)
+                        ? new File(file, deviceDirectoryElement.name)
+                        : file
+                )
+            );
+        }
+        return createdFile.get();
     }
 }
