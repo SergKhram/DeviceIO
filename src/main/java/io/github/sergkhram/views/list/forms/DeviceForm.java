@@ -42,10 +42,6 @@ import static io.github.sergkhram.utils.Utils.getManagerByType;
 public final class DeviceForm extends FormLayout {
     Binder<Device> binder = new Binder<>(Device.class);
 
-    TextField serial = new TextField("Device serial");
-    TextField host = new TextField("Device host");
-    TextField state = new TextField("Device state");
-    TextField osVersion = new TextField("Device OS version");
     TextArea shellResult = new TextArea("Shell result");
     TextField shellRequest = new TextField("Type your shell request");
     VerticalLayout shellCmdLayout;
@@ -63,6 +59,20 @@ public final class DeviceForm extends FormLayout {
 
     public DeviceForm() {
         addClassName("device-form");
+        prepareDialog();
+        add(
+            prepareDeviceInfoForm(),
+            prepareShellCmdLayout(),
+            prepareIosFileExplorerTuner(),
+            prepareDeviceFileExplorer()
+        );
+    }
+
+    private FormLayout prepareDeviceInfoForm() {
+        TextField serial = new TextField("Device serial");
+        TextField host = new TextField("Device host");
+        TextField state = new TextField("Device state");
+        TextField osVersion = new TextField("Device OS version");
         binder.forField(serial)
             .bind(Device::getSerial, null);
         binder.forField(host)
@@ -71,22 +81,20 @@ public final class DeviceForm extends FormLayout {
             .bind(Device::getState, null);
         binder.forField(osVersion)
             .bind(Device::getOsVersion, null);
-        serial.setReadOnly(true);
-        host.setReadOnly(true);
-        state.setReadOnly(true);
-        osVersion.setReadOnly(true);
 
-        prepareDialog();
-
-        add(
+        FormLayout deviceInfoLayout = new FormLayout();
+        deviceInfoLayout.setResponsiveSteps(
+            new FormLayout.ResponsiveStep("0", 1),
+            new FormLayout.ResponsiveStep("20em", 2)
+        );
+        deviceInfoLayout.add(
             serial,
             host,
             state,
-            osVersion,
-            prepareShellCmdLayout(),
-            prepareIosFileExplorerTuner(),
-            prepareDeviceFileExplorer()
+            osVersion
         );
+        deviceInfoLayout.getChildren().forEach(it -> ((TextField) it).setReadOnly(true));
+        return deviceInfoLayout;
     }
 
     private void prepareDialog() {
