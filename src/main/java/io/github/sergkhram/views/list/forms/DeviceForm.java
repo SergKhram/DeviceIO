@@ -91,7 +91,7 @@ public final class DeviceForm extends FormLayout {
         );
 
         downloadDialog.setHeaderTitle("Confirm downloading");
-        setDialogText();
+        setDownloadDialogText();
         downloadDialog.add(downloadDialogText);
         Button closeButton = new Button(
             new Icon("lumo", "cross"),
@@ -111,7 +111,7 @@ public final class DeviceForm extends FormLayout {
             downloadDialog.getFooter().remove(anchorElement);
             anchorElement = null;
         }
-        setDialogText();
+        setDownloadDialogText();
         fireEvent(new DeleteFilesEvent(this, device, currentFile));
     }
 
@@ -123,7 +123,7 @@ public final class DeviceForm extends FormLayout {
         downloadDialogText.setText(text);
     }
 
-    public void setDialogText() {
+    public void setDownloadDialogText() {
         setDownloadDialogText("Are you sure you want to download this file/directory?");
     }
 
@@ -146,7 +146,7 @@ public final class DeviceForm extends FormLayout {
         GridContextMenu<DeviceDirectoryElement> contextMenu = fileExplorerGrid.addContextMenu();
         contextMenu.addItem(
             "Download", click -> {
-                setDialogText();
+                setDownloadDialogText();
                 fireEvent(
                     new DownloadFileEvent(
                         this, device, click.getItem().get(), downloadDialog, iosPackageTypeComboBox.getValue()
