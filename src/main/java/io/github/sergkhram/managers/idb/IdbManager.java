@@ -118,6 +118,7 @@ public class IdbManager implements Manager {
                 device.setOsType(OsType.IOS);
                 device.setName(it.getName());
                 device.setDeviceType(it.getType());
+                device.setOsVersion(it.getIosVersion());
                 return device;
             }
         ).collect(Collectors.toList());

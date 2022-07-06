@@ -29,6 +29,8 @@ public class Device extends AbstractEntity {
     private String name;
     @Column(name = "deviceType")
     private DeviceType deviceType;
+    @Column(name = "osVersion")
+    private String osVersion;
 
     public void setSerial(String serial) {
         this.serial = serial;
@@ -84,5 +86,13 @@ public class Device extends AbstractEntity {
 
     public void setDeviceType(DeviceType deviceType) {
         this.deviceType = deviceType;
+    }
+
+    public void setOsVersion(String osVersion) {
+        this.osVersion = osVersion;
+    }
+
+    public String getOsVersion() {
+        return this.osVersion;
     }
 }

@@ -45,6 +45,7 @@ public final class DeviceForm extends FormLayout {
     TextField serial = new TextField("Device serial");
     TextField host = new TextField("Device host");
     TextField state = new TextField("Device state");
+    TextField osVersion = new TextField("Device OS version");
     TextArea shellResult = new TextArea("Shell result");
     TextField shellRequest = new TextField("Type your shell request");
     VerticalLayout shellCmdLayout;
@@ -68,15 +69,20 @@ public final class DeviceForm extends FormLayout {
             .bind(deviceData -> deviceData.getHost().getAddress(), null);
         binder.forField(state)
             .bind(Device::getState, null);
+        binder.forField(osVersion)
+            .bind(Device::getOsVersion, null);
         serial.setReadOnly(true);
         host.setReadOnly(true);
         state.setReadOnly(true);
+        osVersion.setReadOnly(true);
 
         prepareDialog();
 
-        add(serial,
+        add(
+            serial,
             host,
             state,
+            osVersion,
             prepareShellCmdLayout(),
             prepareIosFileExplorerTuner(),
             prepareDeviceFileExplorer()

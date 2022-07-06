@@ -149,6 +149,7 @@ class AdbManager: Manager {
                         } else if (keys.contains("ro.kernel.qemu.avd_name")) {
                             name = it["ro.kernel.qemu.avd_name"]
                         }
+                        this.osVersion = it["ro.build.version.sdk"].orEmpty()
                     }
                     log.info("Receiving ${it.serial} device info finished")
                     this.name = name.orEmpty()
