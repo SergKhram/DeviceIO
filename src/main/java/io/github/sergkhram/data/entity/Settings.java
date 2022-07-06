@@ -16,4 +16,5 @@ public class Settings extends AbstractEntity {
     private String androidHomePath;
     @Min(5000)
     private Integer adbTimeout;
+    private String downloadPath;
 }

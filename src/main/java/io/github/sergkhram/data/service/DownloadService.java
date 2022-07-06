@@ -13,6 +13,8 @@ import org.zeroturnaround.zip.ZipUtil;
 
 import java.io.*;
 
+import static io.github.sergkhram.utils.Const.DEFAULT_DOWNLOAD_PATH;
+
 @Service
 public class DownloadService {
     AdbManager adbManager;
@@ -37,13 +39,13 @@ public class DownloadService {
             ? adbManager.downloadFile(
                 downloadFileEvent.getDevice(),
                 downloadFileEvent.getDeviceDirectoryElement(),
-                "./target"
+                DEFAULT_DOWNLOAD_PATH
             )
             : idbManager.downloadFile(
                 downloadFileEvent.getDevice(),
                 downloadFileEvent.getDeviceDirectoryElement(),
                 downloadFileEvent.getIosPackageType(),
-            "./target"
+                DEFAULT_DOWNLOAD_PATH
             );
         InputStream inputStream = new FileInputStream(
             file);
@@ -57,13 +59,13 @@ public class DownloadService {
             ? adbManager.downloadFolder(
                 downloadFileEvent.getDevice(),
                 downloadFileEvent.getDeviceDirectoryElement(),
-                "./target"
+                DEFAULT_DOWNLOAD_PATH
             )
             : idbManager.downloadFolder(
                 downloadFileEvent.getDevice(),
                 downloadFileEvent.getDeviceDirectoryElement(),
                 downloadFileEvent.getIosPackageType(),
-                "./target"
+                DEFAULT_DOWNLOAD_PATH
             );
         if(directory.exists()) {
             File zipFile = new File(directory + ZIP_EXTENSION);

@@ -41,7 +41,6 @@ import io.github.sergkhram.data.entity.Device as DeviceEntity
 class AdbManager: Manager {
     private var adb: AndroidDebugBridgeClient? = null
     private val DEFAULT_PORT: Int = 5555
-    private val supportedFeatures = listOf(Feature.STAT_V2, Feature.LS_V2, Feature.SENDRECV_V2)
     companion object : Logger()
 
     init {

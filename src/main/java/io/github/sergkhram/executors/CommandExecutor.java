@@ -1,7 +1,5 @@
 package io.github.sergkhram.executors;
 
-import lombok.SneakyThrows;
-
 import java.io.*;
 import java.util.List;
 import java.util.concurrent.*;

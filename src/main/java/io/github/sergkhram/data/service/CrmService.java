@@ -6,12 +6,14 @@ import io.github.sergkhram.data.entity.Settings;
 import io.github.sergkhram.data.repository.DeviceRepository;
 import io.github.sergkhram.data.repository.HostRepository;
 import io.github.sergkhram.data.repository.SettingsRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
 
 @Service
+@Slf4j
 public class CrmService {
     private final HostRepository hostRepository;
     private final DeviceRepository deviceRepository;
@@ -57,7 +59,7 @@ public class CrmService {
 
     public void saveHost(Host host) {
         if (host == null) {
-            System.err.println("Host is null. Are you sure you have connected your form to the application?");
+            log.info("Host is null. Are you sure you have connected your form to the application?");
             return;
         }
         hostRepository.save(host);
