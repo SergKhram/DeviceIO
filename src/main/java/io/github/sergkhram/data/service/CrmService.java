@@ -96,4 +96,16 @@ public class CrmService {
     public void saveDevice(Device device) {
         deviceRepository.save(device);
     }
+
+    public Device getDeviceById(String id) {
+        return id!=null
+            ? deviceRepository.findById(UUID.fromString(id)).get()
+            : null;
+    }
+
+    public Host getHostById(String id) {
+        return id!=null
+            ? hostRepository.findById(UUID.fromString(id)).get()
+            : null;
+    }
 }

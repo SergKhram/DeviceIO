@@ -83,8 +83,6 @@ public final class HostsListView extends VerticalLayout {
                     host.getPort()
                 )
             );
-//        adbManager.connectToHost(host.getAddress(), host.getPort());
-//        idbManager.connectToHost(host.getAddress(), host.getPort());
         closeEditor();
     }
 
@@ -100,8 +98,6 @@ public final class HostsListView extends VerticalLayout {
                     host.getPort()
                 )
             );
-//        adbManager.disconnectHost(host.getAddress(), host.getPort());
-//        idbManager.disconnectHost(host.getAddress(), host.getPort());
         closeEditor();
     }
 
@@ -124,11 +120,6 @@ public final class HostsListView extends VerticalLayout {
                         .forEach(
                             it -> currentListOfDevices.addAll(it.getListOfDevices(host))
                         );
-
-//                    List<Device> currentListOfAndroidDevices = adbManager.getListOfDevices(host);
-//                    List<Device> currentListOfIOSDevices = idbManager.getListOfDevices(host);
-//                    List<Device> currentListOfDevices = new ArrayList<>(currentListOfAndroidDevices);
-//                    currentListOfDevices.addAll(currentListOfIOSDevices);
                     updateDeviceList(dbListOfDevices, currentListOfDevices);
                 }
             );
