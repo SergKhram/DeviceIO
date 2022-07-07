@@ -65,7 +65,7 @@ public class DeviceInfoController {
 
     @PutMapping(path = "/device/{id}")
     @Throws(exceptionClasses = Exception.class)
-    public ResponseEntity<Object> updateHostRequest(
+    public ResponseEntity<Object> updateDeviceRequest(
         @PathVariable(value = "id") String id,
         @RequestBody Device device
     ) {
