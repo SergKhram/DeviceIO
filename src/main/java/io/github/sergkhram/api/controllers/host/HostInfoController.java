@@ -65,7 +65,7 @@ public class HostInfoController {
     @PutMapping(path = "/host/{id}")
     @Throws(exceptionClasses = Exception.class)
     public ResponseEntity<Object> updateHostRequest(
-        @RequestParam(value = "id", required = false) String id,
+        @PathVariable(value = "id") String id,
         @RequestBody Host host
     ) {
         try {
@@ -80,7 +80,7 @@ public class HostInfoController {
     @DeleteMapping(path = "/host/{id}")
     @Throws(exceptionClasses = Exception.class)
     public ResponseEntity<Object> deleteHostRequest(
-        @RequestParam(value = "id", required = false) String id
+        @PathVariable(value = "id") String id
     ) {
         try {
             Host host = getHostInfo(id);

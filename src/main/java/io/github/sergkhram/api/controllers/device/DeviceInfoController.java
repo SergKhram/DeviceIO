@@ -66,7 +66,7 @@ public class DeviceInfoController {
     @PutMapping(path = "/device/{id}")
     @Throws(exceptionClasses = Exception.class)
     public ResponseEntity<Object> updateHostRequest(
-        @RequestParam(value = "id", required = false) String id,
+        @PathVariable(value = "id") String id,
         @RequestBody Device device
     ) {
         try {
@@ -81,7 +81,7 @@ public class DeviceInfoController {
     @DeleteMapping(path = "/device/{id}")
     @Throws(exceptionClasses = Exception.class)
     public ResponseEntity<Object> deleteDeviceRequest(
-        @RequestParam(value = "id", required = false) String id
+        @PathVariable(value = "id") String id
     ) {
         try {
             Device device = getDeviceInfo(id);
