@@ -1,7 +1,7 @@
 package io.github.sergkhram.api.controllers.host;
 
+import io.github.sergkhram.api.logic.HostRequestsService;
 import io.github.sergkhram.data.entity.Host;
-import io.github.sergkhram.data.service.CrmService;
 import kotlin.jvm.Throws;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -16,20 +16,20 @@ import static io.github.sergkhram.data.converters.Converters.convertModelToJsonN
 @RestController
 @RequestMapping("/api")
 @Slf4j
-public class HostInfoController {
-    CrmService service;
+public class HostController {
+    HostRequestsService hostRequestsService;
 
-    public HostInfoController(CrmService service) {
-        this.service = service;
+    public HostController(HostRequestsService hostRequestsService) {
+        this.hostRequestsService = hostRequestsService;
     }
 
     @GetMapping(path = "/host/{id}")
     @Throws(exceptionClasses = Exception.class)
-    public ResponseEntity<Object> getHostInfoRequest(
+    public ResponseEntity<Object> getHostRequest(
         @PathVariable("id") String id
     ) {
         try {
-            Host host = getHostInfo(id);
+            Host host = hostRequestsService.getHostInfo(id);
             return ResponseEntity.ok().body(convertModelToJsonNode(host));
         } catch (NoSuchElementException|IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("There is no host with id " + id);
@@ -42,7 +42,7 @@ public class HostInfoController {
         @RequestParam(value = "stringFilter", required = false) String stringFilter
     ) {
         try {
-            List<Host> hosts = getHostsList(stringFilter);
+            List<Host> hosts = hostRequestsService.getHostsList(stringFilter);
             return ResponseEntity.ok().body(convertModelToJsonNode(hosts));
         } catch (NoSuchElementException|IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
@@ -55,7 +55,7 @@ public class HostInfoController {
         @RequestBody Host host
     ) {
         try {
-            Host savedHost = saveHost(host);
+            Host savedHost = hostRequestsService.saveHost(host);
             return ResponseEntity.ok().body(convertModelToJsonNode(savedHost));
         } catch (NoSuchElementException|IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
@@ -70,7 +70,7 @@ public class HostInfoController {
     ) {
         try {
             host.setId(UUID.fromString(id));
-            Host savedHost = saveHost(host);
+            Host savedHost = hostRequestsService.saveHost(host);
             return ResponseEntity.ok().body(convertModelToJsonNode(savedHost));
         } catch (NoSuchElementException|IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
@@ -83,33 +83,39 @@ public class HostInfoController {
         @PathVariable(value = "id") String id
     ) {
         try {
-            Host host = getHostInfo(id);
-            deleteHost(host);
+            Host host = hostRequestsService.getHostInfo(id);
+            hostRequestsService.deleteHost(host);
             return ResponseEntity.accepted().build();
         } catch (NoSuchElementException|IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("There is no host with id " + id);
         }
     }
 
-    public Host getHostInfo(String id)
-        throws NoSuchElementException, IllegalArgumentException
-    {
-        return service.getHostById(id);
+    @PostMapping(path = "/host/{id}/connect")
+    @Throws(exceptionClasses = Exception.class)
+    public ResponseEntity<Object> postHostConnectionRequest(
+        @PathVariable(value = "id") String id
+    ) {
+        try {
+            Host host = hostRequestsService.getHostInfo(id);
+            hostRequestsService.connect(host);
+            return ResponseEntity.ok().build();
+        } catch (NoSuchElementException|IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
-    public List<Host> getHostsList(String stringFilter)
-        throws NoSuchElementException, IllegalArgumentException
-    {
-        if(stringFilter == null) stringFilter = "";
-        return service.findAllHosts(stringFilter);
-    }
-
-    public Host saveHost(Host host) {
-        service.saveHost(host);
-        return service.findAllHosts(host.getName()).get(0);
-    }
-
-    public void deleteHost(Host host) {
-        service.deleteHost(host);
+    @PostMapping(path = "/host/{id}/disconnect")
+    @Throws(exceptionClasses = Exception.class)
+    public ResponseEntity<Object> postHostDisconnectionRequest(
+        @PathVariable(value = "id") String id
+    ) {
+        try {
+            Host host = hostRequestsService.getHostInfo(id);
+            hostRequestsService.disconnect(host);
+            return ResponseEntity.ok().build();
+        } catch (NoSuchElementException|IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 }

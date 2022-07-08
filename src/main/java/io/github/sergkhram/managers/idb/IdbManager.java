@@ -53,6 +53,7 @@ public class IdbManager implements Manager {
                 String.format("[%s] Get list of devices process finished with exit code: " + code, processUuid)
             )
         );
+        if(host == null) return convert(iosDeviceList, null);
         if (!host.getAddress().equals(LOCAL_HOST)) {
             return convert(
                 iosDeviceList
