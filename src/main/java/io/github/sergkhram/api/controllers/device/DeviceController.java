@@ -4,6 +4,7 @@ import io.github.sergkhram.api.logic.DeviceRequestsService;
 import io.github.sergkhram.data.entity.Device;
 import io.github.sergkhram.data.entity.DeviceDirectoryElement;
 import io.github.sergkhram.data.enums.IOSPackageType;
+import io.github.sergkhram.data.enums.OsType;
 import kotlin.jvm.Throws;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -143,6 +144,9 @@ public class DeviceController {
     ) {
         try {
             Device device = deviceRequestsService.getDeviceInfo(id);
+            if(device.getOsType().equals(OsType.IOS))
+                return ResponseEntity.badRequest().body("Execute shell request allowed for ANDROID only");
+
             String result = deviceRequestsService.executeShell(device, body);
             return ResponseEntity.ok().body(convertModelToJsonNode(result));
         } catch (NoSuchElementException|IllegalArgumentException e) {
