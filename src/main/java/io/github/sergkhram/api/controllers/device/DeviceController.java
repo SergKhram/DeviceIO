@@ -1,12 +1,13 @@
 package io.github.sergkhram.api.controllers.device;
 
-import io.github.sergkhram.api.logic.DeviceRequestsService;
+import io.github.sergkhram.logic.DeviceRequestsService;
 import io.github.sergkhram.data.entity.Device;
 import io.github.sergkhram.data.entity.DeviceDirectoryElement;
 import io.github.sergkhram.data.enums.IOSPackageType;
 import io.github.sergkhram.data.enums.OsType;
 import kotlin.jvm.Throws;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,13 +19,9 @@ import static io.github.sergkhram.utils.json.converters.Converters.convertModelT
 @RequestMapping("/api")
 @Slf4j
 public class DeviceController {
-    DeviceRequestsService deviceRequestsService;
 
-    public DeviceController(
-        DeviceRequestsService deviceRequestsService
-    ) {
-        this.deviceRequestsService = deviceRequestsService;
-    }
+    @Autowired
+    DeviceRequestsService deviceRequestsService;
 
     @GetMapping(path = "/device/{id}")
     @Throws(exceptionClasses = Exception.class)

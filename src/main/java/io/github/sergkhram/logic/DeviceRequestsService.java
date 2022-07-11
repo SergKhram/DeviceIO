@@ -1,4 +1,4 @@
-package io.github.sergkhram.api.logic;
+package io.github.sergkhram.logic;
 
 import io.github.sergkhram.data.entity.Device;
 import io.github.sergkhram.data.entity.DeviceDirectoryElement;

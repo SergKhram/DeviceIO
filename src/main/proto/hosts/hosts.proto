@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package hosts;
+
+option java_package = "io.github.sergkhram.proto";
+option java_multiple_files = true;
+option java_outer_classname = "HostsProto";
+
+service HostsService {
+  rpc getHostRequest(GetHostRequest) returns (GetHostResponse) {};
+}
+
+message GetHostRequest {
+  string id = 1;
+}
+
+message GetHostResponse {
+  string id = 1;
+  string name = 2;
+  string address = 3;
+  int32 port = 4;
+  bool isActive = 5;
+  repeated DeviceProto devices = 6;
+}
+
+message DeviceProto {
+  string id = 1;
+  string serial = 2;
+  bool isActive = 3;
+  OsTypeProto osType = 4;
+  string state = 5;
+  string name = 6;
+  DeviceTypeProto deviceType = 7;
+  string osVersion = 8;
+}
+
+enum OsTypeProto {
+    ANDROID = 0;
+    IOS = 1;
+}
+
+enum DeviceTypeProto {
+    DEVICE = 0;
+    SIMULATOR = 1;
+}

@@ -11,7 +11,7 @@ import java.util.List;
 @Entity
 @EqualsAndHashCode(callSuper = true)
 @Table(name = "host")
-public class Host extends AbstractEntity{
+public class Host extends AbstractEntity {
     @NotEmpty
     @Column(name = "name")
     private String name;

@@ -1,9 +1,10 @@
 package io.github.sergkhram.api.controllers.host;
 
-import io.github.sergkhram.api.logic.HostRequestsService;
+import io.github.sergkhram.logic.HostRequestsService;
 import io.github.sergkhram.data.entity.Host;
 import kotlin.jvm.Throws;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,11 +18,9 @@ import static io.github.sergkhram.utils.json.converters.Converters.convertModelT
 @RequestMapping("/api")
 @Slf4j
 public class HostController {
-    HostRequestsService hostRequestsService;
 
-    public HostController(HostRequestsService hostRequestsService) {
-        this.hostRequestsService = hostRequestsService;
-    }
+    @Autowired
+    HostRequestsService hostRequestsService;
 
     @GetMapping(path = "/host/{id}")
     @Throws(exceptionClasses = Exception.class)
