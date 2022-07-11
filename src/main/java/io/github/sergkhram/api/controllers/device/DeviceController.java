@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
-import static io.github.sergkhram.data.converters.Converters.convertModelToJsonNode;
+import static io.github.sergkhram.utils.json.converters.Converters.convertModelToJsonNode;
 
 @RestController
 @RequestMapping("/api")

@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
-import static io.github.sergkhram.data.converters.Converters.convertStringToJsonNode;
+import static io.github.sergkhram.utils.json.converters.Converters.convertStringToJsonNode;
 import static io.github.sergkhram.utils.Const.LOCAL_HOST;
 
 @Service

@@ -1,8 +1,8 @@
-package io.github.sergkhram.data.converters;
+package io.github.sergkhram.utils.json.converters;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.sergkhram.data.json.JsonUtil;
+import io.github.sergkhram.utils.json.JsonUtil;
 import lombok.SneakyThrows;
 
 public class Converters {

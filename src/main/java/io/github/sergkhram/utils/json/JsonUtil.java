@@ -1,4 +1,4 @@
-package io.github.sergkhram.data.json;
+package io.github.sergkhram.utils.json;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
