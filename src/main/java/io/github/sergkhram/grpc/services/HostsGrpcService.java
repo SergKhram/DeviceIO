@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @GrpcService
@@ -72,7 +73,7 @@ public class HostsGrpcService extends  HostsServiceGrpc.HostsServiceImplBase {
 
     private List<DeviceProto> convertDevices(Host host) {
         try {
-            return host.getDevices().parallelStream().map(
+            return Objects.requireNonNull(host.getDevices()).parallelStream().map(
                 it -> DeviceProto.newBuilder()
                     .setDeviceType(
                         it.getDeviceType().equals(DeviceType.DEVICE)
