@@ -7,14 +7,23 @@ option java_multiple_files = true;
 option java_outer_classname = "HostsProto";
 
 service HostsService {
-  rpc getHostRequest(GetHostRequest) returns (GetHostResponse) {};
+  rpc getHostRequest(GetHostRequest) returns (HostProto) {};
+  rpc getHostsListRequest(GetHostsListRequest) returns (GetHostsListResponse) {};
 }
 
 message GetHostRequest {
   string id = 1;
 }
 
-message GetHostResponse {
+message GetHostsListRequest {
+  string stringFilter = 1;
+}
+
+message GetHostsListResponse {
+  repeated HostProto hosts = 1;
+}
+
+message HostProto {
   string id = 1;
   string name = 2;
   string address = 3;
