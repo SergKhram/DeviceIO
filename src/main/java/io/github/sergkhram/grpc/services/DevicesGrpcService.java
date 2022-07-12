@@ -2,7 +2,6 @@ package io.github.sergkhram.grpc.services;
 
 import io.github.sergkhram.data.entity.Device;
 import io.github.sergkhram.logic.DeviceRequestsService;
-import io.github.sergkhram.logic.HostRequestsService;
 import io.github.sergkhram.proto.*;
 import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
@@ -18,9 +17,6 @@ import static io.github.sergkhram.utils.grpc.ErrorUtil.prepareGrpcError;
 @GrpcService
 @Slf4j
 public class DevicesGrpcService extends DevicesServiceGrpc.DevicesServiceImplBase {
-
-    @Autowired
-    HostRequestsService hostRequestsService;
 
     @Autowired
     DeviceRequestsService deviceRequestsService;
