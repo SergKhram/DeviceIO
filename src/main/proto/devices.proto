@@ -6,6 +6,15 @@ option java_package = "io.github.sergkhram.proto";
 option java_multiple_files = true;
 option java_outer_classname = "DevicesProto";
 
+service DevicesService {
+  rpc getDeviceRequest(DeviceId) returns (DeviceProto) {};
+  rpc getDevicesListRequest(GetDevicesListRequest) returns (GetDevicesListResponse) {};
+}
+
+message DeviceId {
+  string id = 1;
+}
+
 message DeviceProto {
   string id = 1;
   string serial = 2;
@@ -34,4 +43,14 @@ message HostInfoProto {
   string address = 3;
   int32 port = 4;
   bool isActive = 5;
+}
+
+message GetDevicesListRequest {
+  bool isSaved = 1;
+  string stringFilter = 2;
+  string hostId = 3;
+}
+
+message GetDevicesListResponse {
+  repeated DeviceProto devices = 1;
 }

@@ -1,5 +1,6 @@
 package io.github.sergkhram.grpc.converters;
 
+import io.github.sergkhram.data.entity.Device;
 import io.github.sergkhram.data.entity.Host;
 import io.github.sergkhram.data.enums.DeviceType;
 import io.github.sergkhram.data.enums.OsType;
@@ -63,7 +64,11 @@ public class ProtoConverter {
                             ? DeviceTypeProto.DEVICE
                             : DeviceTypeProto.SIMULATOR
                     )
-                    .setId(String.valueOf(it.getId()))
+                    .setId(
+                        it.getId() != null
+                            ? String.valueOf(it.getId())
+                            : ""
+                    )
                     .setName(it.getName())
                     .setIsActive(it.getIsActive())
                     .setOsType(
@@ -79,5 +84,50 @@ public class ProtoConverter {
         } catch (LazyInitializationException e) {
             return Collections.emptyList();
         }
+    }
+
+    public static DeviceProto convertDeviceToDeviceProto(Device device) {
+        DeviceProto deviceProto = DeviceProto.newBuilder()
+            .setDeviceType(
+                device.getDeviceType().equals(DeviceType.DEVICE)
+                    ? DeviceTypeProto.DEVICE
+                    : DeviceTypeProto.SIMULATOR
+            )
+            .setId(
+                device.getId() != null
+                    ? String.valueOf(device.getId())
+                    : ""
+                )
+            .setName(device.getName())
+            .setIsActive(device.getIsActive())
+            .setOsType(
+                device.getOsType().equals(OsType.ANDROID)
+                    ? OsTypeProto.ANDROID
+                    : OsTypeProto.IOS
+            )
+            .setSerial(device.getSerial())
+            .setState(device.getState())
+            .setOsVersion(device.getOsVersion())
+            .build();
+        Host host = device.getHost();
+        if(host!=null) {
+            HostInfoProto hostInfoProto = HostInfoProto.newBuilder()
+                .setId(String.valueOf(host.getId()))
+                .setName(host.getName())
+                .setAddress(host.getAddress())
+                .setIsActive(host.getIsActive())
+                .build();
+            if(host.getPort()!=null) hostInfoProto.toBuilder().setPort(host.getPort()).build();
+            deviceProto = deviceProto.toBuilder().setHost(hostInfoProto).build();
+        }
+        return deviceProto;
+    }
+
+    public static List<DeviceProto> convertDevices(List<Device> devices) {
+        return devices.parallelStream()
+            .map(
+                ProtoConverter::convertDeviceToDeviceProto
+            )
+            .collect(Collectors.toList());
     }
 }
