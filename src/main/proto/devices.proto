@@ -16,6 +16,8 @@ service DevicesService {
   rpc deleteDeviceRequest(DeviceId) returns (google.protobuf.Empty) {};
   rpc postDevicesRequest(PostDevicesRequest) returns (google.protobuf.Empty) {};
   rpc postDeviceRebootRequest(DeviceId) returns (google.protobuf.Empty) {};
+  rpc getDevicesStatesRequest(google.protobuf.Empty) returns (DevicesStatesResponse) {};
+  rpc postExecuteShellRequest(ExecuteShellRequest) returns (ExecuteShellResponse) {};
 }
 
 message DeviceId {
@@ -87,4 +89,17 @@ message UpdateDeviceRequest {
 
 message PostDevicesRequest {
   repeated PostDeviceRequest devices = 1;
+}
+
+message DevicesStatesResponse {
+  map<string, string> states = 1;
+}
+
+message ExecuteShellRequest {
+  string id = 1;
+  string body = 2;
+}
+
+message ExecuteShellResponse {
+  string result = 1;
 }

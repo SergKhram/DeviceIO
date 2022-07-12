@@ -2,14 +2,18 @@ package io.github.sergkhram.grpc.services;
 
 import com.google.protobuf.Empty;
 import io.github.sergkhram.data.entity.Device;
+import io.github.sergkhram.data.enums.OsType;
 import io.github.sergkhram.logic.DeviceRequestsService;
 import io.github.sergkhram.proto.*;
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
@@ -32,7 +36,7 @@ public class DevicesGrpcService extends DevicesServiceGrpc.DevicesServiceImplBas
 
             responseObserver.onNext(response);
             responseObserver.onCompleted();
-        } catch (NoSuchElementException |IllegalArgumentException e) {
+        } catch (NoSuchElementException | IllegalArgumentException e) {
             responseObserver.onError(
                 prepareGrpcError(e)
             );
@@ -44,11 +48,11 @@ public class DevicesGrpcService extends DevicesServiceGrpc.DevicesServiceImplBas
         try {
             List<Device> devices = request.getIsSaved()
                 ? deviceRequestsService.getDBDevicesList(
-                    request.getStringFilter(),
-                    request.getHostId()
-                )
+                request.getStringFilter(),
+                request.getHostId()
+            )
                 : deviceRequestsService.getCurrentDevicesList(
-                    request.getHostId()
+                request.getHostId()
             );
 
             GetDevicesListResponse response = GetDevicesListResponse.newBuilder()
@@ -143,6 +147,54 @@ public class DevicesGrpcService extends DevicesServiceGrpc.DevicesServiceImplBas
 
             responseObserver.onNext(response);
             responseObserver.onCompleted();
+        } catch (Exception e) {
+            responseObserver.onError(
+                prepareGrpcError(e)
+            );
+        }
+    }
+
+    @Override
+    public void getDevicesStatesRequest(Empty request, StreamObserver<DevicesStatesResponse> responseObserver) {
+        try {
+            Map<String, String> states = deviceRequestsService.getDevicesStates();
+
+            DevicesStatesResponse response = DevicesStatesResponse.newBuilder()
+                .putAllStates(states)
+                .build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            responseObserver.onError(
+                prepareGrpcError(e)
+            );
+        }
+    }
+
+    @Override
+    public void postExecuteShellRequest(
+        ExecuteShellRequest request,
+        StreamObserver<ExecuteShellResponse> responseObserver
+    ) {
+        try {
+            Device device = deviceRequestsService.getDeviceInfo(request.getId());
+            if (device.getOsType().equals(OsType.IOS)) {
+                responseObserver.onError(
+                    Status.CANCELLED
+                        .withDescription("Execute shell request allowed for ANDROID only")
+                        .asRuntimeException()
+                );
+            } else {
+                String result = deviceRequestsService.executeShell(device, request.getBody());
+
+                ExecuteShellResponse response = ExecuteShellResponse.newBuilder()
+                    .setResult(result)
+                    .build();
+
+                responseObserver.onNext(response);
+                responseObserver.onCompleted();
+            }
         } catch (Exception e) {
             responseObserver.onError(
                 prepareGrpcError(e)

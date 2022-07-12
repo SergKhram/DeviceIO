@@ -16,7 +16,7 @@ import static io.github.sergkhram.utils.grpc.ErrorUtil.prepareGrpcError;
 
 @GrpcService
 @Slf4j
-public class HostsGrpcService extends  HostsServiceGrpc.HostsServiceImplBase {
+public class HostsGrpcService extends HostsServiceGrpc.HostsServiceImplBase {
 
     @Autowired
     HostRequestsService hostRequestsService;
@@ -30,7 +30,7 @@ public class HostsGrpcService extends  HostsServiceGrpc.HostsServiceImplBase {
 
             responseObserver.onNext(response);
             responseObserver.onCompleted();
-        } catch (NoSuchElementException |IllegalArgumentException e) {
+        } catch (NoSuchElementException | IllegalArgumentException e) {
             responseObserver.onError(
                 prepareGrpcError(e)
             );
