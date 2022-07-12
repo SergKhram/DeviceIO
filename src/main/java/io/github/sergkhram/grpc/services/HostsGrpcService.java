@@ -21,7 +21,7 @@ public class HostsGrpcService extends  HostsServiceGrpc.HostsServiceImplBase {
     HostRequestsService hostRequestsService;
 
     @Override
-    public void getHostRequest(GetHostRequest request, StreamObserver<HostProto> responseObserver) {
+    public void getHostRequest(HostId request, StreamObserver<HostProto> responseObserver) {
         try {
             Host host = hostRequestsService.getHostInfo(request.getId());
 
@@ -67,7 +67,7 @@ public class HostsGrpcService extends  HostsServiceGrpc.HostsServiceImplBase {
     }
 
     @Override
-    public void updateHostRequest(UpdateOrDeleteHostRequest request, StreamObserver<HostProto> responseObserver) {
+    public void updateHostRequest(UpdateHostRequest request, StreamObserver<HostProto> responseObserver) {
         try {
             Host host = convertUpdateOrDeleteHostProtoRequestToHost(request);
             host.setId(UUID.fromString(request.getId()));
@@ -83,10 +83,40 @@ public class HostsGrpcService extends  HostsServiceGrpc.HostsServiceImplBase {
     }
 
     @Override
-    public void deleteHostRequest(UpdateOrDeleteHostRequest request, StreamObserver<Empty> responseObserver) {
+    public void deleteHostRequest(HostId request, StreamObserver<Empty> responseObserver) {
         try {
             Host host = hostRequestsService.getHostInfo(request.getId());
             hostRequestsService.deleteHost(host);
+
+            Empty response = Empty.getDefaultInstance();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            responseObserver.onError(e);
+        }
+    }
+
+    @Override
+    public void postHostConnectionRequest(HostId request, StreamObserver<Empty> responseObserver) {
+        try {
+            Host host = hostRequestsService.getHostInfo(request.getId());
+            hostRequestsService.connect(host);
+
+            Empty response = Empty.getDefaultInstance();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            responseObserver.onError(e);
+        }
+    }
+
+    @Override
+    public void postHostDisconnectionRequest(HostId request, StreamObserver<Empty> responseObserver) {
+        try {
+            Host host = hostRequestsService.getHostInfo(request.getId());
+            hostRequestsService.disconnect(host);
 
             Empty response = Empty.getDefaultInstance();
 

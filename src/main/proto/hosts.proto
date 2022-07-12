@@ -10,14 +10,16 @@ option java_multiple_files = true;
 option java_outer_classname = "HostsProto";
 
 service HostsService {
-  rpc getHostRequest(GetHostRequest) returns (HostProto) {};
+  rpc getHostRequest(HostId) returns (HostProto) {};
   rpc getHostsListRequest(GetHostsListRequest) returns (GetHostsListResponse) {};
   rpc postHostRequest(PostHostRequest) returns (HostProto) {}
-  rpc updateHostRequest(UpdateOrDeleteHostRequest) returns (HostProto) {}
-  rpc deleteHostRequest(UpdateOrDeleteHostRequest) returns (google.protobuf.Empty) {}
+  rpc updateHostRequest(UpdateHostRequest) returns (HostProto) {}
+  rpc deleteHostRequest(HostId) returns (google.protobuf.Empty) {}
+  rpc postHostConnectionRequest(HostId) returns (google.protobuf.Empty) {}
+  rpc postHostDisconnectionRequest(HostId) returns (google.protobuf.Empty) {}
 }
 
-message GetHostRequest {
+message HostId {
   string id = 1;
 }
 
@@ -44,7 +46,7 @@ message PostHostRequest {
   int32 port = 3;
 }
 
-message UpdateOrDeleteHostRequest {
+message UpdateHostRequest {
   string id = 1;
   string name = 2;
   string address = 3;

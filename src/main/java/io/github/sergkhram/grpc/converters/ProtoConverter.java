@@ -46,7 +46,7 @@ public class ProtoConverter {
         return host;
     }
 
-    public static Host convertUpdateOrDeleteHostProtoRequestToHost(UpdateOrDeleteHostRequest hostRequest) {
+    public static Host convertUpdateOrDeleteHostProtoRequestToHost(UpdateHostRequest hostRequest) {
         Host host = new Host();
         host.setName(hostRequest.getName());
         host.setAddress(hostRequest.getAddress());
