@@ -1,5 +1,6 @@
 package io.github.sergkhram.grpc.services;
 
+import com.google.protobuf.Empty;
 import io.github.sergkhram.data.enums.DeviceType;
 import io.github.sergkhram.data.enums.OsType;
 import io.github.sergkhram.proto.*;
@@ -11,9 +12,7 @@ import net.devh.boot.grpc.server.service.GrpcService;
 import org.hibernate.LazyInitializationException;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @GrpcService
@@ -25,35 +24,90 @@ public class HostsGrpcService extends  HostsServiceGrpc.HostsServiceImplBase {
 
     @Override
     public void getHostRequest(GetHostRequest request, StreamObserver<HostProto> responseObserver) {
-        Host host = hostRequestsService.getHostInfo(request.getId());
+        try {
+            Host host = hostRequestsService.getHostInfo(request.getId());
 
-        HostProto response = convertHost(host);
+            HostProto response = convertHostToHostProto(host);
 
-        responseObserver.onNext(response);
-        responseObserver.onCompleted();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (NoSuchElementException |IllegalArgumentException e) {
+            responseObserver.onError(e);
+        }
     }
 
     @Override
     public void getHostsListRequest(GetHostsListRequest request, StreamObserver<GetHostsListResponse> responseObserver) {
-        List<Host> hosts = hostRequestsService.getHostsList(request.getStringFilter());
+        try {
+            List<Host> hosts = hostRequestsService.getHostsList(request.getStringFilter());
 
-        GetHostsListResponse response = GetHostsListResponse.newBuilder()
-            .addAllHosts(convertHosts(hosts))
-            .build();
+            GetHostsListResponse response = GetHostsListResponse.newBuilder()
+                .addAllHosts(convertHosts(hosts))
+                .build();
 
-        responseObserver.onNext(response);
-        responseObserver.onCompleted();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            responseObserver.onError(e);
+        }
+    }
+
+    @Override
+    public void postHostRequest(PostHostRequest request, StreamObserver<HostProto> responseObserver) {
+        try {
+            Host savedHost = hostRequestsService.saveHost(
+                convertHostProtoRequestToHost(request)
+            );
+
+            HostProto response = convertHostToHostProto(savedHost);
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            responseObserver.onError(e);
+        }
+    }
+
+    @Override
+    public void updateHostRequest(UpdateOrDeleteHostRequest request, StreamObserver<HostProto> responseObserver) {
+        try {
+            Host host = convertUpdateOrDeleteHostProtoRequestToHost(request);
+            host.setId(UUID.fromString(request.getId()));
+            Host savedHost = hostRequestsService.saveHost(host);
+
+            HostProto response = convertHostToHostProto(savedHost);
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            responseObserver.onError(e);
+        }
+    }
+
+    @Override
+    public void deleteHostRequest(UpdateOrDeleteHostRequest request, StreamObserver<Empty> responseObserver) {
+        try {
+            Host host = hostRequestsService.getHostInfo(request.getId());
+            hostRequestsService.deleteHost(host);
+
+            Empty response = Empty.newBuilder().build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            responseObserver.onError(e);
+        }
     }
 
     private List<HostProto> convertHosts(List<Host> hosts) {
         return hosts.parallelStream()
             .map(
-                this::convertHost
+                this::convertHostToHostProto
             )
             .collect(Collectors.toList());
     }
 
-    private HostProto convertHost(Host host) {
+    private HostProto convertHostToHostProto(Host host) {
         HostProto hostObject = HostProto.newBuilder()
             .setId(String.valueOf(host.getId()))
             .setName(host.getName())
@@ -69,6 +123,22 @@ public class HostsGrpcService extends  HostsServiceGrpc.HostsServiceImplBase {
             ).build();
         }
         return hostObject;
+    }
+
+    private Host convertHostProtoRequestToHost(PostHostRequest hostRequest) {
+        Host host = new Host();
+        host.setName(hostRequest.getName());
+        host.setAddress(hostRequest.getAddress());
+        if(hostRequest.getPort() != 0) host.setPort(hostRequest.getPort());
+        return host;
+    }
+
+    private Host convertUpdateOrDeleteHostProtoRequestToHost(UpdateOrDeleteHostRequest hostRequest) {
+        Host host = new Host();
+        host.setName(hostRequest.getName());
+        host.setAddress(hostRequest.getAddress());
+        if(hostRequest.getPort() != 0) host.setPort(hostRequest.getPort());
+        return host;
     }
 
     private List<DeviceProto> convertDevices(Host host) {

@@ -1,8 +1,9 @@
 syntax = "proto3";
 
-package hosts;
+package protos;
 
-import "devices/devices.proto";
+import "devices.proto";
+import "google/protobuf/empty.proto";
 
 option java_package = "io.github.sergkhram.proto";
 option java_multiple_files = true;
@@ -11,6 +12,9 @@ option java_outer_classname = "HostsProto";
 service HostsService {
   rpc getHostRequest(GetHostRequest) returns (HostProto) {};
   rpc getHostsListRequest(GetHostsListRequest) returns (GetHostsListResponse) {};
+  rpc postHostRequest(PostHostRequest) returns (HostProto) {}
+  rpc updateHostRequest(UpdateOrDeleteHostRequest) returns (HostProto) {}
+  rpc deleteHostRequest(UpdateOrDeleteHostRequest) returns (google.protobuf.Empty) {}
 }
 
 message GetHostRequest {
@@ -31,5 +35,18 @@ message HostProto {
   string address = 3;
   int32 port = 4;
   bool isActive = 5;
-  repeated devices.DeviceProto devices = 6;
+  repeated DeviceProto devices = 6;
+}
+
+message PostHostRequest {
+  string name = 1;
+  string address = 2;
+  int32 port = 3;
+}
+
+message UpdateOrDeleteHostRequest {
+  string id = 1;
+  string name = 2;
+  string address = 3;
+  int32 port = 4;
 }
