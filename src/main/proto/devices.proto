@@ -9,6 +9,7 @@ option java_outer_classname = "DevicesProto";
 service DevicesService {
   rpc getDeviceRequest(DeviceId) returns (DeviceProto) {};
   rpc getDevicesListRequest(GetDevicesListRequest) returns (GetDevicesListResponse) {};
+  rpc postDeviceRequest(PostDeviceRequest) returns (DeviceProto) {};
 }
 
 message DeviceId {
@@ -53,4 +54,15 @@ message GetDevicesListRequest {
 
 message GetDevicesListResponse {
   repeated DeviceProto devices = 1;
+}
+
+message PostDeviceRequest {
+  string serial = 1;
+  bool isActive = 2;
+  OsTypeProto osType = 3;
+  string state = 4;
+  string name = 5;
+  DeviceTypeProto deviceType = 6;
+  string osVersion = 7;
+  HostInfoProto host = 8;
 }

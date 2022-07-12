@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 import static io.github.sergkhram.grpc.converters.ProtoConverter.*;
+import static io.github.sergkhram.utils.grpc.ErrorUtil.prepareGrpcError;
 
 @GrpcService
 @Slf4j
@@ -34,7 +35,9 @@ public class DevicesGrpcService extends DevicesServiceGrpc.DevicesServiceImplBas
             responseObserver.onNext(response);
             responseObserver.onCompleted();
         } catch (NoSuchElementException |IllegalArgumentException e) {
-            responseObserver.onError(e);
+            responseObserver.onError(
+                prepareGrpcError(e)
+            );
         }
     }
 
@@ -56,8 +59,27 @@ public class DevicesGrpcService extends DevicesServiceGrpc.DevicesServiceImplBas
 
             responseObserver.onNext(response);
             responseObserver.onCompleted();
-        } catch (NoSuchElementException |IllegalArgumentException e) {
-            responseObserver.onError(e);
+        } catch (Exception e) {
+            responseObserver.onError(
+                prepareGrpcError(e)
+            );
+        }
+    }
+
+    @Override
+    public void postDeviceRequest(PostDeviceRequest request, StreamObserver<DeviceProto> responseObserver) {
+        try {
+            Device device = convertDeviceProtoRequestToDevice(request);
+            Device savedDevice = deviceRequestsService.saveDevice(device);
+
+            DeviceProto response = convertDeviceToDeviceProto(savedDevice);
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            responseObserver.onError(
+                prepareGrpcError(e)
+            );
         }
     }
 }

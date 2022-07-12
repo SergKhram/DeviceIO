@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.*;
 
 import static io.github.sergkhram.grpc.converters.ProtoConverter.*;
+import static io.github.sergkhram.utils.grpc.ErrorUtil.prepareGrpcError;
 
 @GrpcService
 @Slf4j
@@ -30,7 +31,9 @@ public class HostsGrpcService extends  HostsServiceGrpc.HostsServiceImplBase {
             responseObserver.onNext(response);
             responseObserver.onCompleted();
         } catch (NoSuchElementException |IllegalArgumentException e) {
-            responseObserver.onError(e);
+            responseObserver.onError(
+                prepareGrpcError(e)
+            );
         }
     }
 
@@ -46,7 +49,9 @@ public class HostsGrpcService extends  HostsServiceGrpc.HostsServiceImplBase {
             responseObserver.onNext(response);
             responseObserver.onCompleted();
         } catch (Exception e) {
-            responseObserver.onError(e);
+            responseObserver.onError(
+                prepareGrpcError(e)
+            );
         }
     }
 
@@ -62,7 +67,9 @@ public class HostsGrpcService extends  HostsServiceGrpc.HostsServiceImplBase {
             responseObserver.onNext(response);
             responseObserver.onCompleted();
         } catch (Exception e) {
-            responseObserver.onError(e);
+            responseObserver.onError(
+                prepareGrpcError(e)
+            );
         }
     }
 
@@ -78,7 +85,9 @@ public class HostsGrpcService extends  HostsServiceGrpc.HostsServiceImplBase {
             responseObserver.onNext(response);
             responseObserver.onCompleted();
         } catch (Exception e) {
-            responseObserver.onError(e);
+            responseObserver.onError(
+                prepareGrpcError(e)
+            );
         }
     }
 
@@ -93,7 +102,9 @@ public class HostsGrpcService extends  HostsServiceGrpc.HostsServiceImplBase {
             responseObserver.onNext(response);
             responseObserver.onCompleted();
         } catch (Exception e) {
-            responseObserver.onError(e);
+            responseObserver.onError(
+                prepareGrpcError(e)
+            );
         }
     }
 
@@ -108,7 +119,9 @@ public class HostsGrpcService extends  HostsServiceGrpc.HostsServiceImplBase {
             responseObserver.onNext(response);
             responseObserver.onCompleted();
         } catch (Exception e) {
-            responseObserver.onError(e);
+            responseObserver.onError(
+                prepareGrpcError(e)
+            );
         }
     }
 
@@ -123,7 +136,9 @@ public class HostsGrpcService extends  HostsServiceGrpc.HostsServiceImplBase {
             responseObserver.onNext(response);
             responseObserver.onCompleted();
         } catch (Exception e) {
-            responseObserver.onError(e);
+            responseObserver.onError(
+                prepareGrpcError(e)
+            );
         }
     }
 }

@@ -10,6 +10,7 @@ import org.hibernate.LazyInitializationException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class ProtoConverter {
@@ -129,5 +130,36 @@ public class ProtoConverter {
                 ProtoConverter::convertDeviceToDeviceProto
             )
             .collect(Collectors.toList());
+    }
+
+    public static Device convertDeviceProtoRequestToDevice(PostDeviceRequest deviceRequest) {
+        Device device = new Device();
+        device.setDeviceType(
+            deviceRequest.getDeviceType().equals(DeviceTypeProto.DEVICE)
+                ? DeviceType.DEVICE
+                : DeviceType.SIMULATOR
+        );
+        device.setName(deviceRequest.getName());
+        device.setOsType(
+            deviceRequest.getOsType().equals(OsTypeProto.ANDROID)
+                ? OsType.ANDROID
+                : OsType.IOS
+        );
+        device.setOsVersion(deviceRequest.getOsVersion());
+        device.setSerial(deviceRequest.getSerial());
+        device.setIsActive(deviceRequest.getIsActive());
+        device.setState(deviceRequest.getState());
+        device.setHost(convertHostInfoProtoToHost(deviceRequest.getHost()));
+        return device;
+    }
+
+    public static Host convertHostInfoProtoToHost(HostInfoProto hostInfoProto) {
+        Host host = new Host();
+        host.setName(hostInfoProto.getName());
+        host.setId(UUID.fromString(hostInfoProto.getId()));
+        host.setIsActive(hostInfoProto.getIsActive());
+        host.setAddress(hostInfoProto.getAddress());
+        if(hostInfoProto.getPort()!=0) host.setPort(hostInfoProto.getPort());
+        return host;
     }
 }
