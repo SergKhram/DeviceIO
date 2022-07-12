@@ -74,8 +74,8 @@ public class DeviceController {
     ) {
         try {
             device.setId(UUID.fromString(id));
-            Device savedHost = deviceRequestsService.saveDevice(device);
-            return ResponseEntity.ok().body(convertModelToJsonNode(savedHost));
+            Device savedDevice = deviceRequestsService.saveDevice(device);
+            return ResponseEntity.ok().body(convertModelToJsonNode(savedDevice));
         } catch (NoSuchElementException|IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getLocalizedMessage());
         }

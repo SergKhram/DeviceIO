@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package protos;
 
+import "google/protobuf/empty.proto";
+
 option java_package = "io.github.sergkhram.proto";
 option java_multiple_files = true;
 option java_outer_classname = "DevicesProto";
@@ -10,6 +12,10 @@ service DevicesService {
   rpc getDeviceRequest(DeviceId) returns (DeviceProto) {};
   rpc getDevicesListRequest(GetDevicesListRequest) returns (GetDevicesListResponse) {};
   rpc postDeviceRequest(PostDeviceRequest) returns (DeviceProto) {};
+  rpc updateDeviceRequest(UpdateDeviceRequest) returns (DeviceProto) {};
+  rpc deleteDeviceRequest(DeviceId) returns (google.protobuf.Empty) {};
+  rpc postDevicesRequest(PostDevicesRequest) returns (google.protobuf.Empty) {};
+  rpc postDeviceRebootRequest(DeviceId) returns (google.protobuf.Empty) {};
 }
 
 message DeviceId {
@@ -65,4 +71,20 @@ message PostDeviceRequest {
   DeviceTypeProto deviceType = 6;
   string osVersion = 7;
   HostInfoProto host = 8;
+}
+
+message UpdateDeviceRequest {
+  string id = 1;
+  string serial = 2;
+  bool isActive = 3;
+  OsTypeProto osType = 4;
+  string state = 5;
+  string name = 6;
+  DeviceTypeProto deviceType = 7;
+  string osVersion = 8;
+  HostInfoProto host = 9;
+}
+
+message PostDevicesRequest {
+  repeated PostDeviceRequest devices = 1;
 }

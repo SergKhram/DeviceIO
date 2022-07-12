@@ -14,7 +14,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class ProtoConverter {
-    public static List<HostProto> convertHosts(List<Host> hosts) {
+    public static List<HostProto> convertHostsToHostsProto(List<Host> hosts) {
         return hosts.parallelStream()
             .map(
                 ProtoConverter::convertHostToHostProto
@@ -29,7 +29,7 @@ public class ProtoConverter {
             .setAddress(host.getAddress())
             .setIsActive(host.getIsActive())
             .addAllDevices(
-                convertDevices(host)
+                convertDevicesFromHost(host)
             )
             .build();
         if(host.getPort()!=null) {
@@ -48,7 +48,7 @@ public class ProtoConverter {
         return host;
     }
 
-    public static Host convertUpdateOrDeleteHostProtoRequestToHost(UpdateHostRequest hostRequest) {
+    public static Host convertUpdateHostProtoRequestToHost(UpdateHostRequest hostRequest) {
         Host host = new Host();
         host.setName(hostRequest.getName());
         host.setAddress(hostRequest.getAddress());
@@ -56,7 +56,7 @@ public class ProtoConverter {
         return host;
     }
 
-    public static List<DeviceProto> convertDevices(Host host) {
+    public static List<DeviceProto> convertDevicesFromHost(Host host) {
         try {
             return Objects.requireNonNull(host.getDevices()).parallelStream().map(
                 it -> DeviceProto.newBuilder()
@@ -124,7 +124,7 @@ public class ProtoConverter {
         return deviceProto;
     }
 
-    public static List<DeviceProto> convertDevices(List<Device> devices) {
+    public static List<DeviceProto> convertDevicesToProtoDevices(List<Device> devices) {
         return devices.parallelStream()
             .map(
                 ProtoConverter::convertDeviceToDeviceProto
@@ -153,6 +153,20 @@ public class ProtoConverter {
         return device;
     }
 
+    public static Device convertUpdateDeviceProtoRequestToDevice(UpdateDeviceRequest deviceRequest) {
+        PostDeviceRequest postDeviceRequest = PostDeviceRequest.newBuilder()
+            .setDeviceType(deviceRequest.getDeviceType())
+            .setHost(deviceRequest.getHost())
+            .setName(deviceRequest.getName())
+            .setOsType(deviceRequest.getOsType())
+            .setOsVersion(deviceRequest.getOsVersion())
+            .setSerial(deviceRequest.getSerial())
+            .setIsActive(deviceRequest.getIsActive())
+            .setState(deviceRequest.getState())
+            .build();
+        return convertDeviceProtoRequestToDevice(postDeviceRequest);
+    }
+
     public static Host convertHostInfoProtoToHost(HostInfoProto hostInfoProto) {
         Host host = new Host();
         host.setName(hostInfoProto.getName());
@@ -161,5 +175,14 @@ public class ProtoConverter {
         host.setAddress(hostInfoProto.getAddress());
         if(hostInfoProto.getPort()!=0) host.setPort(hostInfoProto.getPort());
         return host;
+    }
+
+    public static List<Device> convertPostDevicesRequestToDevices(List<PostDeviceRequest> devices) {
+        return devices
+            .parallelStream()
+            .map(
+                ProtoConverter::convertDeviceProtoRequestToDevice
+            )
+            .collect(Collectors.toList());
     }
 }

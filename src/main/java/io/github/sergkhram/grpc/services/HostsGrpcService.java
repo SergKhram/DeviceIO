@@ -43,7 +43,7 @@ public class HostsGrpcService extends  HostsServiceGrpc.HostsServiceImplBase {
             List<Host> hosts = hostRequestsService.getHostsList(request.getStringFilter());
 
             GetHostsListResponse response = GetHostsListResponse.newBuilder()
-                .addAllHosts(convertHosts(hosts))
+                .addAllHosts(convertHostsToHostsProto(hosts))
                 .build();
 
             responseObserver.onNext(response);
@@ -76,7 +76,7 @@ public class HostsGrpcService extends  HostsServiceGrpc.HostsServiceImplBase {
     @Override
     public void updateHostRequest(UpdateHostRequest request, StreamObserver<HostProto> responseObserver) {
         try {
-            Host host = convertUpdateOrDeleteHostProtoRequestToHost(request);
+            Host host = convertUpdateHostProtoRequestToHost(request);
             host.setId(UUID.fromString(request.getId()));
             Host savedHost = hostRequestsService.saveHost(host);
 

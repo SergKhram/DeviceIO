@@ -1,5 +1,6 @@
 package io.github.sergkhram.grpc.services;
 
+import com.google.protobuf.Empty;
 import io.github.sergkhram.data.entity.Device;
 import io.github.sergkhram.logic.DeviceRequestsService;
 import io.github.sergkhram.proto.*;
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.UUID;
 
 import static io.github.sergkhram.grpc.converters.ProtoConverter.*;
 import static io.github.sergkhram.utils.grpc.ErrorUtil.prepareGrpcError;
@@ -50,7 +52,7 @@ public class DevicesGrpcService extends DevicesServiceGrpc.DevicesServiceImplBas
             );
 
             GetDevicesListResponse response = GetDevicesListResponse.newBuilder()
-                .addAllDevices(convertDevices(devices))
+                .addAllDevices(convertDevicesToProtoDevices(devices))
                 .build();
 
             responseObserver.onNext(response);
@@ -69,6 +71,75 @@ public class DevicesGrpcService extends DevicesServiceGrpc.DevicesServiceImplBas
             Device savedDevice = deviceRequestsService.saveDevice(device);
 
             DeviceProto response = convertDeviceToDeviceProto(savedDevice);
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            responseObserver.onError(
+                prepareGrpcError(e)
+            );
+        }
+    }
+
+    @Override
+    public void updateDeviceRequest(UpdateDeviceRequest request, StreamObserver<DeviceProto> responseObserver) {
+        try {
+            Device device = convertUpdateDeviceProtoRequestToDevice(request);
+            device.setId(UUID.fromString(request.getId()));
+            Device savedDevice = deviceRequestsService.saveDevice(device);
+
+            DeviceProto response = convertDeviceToDeviceProto(savedDevice);
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            responseObserver.onError(
+                prepareGrpcError(e)
+            );
+        }
+    }
+
+    @Override
+    public void deleteDeviceRequest(DeviceId request, StreamObserver<Empty> responseObserver) {
+        try {
+            Device device = deviceRequestsService.getDeviceInfo(request.getId());
+            deviceRequestsService.deleteDevice(device);
+
+            Empty response = Empty.getDefaultInstance();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            responseObserver.onError(
+                prepareGrpcError(e)
+            );
+        }
+    }
+
+    @Override
+    public void postDevicesRequest(PostDevicesRequest request, StreamObserver<Empty> responseObserver) {
+        try {
+            List<Device> devices = convertPostDevicesRequestToDevices(request.getDevicesList());
+            deviceRequestsService.saveDevices(devices);
+
+            Empty response = Empty.getDefaultInstance();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            responseObserver.onError(
+                prepareGrpcError(e)
+            );
+        }
+    }
+
+    @Override
+    public void postDeviceRebootRequest(DeviceId request, StreamObserver<Empty> responseObserver) {
+        try {
+            Device device = deviceRequestsService.getDeviceInfo(request.getId());
+            deviceRequestsService.reboot(device);
+
+            Empty response = Empty.getDefaultInstance();
 
             responseObserver.onNext(response);
             responseObserver.onCompleted();
