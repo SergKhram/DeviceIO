@@ -1,4 +1,4 @@
-package io.github.sergkhram.views;
+package io.github.sergkhram.ui.views;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
@@ -72,7 +72,7 @@ public final class SettingsView extends VerticalLayout {
         Settings newSettings = Objects.requireNonNullElseGet(service.getCurrentSettings(), Settings::new);
         try {
             binder.writeBean(newSettings);
-            service.settingsRepository.save(newSettings);
+            service.saveSettings(newSettings);
             Integer currentAdbTimeout = newSettings.getAdbTimeout();
             if(currentAdbTimeout != null) {
                 Const.TIMEOUT = currentAdbTimeout;

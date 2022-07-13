@@ -1,9 +1,9 @@
-package io.github.sergkhram.views.list;
+package io.github.sergkhram.ui.views.list;
 
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import io.github.sergkhram.data.entity.Host;
-import io.github.sergkhram.views.list.forms.HostForm;
+import io.github.sergkhram.ui.views.list.forms.HostForm;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

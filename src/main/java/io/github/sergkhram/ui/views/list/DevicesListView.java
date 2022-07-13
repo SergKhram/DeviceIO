@@ -1,4 +1,4 @@
-package io.github.sergkhram.views.list;
+package io.github.sergkhram.ui.views.list;
 
 import com.malinskiy.adam.request.device.DeviceState;
 import com.vaadin.flow.component.Component;
@@ -17,30 +17,23 @@ import com.vaadin.flow.router.*;
 import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.theme.lumo.Lumo;
 import io.github.sergkhram.data.enums.OsType;
-import io.github.sergkhram.data.providers.IOSDeviceDirectoriesDataProvider;
+import io.github.sergkhram.ui.providers.IOSDeviceDirectoriesDataProvider;
 import io.github.sergkhram.data.service.DownloadService;
 import io.github.sergkhram.logic.DeviceRequestsService;
 import io.github.sergkhram.logic.HostRequestsService;
-import io.github.sergkhram.managers.Manager;
-import io.github.sergkhram.managers.adb.AdbManager;
 import io.github.sergkhram.data.entity.Device;
-import io.github.sergkhram.data.entity.DeviceDirectoryElement;
 import io.github.sergkhram.data.entity.Host;
-import io.github.sergkhram.managers.idb.IdbManager;
-import io.github.sergkhram.data.service.CrmService;
-import io.github.sergkhram.views.MainLayout;
-import io.github.sergkhram.views.list.forms.DeviceForm;
+import io.github.sergkhram.ui.views.MainLayout;
+import io.github.sergkhram.ui.views.list.forms.DeviceForm;
 import org.apache.commons.io.FileUtils;
 import org.springframework.context.annotation.Scope;
 
 import java.io.*;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Objects;
 
 import static io.github.sergkhram.utils.Const.IOS_OFFLINE_STATE;
-import static io.github.sergkhram.utils.Utils.getManagerByType;
 
 @org.springframework.stereotype.Component
 @Scope("prototype")
@@ -51,17 +44,14 @@ public final class DevicesListView extends VerticalLayout {
     Grid<Device> grid = new Grid<>(Device.class);
     TextField filterText = new TextField();
     DeviceForm form;
-    DownloadService downloadService;
 
     HostRequestsService hostRequestsService;
     DeviceRequestsService deviceRequestsService;
 
     public DevicesListView(
-        DownloadService downloadService,
         HostRequestsService hostRequestsService,
         DeviceRequestsService deviceRequestsService
     ) {
-        this.downloadService = downloadService;
         this.deviceRequestsService = deviceRequestsService;
         this.hostRequestsService = hostRequestsService;
         addClassName("list-view");
@@ -216,38 +206,22 @@ public final class DevicesListView extends VerticalLayout {
     }
 
     private void download(DeviceForm.DownloadEvent downloadEvent) {
-        DeviceDirectoryElement currentDeviceDirectoryElement = downloadEvent.getDeviceDirectoryElement();
-        StreamResource resource = null;
-        String error = "";
+        DownloadService.DownloadRequestData downloadRequestData = DownloadService.DownloadRequestData
+            .builder()
+            .device(downloadEvent.getDevice())
+            .deviceDirectoryElement(downloadEvent.getDeviceDirectoryElement())
+            .iosPackageType(downloadEvent.getIosPackageType())
+            .build();
 
-        if (currentDeviceDirectoryElement.isDirectory != null && currentDeviceDirectoryElement.isDirectory) {
-            try {
-                DownloadService.DownloadData data = downloadService.downloadFolder(downloadEvent);
-                if (data.error != null) {
-                    error = data.error;
-                } else {
-                    resource = data.resource;
-                    form.setCurrentFile(data.file);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                error = e.getLocalizedMessage();
-            }
-        } else {
-            try {
-                DownloadService.DownloadData data = downloadService.downloadFile(downloadEvent);
-                resource = data.resource;
-                form.setCurrentFile(data.file);
-            } catch (Exception e) {
-                e.printStackTrace();
-                error = e.getLocalizedMessage();
-            }
-        }
-        if (error.isEmpty()) {
+        try {
+            DownloadService.DownloadResponseData data = deviceRequestsService.download(downloadRequestData);
+            StreamResource resource = Objects.requireNonNull(data).getResource();
+            form.setCurrentFile(data.getFile());
             Anchor link = prepareAnchor(resource, downloadEvent.getDialog());
             form.setAnchorElement(link);
-        } else {
-            form.setDownloadDialogText(error);
+        } catch (Exception e) {
+            e.printStackTrace();
+            form.setDownloadDialogText(e.getLocalizedMessage());
         }
     }
 

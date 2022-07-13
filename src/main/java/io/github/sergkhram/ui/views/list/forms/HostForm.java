@@ -1,4 +1,4 @@
-package io.github.sergkhram.views.list.forms;
+package io.github.sergkhram.ui.views.list.forms;
 
 import com.vaadin.flow.component.ComponentEvent;
 import com.vaadin.flow.component.ComponentEventListener;

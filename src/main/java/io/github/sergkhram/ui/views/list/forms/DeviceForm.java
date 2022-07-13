@@ -1,4 +1,4 @@
-package io.github.sergkhram.views.list.forms;
+package io.github.sergkhram.ui.views.list.forms;
 
 import com.vaadin.flow.component.ComponentEvent;
 import com.vaadin.flow.component.ComponentEventListener;
@@ -26,11 +26,11 @@ import com.vaadin.flow.shared.Registration;
 import com.vaadin.flow.theme.lumo.Lumo;
 import io.github.sergkhram.data.enums.OsType;
 import io.github.sergkhram.data.enums.IOSPackageType;
-import io.github.sergkhram.data.providers.IOSDeviceDirectoriesDataProvider;
+import io.github.sergkhram.ui.providers.IOSDeviceDirectoriesDataProvider;
 import io.github.sergkhram.logic.DeviceRequestsService;
 import io.github.sergkhram.data.entity.Device;
 import io.github.sergkhram.data.entity.DeviceDirectoryElement;
-import io.github.sergkhram.data.providers.AndroidDeviceDirectoriesDataProvider;
+import io.github.sergkhram.ui.providers.AndroidDeviceDirectoriesDataProvider;
 
 import java.io.File;
 

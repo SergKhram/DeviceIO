@@ -1,4 +1,4 @@
-package io.github.sergkhram.data.providers;
+package io.github.sergkhram.ui.providers;
 
 import com.vaadin.flow.data.provider.hierarchy.AbstractBackEndHierarchicalDataProvider;
 import com.vaadin.flow.data.provider.hierarchy.HierarchicalQuery;

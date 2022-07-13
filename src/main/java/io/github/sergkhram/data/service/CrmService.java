@@ -17,7 +17,7 @@ import java.util.UUID;
 public class CrmService {
     private final HostRepository hostRepository;
     private final DeviceRepository deviceRepository;
-    public final SettingsRepository settingsRepository;
+    private final SettingsRepository settingsRepository;
 
     public CrmService(HostRepository hostRepository,
                       DeviceRepository deviceRepository,
