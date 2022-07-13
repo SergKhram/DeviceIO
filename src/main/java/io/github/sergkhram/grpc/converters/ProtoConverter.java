@@ -1,6 +1,7 @@
 package io.github.sergkhram.grpc.converters;
 
 import io.github.sergkhram.data.entity.Device;
+import io.github.sergkhram.data.entity.DeviceDirectoryElement;
 import io.github.sergkhram.data.entity.Host;
 import io.github.sergkhram.data.enums.DeviceType;
 import io.github.sergkhram.data.enums.OsType;
@@ -184,5 +185,25 @@ public class ProtoConverter {
                 ProtoConverter::convertDeviceProtoRequestToDevice
             )
             .collect(Collectors.toList());
+    }
+
+    //DDElements - DeviceDirectoryElements
+    public static List<DeviceDirectoryElementProto> convertDDElementsToDDElementsProto(
+        List<DeviceDirectoryElement> files
+    ) {
+        return files.parallelStream()
+            .map(ProtoConverter::convertDDElementToDDElementProto)
+            .collect(Collectors.toList());
+    }
+
+    public static DeviceDirectoryElementProto convertDDElementToDDElementProto(
+        DeviceDirectoryElement file
+    ) {
+        return DeviceDirectoryElementProto.newBuilder()
+            .setName(file.name)
+            .setIsDirectory(file.isDirectory)
+            .setPath(file.path)
+            .setSize(file.size)
+            .build();
     }
 }

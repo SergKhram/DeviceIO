@@ -18,6 +18,7 @@ service DevicesService {
   rpc postDeviceRebootRequest(DeviceId) returns (google.protobuf.Empty) {};
   rpc getDevicesStatesRequest(google.protobuf.Empty) returns (DevicesStatesResponse) {};
   rpc postExecuteShellRequest(ExecuteShellRequest) returns (ExecuteShellResponse) {};
+  rpc getFilesListOfDeviceRequest(GetDeviceFilesRequest) returns (GetDeviceFilesResponse) {}
 }
 
 message DeviceId {
@@ -102,4 +103,21 @@ message ExecuteShellRequest {
 
 message ExecuteShellResponse {
   string result = 1;
+}
+
+message GetDeviceFilesRequest {
+  string id = 1;
+  string path = 2;
+  string iosPackageType = 3;
+}
+
+message GetDeviceFilesResponse {
+  repeated DeviceDirectoryElementProto files = 1;
+}
+
+message DeviceDirectoryElementProto {
+  bool isDirectory = 1;
+  string name = 2;
+  string path = 3;
+  string size = 4;
 }

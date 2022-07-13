@@ -2,6 +2,8 @@ package io.github.sergkhram.grpc.services;
 
 import com.google.protobuf.Empty;
 import io.github.sergkhram.data.entity.Device;
+import io.github.sergkhram.data.entity.DeviceDirectoryElement;
+import io.github.sergkhram.data.enums.IOSPackageType;
 import io.github.sergkhram.data.enums.OsType;
 import io.github.sergkhram.logic.DeviceRequestsService;
 import io.github.sergkhram.proto.*;
@@ -195,6 +197,31 @@ public class DevicesGrpcService extends DevicesServiceGrpc.DevicesServiceImplBas
                 responseObserver.onNext(response);
                 responseObserver.onCompleted();
             }
+        } catch (Exception e) {
+            responseObserver.onError(
+                prepareGrpcError(e)
+            );
+        }
+    }
+
+    @Override
+    public void getFilesListOfDeviceRequest(
+        GetDeviceFilesRequest request,
+        StreamObserver<GetDeviceFilesResponse> responseObserver
+    ) {
+        try {
+            IOSPackageType iosPackageType = IOSPackageType.APPLICATION;
+            Device device = deviceRequestsService.getDeviceInfo(request.getId());
+            request.getIosPackageType();
+            if(!request.getIosPackageType().isEmpty())
+                iosPackageType = IOSPackageType.valueOf(request.getIosPackageType().toUpperCase());
+            List<DeviceDirectoryElement> files = deviceRequestsService.getListFiles(device, request.getPath(), iosPackageType);
+            GetDeviceFilesResponse response = GetDeviceFilesResponse.newBuilder()
+                .addAllFiles(convertDDElementsToDDElementsProto(files))
+                .build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
         } catch (Exception e) {
             responseObserver.onError(
                 prepareGrpcError(e)
