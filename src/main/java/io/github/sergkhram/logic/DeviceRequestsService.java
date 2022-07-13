@@ -42,9 +42,15 @@ public class DeviceRequestsService {
     public List<Device> getDBDevicesList(String stringFilter, String hostId)
         throws NoSuchElementException, IllegalArgumentException
     {
+        return getDBDevicesList(stringFilter, UUID.fromString(hostId));
+    }
+
+    public List<Device> getDBDevicesList(String stringFilter, UUID hostId)
+        throws NoSuchElementException, IllegalArgumentException
+    {
         if(stringFilter == null) stringFilter = "";
-        if(hostId != null && !hostId.isEmpty()) {
-            return service.findAllDevices(stringFilter, UUID.fromString(hostId));
+        if(hostId != null && !hostId.toString().isEmpty()) {
+            return service.findAllDevices(stringFilter, hostId);
         } else {
             return service.findAllDevices(stringFilter);
         }
@@ -61,6 +67,10 @@ public class DeviceRequestsService {
                 it -> currentListOfDevices.addAll(it.getListOfDevices(host))
             );
         return currentListOfDevices;
+    }
+
+    public List<Device> getCurrentDevicesList(UUID hostId) {
+        return getCurrentDevicesList(String.valueOf(hostId));
     }
 
     public Device saveDevice(Device device) {

@@ -2,9 +2,12 @@ package io.github.sergkhram.data.entity;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import org.springframework.format.annotation.NumberFormat;
 
 import javax.annotation.Nullable;
 import javax.persistence.*;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotEmpty;
 import java.util.List;
 
@@ -19,6 +22,9 @@ public class Host extends AbstractEntity {
     @Column(name = "address")
     private String address;
     @Column(name = "port")
+    @NumberFormat
+    @Max(65535)
+    @Min(0)
     private Integer port;
     @Builder.Default
     @Column(name = "isActive")
