@@ -1,3 +1,2 @@
 # DeviceIO
-- docker build -t deviceio .
-- docker run -ti -p 8090:8080 deviceio
+Farm-like service to manage ios/android devices with ui
