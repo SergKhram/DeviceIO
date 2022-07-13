@@ -184,7 +184,7 @@ public final class HostsListView extends VerticalLayout {
         try {
             InetAddress address = InetAddress.getByName(host.getAddress());
             host.setIsActive(address.isReachable(5000));
-            if(host.getIsActive()) {
+            if (host.getIsActive()) {
                 hostRequestsService.saveHost(host);
             } else {
                 deviceRequestsService.getDBDevicesList(
@@ -192,8 +192,7 @@ public final class HostsListView extends VerticalLayout {
                     host.getId()
                 ).forEach(deviceRequestsService::deleteDevice);
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
             deviceRequestsService.getDBDevicesList(
                 "", host.getId()

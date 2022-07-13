@@ -34,17 +34,17 @@ public class DownloadService {
         public String error;
     }
 
-    public DownloadData downloadFile(DeviceForm.DownloadFileEvent downloadFileEvent) throws FileNotFoundException {
-        File file = downloadFileEvent.getDevice().getOsType().equals(OsType.ANDROID)
+    public DownloadData downloadFile(DeviceForm.DownloadEvent downloadEvent) throws FileNotFoundException {
+        File file = downloadEvent.getDevice().getOsType().equals(OsType.ANDROID)
             ? adbManager.downloadFile(
-                downloadFileEvent.getDevice(),
-                downloadFileEvent.getDeviceDirectoryElement(),
+                downloadEvent.getDevice(),
+                downloadEvent.getDeviceDirectoryElement(),
                 DEFAULT_DOWNLOAD_PATH
             )
             : idbManager.downloadFile(
-                downloadFileEvent.getDevice(),
-                downloadFileEvent.getDeviceDirectoryElement(),
-                downloadFileEvent.getIosPackageType(),
+                downloadEvent.getDevice(),
+                downloadEvent.getDeviceDirectoryElement(),
+                downloadEvent.getIosPackageType(),
                 DEFAULT_DOWNLOAD_PATH
             );
         InputStream inputStream = new FileInputStream(
@@ -53,18 +53,18 @@ public class DownloadService {
         return new DownloadData(file, resource, null);
     }
 
-    public DownloadData downloadFolder(DeviceForm.DownloadFileEvent downloadFileEvent) throws IOException {
+    public DownloadData downloadFolder(DeviceForm.DownloadEvent downloadEvent) throws IOException {
         DownloadData downloadData = new DownloadData();
-        File directory = downloadFileEvent.getDevice().getOsType().equals(OsType.ANDROID)
+        File directory = downloadEvent.getDevice().getOsType().equals(OsType.ANDROID)
             ? adbManager.downloadFolder(
-                downloadFileEvent.getDevice(),
-                downloadFileEvent.getDeviceDirectoryElement(),
+                downloadEvent.getDevice(),
+                downloadEvent.getDeviceDirectoryElement(),
                 DEFAULT_DOWNLOAD_PATH
             )
             : idbManager.downloadFolder(
-                downloadFileEvent.getDevice(),
-                downloadFileEvent.getDeviceDirectoryElement(),
-                downloadFileEvent.getIosPackageType(),
+                downloadEvent.getDevice(),
+                downloadEvent.getDeviceDirectoryElement(),
+                downloadEvent.getIosPackageType(),
                 DEFAULT_DOWNLOAD_PATH
             );
         if(directory.exists()) {

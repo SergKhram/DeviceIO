@@ -19,6 +19,8 @@ import com.vaadin.flow.theme.lumo.Lumo;
 import io.github.sergkhram.data.enums.OsType;
 import io.github.sergkhram.data.providers.IOSDeviceDirectoriesDataProvider;
 import io.github.sergkhram.data.service.DownloadService;
+import io.github.sergkhram.logic.DeviceRequestsService;
+import io.github.sergkhram.logic.HostRequestsService;
 import io.github.sergkhram.managers.Manager;
 import io.github.sergkhram.managers.adb.AdbManager;
 import io.github.sergkhram.data.entity.Device;
@@ -34,6 +36,7 @@ import org.springframework.context.annotation.Scope;
 import java.io.*;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static io.github.sergkhram.utils.Const.IOS_OFFLINE_STATE;
@@ -47,20 +50,20 @@ public final class DevicesListView extends VerticalLayout {
     ComboBox<Host> hosts = new ComboBox<>();
     Grid<Device> grid = new Grid<>(Device.class);
     TextField filterText = new TextField();
-    CrmService service;
     DeviceForm form;
-    List<Manager> managers;
     DownloadService downloadService;
 
+    HostRequestsService hostRequestsService;
+    DeviceRequestsService deviceRequestsService;
+
     public DevicesListView(
-            CrmService service,
-            AdbManager adbManager,
-            IdbManager idbManager,
-            DownloadService downloadService
+        DownloadService downloadService,
+        HostRequestsService hostRequestsService,
+        DeviceRequestsService deviceRequestsService
     ) {
-        this.service = service;
         this.downloadService = downloadService;
-        managers = List.of(adbManager, idbManager);
+        this.deviceRequestsService = deviceRequestsService;
+        this.hostRequestsService = hostRequestsService;
         addClassName("list-view");
         setSizeFull();
         configureGrid();
@@ -85,7 +88,7 @@ public final class DevicesListView extends VerticalLayout {
         filterText.setValueChangeMode(ValueChangeMode.LAZY);
         filterText.addValueChangeListener(e -> updateList(hosts.getValue()));
 
-        hosts.setItems(service.findAllHosts(""));
+        hosts.setItems(hostRequestsService.getHostsList(""));
         hosts.setItemLabelGenerator(Host::getName);
         hosts.setClearButtonVisible(true);
         hosts.setHelperText("Choose the host to see the devices");
@@ -118,7 +121,7 @@ public final class DevicesListView extends VerticalLayout {
         grid.addComponentColumn(
             device -> {
                 Image image;
-                switch(device.getOsType()) {
+                switch (device.getOsType()) {
                     case ANDROID:
                         image = new Image("images/android.png", "Android");
                         break;
@@ -140,10 +143,7 @@ public final class DevicesListView extends VerticalLayout {
                 rebootButton.setThemeName(Lumo.DARK);
                 rebootButton.addClickListener(
                     click -> {
-                        switch (device.getOsType()) {
-                            case ANDROID: getManagerByType(managers, AdbManager.class).rebootDevice(device);
-                            case IOS: getManagerByType(managers, IdbManager.class).rebootDevice(device);
-                        }
+                        deviceRequestsService.reboot(device);
                     }
                 );
                 return rebootButton;
@@ -164,39 +164,34 @@ public final class DevicesListView extends VerticalLayout {
         if (host == null)
             updateList();
         else
-            grid.setItems(service.findAllDevices(filterText.getValue(), host.getId()));
+            grid.setItems(deviceRequestsService.getDBDevicesList(filterText.getValue(), host.getId()));
     }
 
     private void updateList() {
-        grid.setItems(service.findAllDevices(filterText.getValue()));
+        grid.setItems(deviceRequestsService.getDBDevicesList(filterText.getValue(), ""));
     }
 
     private void updateDevicesState() {
-        ConcurrentHashMap<String, String> devicesStates = new ConcurrentHashMap<>();
-        managers
-            .parallelStream()
-            .forEach(
-                it -> devicesStates.putAll(it.getDevicesStates())
-            );
-        service.findAllDevices("").parallelStream().forEach(
+        Map<String, String> devicesStates = deviceRequestsService.getDevicesStates();
+        deviceRequestsService.getDBDevicesList("", "").parallelStream().forEach(
             it -> {
                 String currentState = devicesStates.getOrDefault(it.getSerial(), null);
-                if(
+                if (
                     currentState == null
                         || currentState.equals(DeviceState.OFFLINE.name())
                         || currentState.equalsIgnoreCase(IOS_OFFLINE_STATE)
                 ) {
                     it.setState(
-                        currentState!=null ? currentState : DeviceState.OFFLINE.name()
+                        currentState != null ? currentState : DeviceState.OFFLINE.name()
                     );
                     it.setIsActive(false);
                 } else {
-                    if(!it.getState().equals(currentState)) {
+                    if (!it.getState().equals(currentState)) {
                         it.setState(currentState);
                         it.setIsActive(true);
                     }
                 }
-                service.saveDevice(it);
+                deviceRequestsService.saveDevice(it);
             }
         );
         updateList();
@@ -206,29 +201,29 @@ public final class DevicesListView extends VerticalLayout {
         form = new DeviceForm();
         form.setWidth("35em");
         form.addListener(DeviceForm.ExecuteShellEvent.class, this::executeShell);
-        form.addListener(DeviceForm.DownloadFileEvent.class, this::downloadFile);
+        form.addListener(DeviceForm.DownloadEvent.class, this::download);
         form.addListener(DeviceForm.DeleteFilesEvent.class, this::deleteFiles);
         form.addListener(DeviceForm.ReinitFileExplorerEvent.class, this::reinitExplorer);
     }
 
     private void executeShell(DeviceForm.ExecuteShellEvent executeShellEvent) {
         form.clearShellResult();
-        String result = getManagerByType(managers, AdbManager.class).executeShell(
+        String result = deviceRequestsService.executeShell(
             executeShellEvent.getDevice(),
             executeShellEvent.getShellRequestValue()
         );
         form.setShellResult(result);
     }
 
-    private void downloadFile(DeviceForm.DownloadFileEvent downloadFileEvent) {
-        DeviceDirectoryElement currentDeviceDirectoryElement = downloadFileEvent.getDeviceDirectoryElement();
+    private void download(DeviceForm.DownloadEvent downloadEvent) {
+        DeviceDirectoryElement currentDeviceDirectoryElement = downloadEvent.getDeviceDirectoryElement();
         StreamResource resource = null;
         String error = "";
 
-        if(currentDeviceDirectoryElement.isDirectory != null && currentDeviceDirectoryElement.isDirectory) {
+        if (currentDeviceDirectoryElement.isDirectory != null && currentDeviceDirectoryElement.isDirectory) {
             try {
-                DownloadService.DownloadData data = downloadService.downloadFolder(downloadFileEvent);
-                if(data.error != null) {
+                DownloadService.DownloadData data = downloadService.downloadFolder(downloadEvent);
+                if (data.error != null) {
                     error = data.error;
                 } else {
                     resource = data.resource;
@@ -240,7 +235,7 @@ public final class DevicesListView extends VerticalLayout {
             }
         } else {
             try {
-                DownloadService.DownloadData data = downloadService.downloadFile(downloadFileEvent);
+                DownloadService.DownloadData data = downloadService.downloadFile(downloadEvent);
                 resource = data.resource;
                 form.setCurrentFile(data.file);
             } catch (Exception e) {
@@ -248,8 +243,8 @@ public final class DevicesListView extends VerticalLayout {
                 error = e.getLocalizedMessage();
             }
         }
-        if(error.isEmpty()) {
-            Anchor link = prepareAnchor(resource, downloadFileEvent.getDialog());
+        if (error.isEmpty()) {
+            Anchor link = prepareAnchor(resource, downloadEvent.getDialog());
             form.setAnchorElement(link);
         } else {
             form.setDownloadDialogText(error);
@@ -271,7 +266,7 @@ public final class DevicesListView extends VerticalLayout {
 
     private void deleteFiles(DeviceForm.DeleteFilesEvent deleteFilesEvent) {
         File currentFile = deleteFilesEvent.currentFile;
-        if(currentFile != null && currentFile.exists()) {
+        if (currentFile != null && currentFile.exists()) {
             FileUtils.deleteQuietly(currentFile);
         }
     }
@@ -280,7 +275,7 @@ public final class DevicesListView extends VerticalLayout {
         form.setNewDataProviderFileExplorer(
             new IOSDeviceDirectoriesDataProvider(
                 reinitFileExplorerEvent.getDevice(),
-                getManagerByType(managers, IdbManager.class),
+                deviceRequestsService,
                 reinitFileExplorerEvent.getBundle(),
                 reinitFileExplorerEvent.getIosPackageType()
             )
@@ -301,14 +296,14 @@ public final class DevicesListView extends VerticalLayout {
         } else {
             form.setDevice(device);
             form.setVisible(true);
-            if(device.getOsType().equals(OsType.IOS)) {
+            if (device.getOsType().equals(OsType.IOS)) {
                 form.setVisibleIOSLayoutForExplorer(true);
                 form.setVisibleShellLayout(false);
             } else {
                 form.setVisibleIOSLayoutForExplorer(false);
                 form.setVisibleShellLayout(true);
             }
-            form.initDeviceExplorer(managers);
+            form.initDeviceExplorer(deviceRequestsService);
             addClassName("device-interact");
         }
     }
