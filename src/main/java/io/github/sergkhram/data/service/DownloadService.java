@@ -8,6 +8,7 @@ import io.github.sergkhram.data.enums.OsType;
 import io.github.sergkhram.managers.adb.AdbManager;
 import io.github.sergkhram.managers.idb.IdbManager;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.springframework.stereotype.Service;
 import org.zeroturnaround.zip.ZipUtil;
@@ -18,6 +19,7 @@ import java.util.NoSuchElementException;
 import static io.github.sergkhram.utils.Const.DEFAULT_DOWNLOAD_PATH;
 
 @Service
+@Slf4j
 public class DownloadService {
     AdbManager adbManager;
     IdbManager idbManager;

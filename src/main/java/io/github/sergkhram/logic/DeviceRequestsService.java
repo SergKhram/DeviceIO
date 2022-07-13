@@ -9,6 +9,7 @@ import io.github.sergkhram.data.service.DownloadService;
 import io.github.sergkhram.managers.Manager;
 import io.github.sergkhram.managers.adb.AdbManager;
 import io.github.sergkhram.managers.idb.IdbManager;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +21,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import static io.github.sergkhram.utils.Utils.getManagerByType;
 
 @Service
+@Slf4j
 public class DeviceRequestsService {
     @Autowired
     CrmService service;
