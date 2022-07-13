@@ -3,12 +3,10 @@ package io.github.sergkhram.views.list;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.theme.lumo.Lumo;
-import io.github.sergkhram.managers.Manager;
-import io.github.sergkhram.managers.adb.AdbManager;
+import io.github.sergkhram.logic.DeviceRequestsService;
+import io.github.sergkhram.logic.HostRequestsService;
 import io.github.sergkhram.data.entity.Device;
 import io.github.sergkhram.data.entity.Host;
-import io.github.sergkhram.managers.idb.IdbManager;
-import io.github.sergkhram.data.service.CrmService;
 import io.github.sergkhram.views.MainLayout;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
@@ -24,10 +22,8 @@ import org.springframework.context.annotation.Scope;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 @org.springframework.stereotype.Component
@@ -38,12 +34,16 @@ public final class HostsListView extends VerticalLayout {
     Grid<Host> grid = new Grid<>(Host.class);
     TextField filterText = new TextField();
     HostForm form;
-    CrmService service;
-    List<Manager> managers;
 
-    public HostsListView(CrmService service, AdbManager adbManager, IdbManager idbManager) {
-        this.service = service;
-        managers = List.of(adbManager, idbManager);
+    HostRequestsService hostRequestsService;
+    DeviceRequestsService deviceRequestsService;
+
+    public HostsListView(
+        HostRequestsService hostRequestsService,
+        DeviceRequestsService deviceRequestsService
+    ) {
+        this.deviceRequestsService = deviceRequestsService;
+        this.hostRequestsService = hostRequestsService;
         addClassName("list-view");
         setSizeFull();
         configureGrid();
@@ -73,31 +73,17 @@ public final class HostsListView extends VerticalLayout {
 
     private void saveHost(HostForm.SaveEvent saveEvent) {
         Host host = saveEvent.getHost();
-        service.saveHost(host);
+        hostRequestsService.saveHost(host);
         updateList();
-        managers
-            .parallelStream()
-            .forEach(
-                it -> it.connectToHost(
-                    host.getAddress(),
-                    host.getPort()
-                )
-            );
+        hostRequestsService.connect(host);
         closeEditor();
     }
 
     private void deleteHost(HostForm.DeleteEvent deleteEvent) {
         Host host = deleteEvent.getHost();
-        service.deleteHost(host);
+        hostRequestsService.deleteHost(host);
         updateList();
-        managers
-            .parallelStream()
-            .forEach(
-                it -> it.disconnectHost(
-                    host.getAddress(),
-                    host.getPort()
-                )
-            );
+        hostRequestsService.disconnect(host);
         closeEditor();
     }
 
@@ -113,13 +99,13 @@ public final class HostsListView extends VerticalLayout {
             connectButton.setThemeName(Lumo.DARK);
             connectButton.addClickListener(
                 click -> {
-                    List<Device> dbListOfDevices = service.findAllDevices("", host.getId());
-                    CopyOnWriteArrayList<Device> currentListOfDevices = new CopyOnWriteArrayList<>();
-                    managers
-                        .parallelStream()
-                        .forEach(
-                            it -> currentListOfDevices.addAll(it.getListOfDevices(host))
-                        );
+                    List<Device> dbListOfDevices = deviceRequestsService.getDBDevicesList(
+                        "",
+                        host.getId()
+                    );
+                    List<Device> currentListOfDevices = deviceRequestsService.getCurrentDevicesList(
+                        host.getId()
+                    );
                     updateDeviceList(dbListOfDevices, currentListOfDevices);
                 }
             );
@@ -173,7 +159,7 @@ public final class HostsListView extends VerticalLayout {
     }
 
     private void updateList() {
-        grid.setItems(service.findAllHosts(filterText.getValue()));
+        grid.setItems(hostRequestsService.getHostsList(filterText.getValue()));
     }
 
     private void closeEditor() {
@@ -188,7 +174,7 @@ public final class HostsListView extends VerticalLayout {
     }
 
     public void updateHostsState() {
-        service.findAllHosts("").parallelStream().forEach(
+        hostRequestsService.getHostsList("").parallelStream().forEach(
             this::updateHostState
         );
         updateList();
@@ -199,14 +185,19 @@ public final class HostsListView extends VerticalLayout {
             InetAddress address = InetAddress.getByName(host.getAddress());
             host.setIsActive(address.isReachable(5000));
             if(host.getIsActive()) {
-                service.saveHost(host);
+                hostRequestsService.saveHost(host);
             } else {
-                service.findAllDevices("", host.getId()).forEach(service::deleteDevice);
+                deviceRequestsService.getDBDevicesList(
+                    "",
+                    host.getId()
+                ).forEach(deviceRequestsService::deleteDevice);
             }
         }
         catch (IOException e) {
             e.printStackTrace();
-            service.findAllDevices("", host.getId()).forEach(service::deleteDevice);
+            deviceRequestsService.getDBDevicesList(
+                "", host.getId()
+            ).forEach(deviceRequestsService::deleteDevice);
         }
     }
 
@@ -218,9 +209,9 @@ public final class HostsListView extends VerticalLayout {
                 .collect(Collectors.toList())
                 .contains(device.getSerial())
         ).forEach(device ->
-            service.deleteDevice(device)
+            deviceRequestsService.deleteDevice(device)
         );
-        service.saveDevices(
+        deviceRequestsService.saveDevices(
             currentListOfDevices.stream().filter(device ->
                 !dbListOfDevices
                     .stream()
