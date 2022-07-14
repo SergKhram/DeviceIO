@@ -1,10 +1,8 @@
 package io.github.sergkhram.data.entity;
 
-import lombok.Builder;
 import lombok.Getter;
 
 @Getter
-@Builder
 public class DeviceDirectoryElement {
     public Boolean isDirectory;
     public String name;
