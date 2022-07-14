@@ -1,5 +1,6 @@
 package io.github.sergkhram.api.controllers.device;
 
+import io.github.sergkhram.data.service.DownloadService;
 import io.github.sergkhram.logic.DeviceRequestsService;
 import io.github.sergkhram.data.entity.Device;
 import io.github.sergkhram.data.entity.DeviceDirectoryElement;
@@ -7,10 +8,19 @@ import io.github.sergkhram.data.enums.IOSPackageType;
 import io.github.sergkhram.data.enums.OsType;
 import kotlin.jvm.Throws;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 import static io.github.sergkhram.utils.json.converters.Converters.convertModelToJsonNode;
@@ -168,6 +178,47 @@ public class DeviceController {
             return ResponseEntity.ok().body(convertModelToJsonNode(files));
         } catch (NoSuchElementException|IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getLocalizedMessage());
+        }
+    }
+
+    @PostMapping(path = "/device/{id}/files/download")
+    @Throws(exceptionClasses = Exception.class)
+    public ResponseEntity<Object> postDownloadFileRequest(
+        @PathVariable(value = "id") String id,
+        @RequestParam(value = "iosPackageType", required = false) String iosPackageTypeValue,
+        @RequestBody DeviceDirectoryElement deviceDirectoryElement
+    ) {
+        File currentFile = null;
+        try {
+            IOSPackageType iosPackageType = IOSPackageType.APPLICATION;
+            if(iosPackageTypeValue != null && !iosPackageTypeValue.isEmpty())
+                iosPackageType = IOSPackageType.valueOf(iosPackageTypeValue.toUpperCase());
+            DownloadService.DownloadRequestData requestData = DownloadService.DownloadRequestData
+                .builder()
+                .device(deviceRequestsService.getDeviceInfo(id))
+                .deviceDirectoryElement(deviceDirectoryElement)
+                .iosPackageType(iosPackageType)
+                .build();
+            DownloadService.DownloadResponseData responseData = deviceRequestsService.download(requestData);
+
+            Path path = Paths.get(responseData.getFile().getAbsolutePath());
+            ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(path));
+
+            currentFile = responseData.getFile();
+            return ResponseEntity.ok()
+                .header(
+                    HttpHeaders.CONTENT_DISPOSITION,
+                    "attachment; filename=\"" + responseData.getFile().getName() + "\""
+                )
+                .contentLength(responseData.getFile().length())
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(resource);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getLocalizedMessage());
+        } finally {
+            if (currentFile != null && currentFile.exists()) {
+                FileUtils.deleteQuietly(currentFile);
+            }
         }
     }
 }
