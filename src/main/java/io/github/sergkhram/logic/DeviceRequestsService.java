@@ -24,7 +24,7 @@ import static io.github.sergkhram.utils.Utils.getManagerByType;
 @Slf4j
 public class DeviceRequestsService {
     @Autowired
-    CrmService service;
+    CrmService crmService;
     @Autowired
     HostRequestsService hostRequestsService;
     List<Manager> managers;
@@ -41,7 +41,7 @@ public class DeviceRequestsService {
     public Device getDeviceInfo(String id)
         throws NoSuchElementException, IllegalArgumentException
     {
-        return service.getDeviceById(id);
+        return crmService.getDeviceById(id);
     }
 
     public List<Device> getDBDevicesList(String stringFilter, String hostId)
@@ -55,9 +55,9 @@ public class DeviceRequestsService {
     {
         if(stringFilter == null) stringFilter = "";
         if(hostId != null && !hostId.toString().isEmpty()) {
-            return service.findAllDevices(stringFilter, hostId);
+            return crmService.findAllDevices(stringFilter, hostId);
         } else {
-            return service.findAllDevices(stringFilter);
+            return crmService.findAllDevices(stringFilter);
         }
     }
 
@@ -79,16 +79,16 @@ public class DeviceRequestsService {
     }
 
     public Device saveDevice(Device device) {
-        service.saveDevice(device);
-        return service.findAllDevices(device.getSerial()).get(0);
+        crmService.saveDevice(device);
+        return crmService.findAllDevices(device.getSerial()).get(0);
     }
 
     public void deleteDevice(Device device) {
-        service.deleteDevice(device);
+        crmService.deleteDevice(device);
     }
 
     public void saveDevices(List<Device> devices) {
-        service.saveDevices(devices);
+        crmService.saveDevices(devices);
     }
 
     public void reboot(Device device) {

@@ -5,6 +5,7 @@ import com.vaadin.flow.data.provider.ListDataProvider;
 import io.github.sergkhram.data.entity.Host;
 import io.github.sergkhram.ui.views.list.forms.HostForm;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,7 @@ public class HostsListViewTest {
     private HostsListView hostsListView;
 
     @Test
+    @Disabled
     public void formShownWhenContactSelected() {
         Grid<Host> grid = hostsListView.grid;
         Host firstContact = getFirstItem(grid);
