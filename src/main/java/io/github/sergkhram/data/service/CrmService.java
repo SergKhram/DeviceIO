@@ -59,7 +59,7 @@ public class CrmService {
 
     public void saveHost(Host host) {
         if (host == null) {
-            log.info("Host is null. Are you sure you have connected your form to the application?");
+            log.info("Host is null");
             return;
         }
         hostRepository.save(host);

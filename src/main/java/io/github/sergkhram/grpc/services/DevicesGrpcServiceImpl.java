@@ -16,9 +16,7 @@ import net.devh.boot.grpc.server.service.GrpcService;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -29,7 +27,7 @@ import static io.github.sergkhram.utils.grpc.ErrorUtil.prepareGrpcError;
 
 @GrpcService
 @Slf4j
-public class DevicesGrpcService extends DevicesServiceGrpc.DevicesServiceImplBase {
+public class DevicesGrpcServiceImpl extends DevicesServiceGrpc.DevicesServiceImplBase {
 
     @Autowired
     DeviceRequestsService deviceRequestsService;
