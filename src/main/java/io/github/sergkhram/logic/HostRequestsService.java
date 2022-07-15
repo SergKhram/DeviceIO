@@ -6,6 +6,7 @@ import io.github.sergkhram.managers.Manager;
 import io.github.sergkhram.managers.adb.AdbManager;
 import io.github.sergkhram.managers.idb.IdbManager;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,38 +15,37 @@ import java.util.NoSuchElementException;
 @Service
 @Slf4j
 public class HostRequestsService {
-    CrmService service;
+    @Autowired
+    CrmService crmService;
     List<Manager> managers;
 
     public HostRequestsService(
-        CrmService service,
         AdbManager adbManager,
         IdbManager idbManager
     ) {
-        this.service = service;
         managers = List.of(adbManager, idbManager);
     }
 
     public Host getHostInfo(String id)
         throws NoSuchElementException, IllegalArgumentException
     {
-        return service.getHostById(id);
+        return crmService.getHostById(id);
     }
 
     public List<Host> getHostsList(String stringFilter)
         throws NoSuchElementException, IllegalArgumentException
     {
         if(stringFilter == null) stringFilter = "";
-        return service.findAllHosts(stringFilter);
+        return crmService.findAllHosts(stringFilter);
     }
 
     public Host saveHost(Host host) {
-        service.saveHost(host);
-        return service.findAllHosts(host.getName()).get(0);
+        crmService.saveHost(host);
+        return crmService.findAllHosts(host.getName()).get(0);
     }
 
     public void deleteHost(Host host) {
-        service.deleteHost(host);
+        crmService.deleteHost(host);
     }
 
     public void connect(Host host) {

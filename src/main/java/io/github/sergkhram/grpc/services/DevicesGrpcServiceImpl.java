@@ -255,7 +255,7 @@ public class DevicesGrpcServiceImpl extends DevicesServiceGrpc.DevicesServiceImp
                     .newBuilder()
                     .setData(
                         ByteString.copyFrom(
-                            FileUtils.readFileToByteArray(responseData.getFile())
+                            FileUtils.readFileToByteArray(currentFile)
                         )
                     )
                     .build()

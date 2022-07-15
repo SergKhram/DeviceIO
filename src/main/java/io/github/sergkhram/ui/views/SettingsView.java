@@ -13,7 +13,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.Lumo;
 import io.github.sergkhram.data.entity.Settings;
-import io.github.sergkhram.data.service.CrmService;
+import io.github.sergkhram.logic.SettingsRequestsService;
 import io.github.sergkhram.utils.Const;
 import org.springframework.context.annotation.Scope;
 
@@ -28,12 +28,13 @@ public final class SettingsView extends VerticalLayout {
     TextField androidHomePath = new TextField("ANDROID_HOME path");
     IntegerField adbTimeout = new IntegerField("ADB Timeout(ms)");
     TextField downloadPath = new TextField("Download path");
-    CrmService service;
     Button save = new Button("Save");
     Binder<Settings> binder = new BeanValidationBinder<>(Settings.class);
 
-    public SettingsView(CrmService service) {
-        this.service = service;
+    SettingsRequestsService settingsRequestsService;
+
+    public SettingsView(SettingsRequestsService settingsRequestsService) {
+        this.settingsRequestsService = settingsRequestsService;
         binder.bindInstanceFields(this);
         addClassName("settings-view");
         setSizeFull();
@@ -59,7 +60,7 @@ public final class SettingsView extends VerticalLayout {
     }
 
     private void updateSettings() {
-        Settings currentSettings = service.getCurrentSettings();
+        Settings currentSettings = settingsRequestsService.getSettings();
         if(currentSettings!=null) {
             binder.readBean(currentSettings);
         } else {
@@ -69,10 +70,10 @@ public final class SettingsView extends VerticalLayout {
     }
 
     private void saveSettings() {
-        Settings newSettings = Objects.requireNonNullElseGet(service.getCurrentSettings(), Settings::new);
+        Settings newSettings = Objects.requireNonNullElseGet(settingsRequestsService.getSettings(), Settings::new);
         try {
             binder.writeBean(newSettings);
-            service.saveSettings(newSettings);
+            settingsRequestsService.saveSettings(newSettings);
             Integer currentAdbTimeout = newSettings.getAdbTimeout();
             if(currentAdbTimeout != null) {
                 Const.TIMEOUT = currentAdbTimeout;
