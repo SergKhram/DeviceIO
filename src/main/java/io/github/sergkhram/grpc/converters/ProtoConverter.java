@@ -206,4 +206,13 @@ public class ProtoConverter {
             .setSize(file.size)
             .build();
     }
+
+    public static DeviceDirectoryElement convertDDElementProtoToDDElement(
+        DeviceDirectoryElementProto file
+    ) {
+        DeviceDirectoryElement dde = new DeviceDirectoryElement(file.getName(), file.getPath());
+        dde.size = file.getSize();
+        dde.isDirectory = file.getIsDirectory();
+        return dde;
+    }
 }

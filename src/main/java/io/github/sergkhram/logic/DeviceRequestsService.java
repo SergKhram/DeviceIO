@@ -5,11 +5,15 @@ import io.github.sergkhram.data.entity.DeviceDirectoryElement;
 import io.github.sergkhram.data.entity.Host;
 import io.github.sergkhram.data.enums.IOSPackageType;
 import io.github.sergkhram.data.service.CrmService;
+import io.github.sergkhram.data.service.DownloadService;
 import io.github.sergkhram.managers.Manager;
 import io.github.sergkhram.managers.adb.AdbManager;
 import io.github.sergkhram.managers.idb.IdbManager;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -17,19 +21,20 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import static io.github.sergkhram.utils.Utils.getManagerByType;
 
 @Service
+@Slf4j
 public class DeviceRequestsService {
+    @Autowired
     CrmService service;
+    @Autowired
     HostRequestsService hostRequestsService;
     List<Manager> managers;
+    @Autowired
+    DownloadService downloadService;
 
     public DeviceRequestsService(
-        CrmService service,
         AdbManager adbManager,
-        IdbManager idbManager,
-        HostRequestsService hostRequestsService
+        IdbManager idbManager
     ) {
-        this.service = service;
-        this.hostRequestsService = hostRequestsService;
         managers = List.of(adbManager, idbManager);
     }
 
@@ -42,7 +47,7 @@ public class DeviceRequestsService {
     public List<Device> getDBDevicesList(String stringFilter, String hostId)
         throws NoSuchElementException, IllegalArgumentException
     {
-        return getDBDevicesList(stringFilter, UUID.fromString(hostId));
+        return getDBDevicesList(stringFilter, hostId.isEmpty() ? null : UUID.fromString(hostId));
     }
 
     public List<Device> getDBDevicesList(String stringFilter, UUID hostId)
@@ -116,5 +121,16 @@ public class DeviceRequestsService {
             case IOS: return getManagerByType(managers, IdbManager.class).getListFiles(device, path, iosPackageType);
             default: return Collections.emptyList();
         }
+    }
+
+    public DownloadService.DownloadResponseData download(DownloadService.DownloadRequestData downloadRequestData)
+        throws IOException
+    {
+        return (
+                downloadRequestData.getDeviceDirectoryElement().isDirectory != null
+                    && downloadRequestData.getDeviceDirectoryElement().isDirectory
+                )
+                ? downloadService.downloadFolder(downloadRequestData)
+                : downloadService.downloadFile(downloadRequestData);
     }
 }

@@ -5,12 +5,14 @@ import io.github.sergkhram.data.service.CrmService;
 import io.github.sergkhram.managers.Manager;
 import io.github.sergkhram.managers.adb.AdbManager;
 import io.github.sergkhram.managers.idb.IdbManager;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.NoSuchElementException;
 
 @Service
+@Slf4j
 public class HostRequestsService {
     CrmService service;
     List<Manager> managers;

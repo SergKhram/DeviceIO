@@ -19,6 +19,7 @@ service DevicesService {
   rpc getDevicesStatesRequest(google.protobuf.Empty) returns (DevicesStatesResponse) {};
   rpc postExecuteShellRequest(ExecuteShellRequest) returns (ExecuteShellResponse) {};
   rpc getFilesListOfDeviceRequest(GetDeviceFilesRequest) returns (GetDeviceFilesResponse) {}
+  rpc postDownloadFileRequest(FileDownloadRequest) returns (stream DataChunk) {}
 }
 
 message DeviceId {
@@ -120,4 +121,14 @@ message DeviceDirectoryElementProto {
   string name = 2;
   string path = 3;
   string size = 4;
+}
+
+message DataChunk {
+  bytes data = 1;
+}
+
+message FileDownloadRequest {
+  string id = 1;
+  string iosPackageType = 2;
+  DeviceDirectoryElementProto deviceDirectoryElementProto = 3;
 }

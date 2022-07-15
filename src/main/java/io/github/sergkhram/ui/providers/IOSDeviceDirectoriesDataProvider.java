@@ -1,27 +1,26 @@
-package io.github.sergkhram.data.providers;
+package io.github.sergkhram.ui.providers;
 
 import com.vaadin.flow.data.provider.hierarchy.AbstractBackEndHierarchicalDataProvider;
 import com.vaadin.flow.data.provider.hierarchy.HierarchicalQuery;
 import io.github.sergkhram.data.entity.Device;
 import io.github.sergkhram.data.entity.DeviceDirectoryElement;
 import io.github.sergkhram.data.enums.IOSPackageType;
-import io.github.sergkhram.managers.adb.AdbManager;
-import io.github.sergkhram.managers.idb.IdbManager;
+import io.github.sergkhram.logic.DeviceRequestsService;
 
 import java.util.List;
 import java.util.stream.Stream;
 
 public class IOSDeviceDirectoriesDataProvider extends AbstractBackEndHierarchicalDataProvider<DeviceDirectoryElement, Void> {
     Device device;
-    IdbManager idbManager;
+    DeviceRequestsService deviceRequestsService;
     String bundle;
     IOSPackageType iosPackageType;
 
     public IOSDeviceDirectoriesDataProvider(
-        Device device, IdbManager idbManager, String bundle, IOSPackageType iosPackageType
+        Device device, DeviceRequestsService deviceRequestsService, String bundle, IOSPackageType iosPackageType
     ) {
         this.device = device;
-        this.idbManager = idbManager;
+        this.deviceRequestsService = deviceRequestsService;
         this.bundle = bundle;
         this.iosPackageType = iosPackageType;
     }
@@ -30,9 +29,9 @@ public class IOSDeviceDirectoriesDataProvider extends AbstractBackEndHierarchica
     public int getChildCount(final HierarchicalQuery<DeviceDirectoryElement, Void> hierarchicalQuery) {
         DeviceDirectoryElement parent = hierarchicalQuery.getParentOptional()
             .orElse(null);
-        return parent!=null
+        return parent != null
             ? getChildrenElements(parent).size()
-            : idbManager.getListFiles(device, bundle, iosPackageType).size();
+            : deviceRequestsService.getListFiles(device, bundle, iosPackageType).size();
     }
 
     @Override
@@ -40,9 +39,9 @@ public class IOSDeviceDirectoriesDataProvider extends AbstractBackEndHierarchica
         boolean hasChildren;
         if (deviceDirectoryElement != null) {
             hasChildren = getChildrenElements(deviceDirectoryElement).size() > 0;
-            if(hasChildren) deviceDirectoryElement.isDirectory = true;
+            if (hasChildren) deviceDirectoryElement.isDirectory = true;
         } else {
-            hasChildren = idbManager.getListFiles(device, bundle, iosPackageType).size() > 0;
+            hasChildren = deviceRequestsService.getListFiles(device, bundle, iosPackageType).size() > 0;
         }
         return hasChildren;
     }
@@ -53,13 +52,15 @@ public class IOSDeviceDirectoriesDataProvider extends AbstractBackEndHierarchica
     ) {
         final DeviceDirectoryElement parent = hierarchicalQuery.getParentOptional()
             .orElse(null);
-        return parent!=null
+        return parent != null
             ? getChildrenElements(parent).stream()
-            : idbManager.getListFiles(device, bundle, iosPackageType).stream();
+            : deviceRequestsService.getListFiles(device, bundle, iosPackageType).stream();
     }
 
     private List<DeviceDirectoryElement> getChildrenElements(DeviceDirectoryElement deviceDirectoryElement) {
         String parentPath = deviceDirectoryElement.path + "/";
-        return idbManager.getListFiles(device, parentPath + deviceDirectoryElement.name, iosPackageType);
+        return deviceRequestsService.getListFiles(
+            device, parentPath + deviceDirectoryElement.name, iosPackageType
+        );
     }
 }

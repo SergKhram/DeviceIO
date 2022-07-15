@@ -1,4 +1,4 @@
-package io.github.sergkhram.views.list.forms;
+package io.github.sergkhram.ui.views.list.forms;
 
 import com.vaadin.flow.component.ComponentEvent;
 import com.vaadin.flow.component.ComponentEventListener;
@@ -26,18 +26,14 @@ import com.vaadin.flow.shared.Registration;
 import com.vaadin.flow.theme.lumo.Lumo;
 import io.github.sergkhram.data.enums.OsType;
 import io.github.sergkhram.data.enums.IOSPackageType;
-import io.github.sergkhram.data.providers.IOSDeviceDirectoriesDataProvider;
-import io.github.sergkhram.managers.Manager;
-import io.github.sergkhram.managers.adb.AdbManager;
+import io.github.sergkhram.ui.providers.IOSDeviceDirectoriesDataProvider;
+import io.github.sergkhram.logic.DeviceRequestsService;
 import io.github.sergkhram.data.entity.Device;
 import io.github.sergkhram.data.entity.DeviceDirectoryElement;
-import io.github.sergkhram.data.providers.AndroidDeviceDirectoriesDataProvider;
-import io.github.sergkhram.managers.idb.IdbManager;
+import io.github.sergkhram.ui.providers.AndroidDeviceDirectoriesDataProvider;
 
 import java.io.File;
-import java.util.List;
 
-import static io.github.sergkhram.utils.Utils.getManagerByType;
 
 public final class DeviceForm extends FormLayout {
     Binder<Device> binder = new Binder<>(Device.class);
@@ -162,7 +158,7 @@ public final class DeviceForm extends FormLayout {
             "Download", click -> {
                 setDownloadDialogText();
                 fireEvent(
-                    new DownloadFileEvent(
+                    new DownloadEvent(
                         this, device, click.getItem().get(), downloadDialog, iosPackageTypeComboBox.getValue()
                     )
                 );
@@ -221,16 +217,16 @@ public final class DeviceForm extends FormLayout {
         iosExplorerTunerLayout.setVisible(visible);
     }
 
-    public void initDeviceExplorer(List<Manager> managers) {
+    public void initDeviceExplorer(DeviceRequestsService deviceRequestsService) {
         if(device.getIsActive()) {
             dataProvider = device.getOsType().equals(OsType.ANDROID)
                 ? new AndroidDeviceDirectoriesDataProvider(
                     device,
-                    getManagerByType(managers, AdbManager.class)
+                    deviceRequestsService
                 )
                 : new IOSDeviceDirectoriesDataProvider(
                     device,
-                    getManagerByType(managers, IdbManager.class),
+                    deviceRequestsService,
                     "",
                     iosPackageTypeComboBox.getValue()
                 );
@@ -312,12 +308,12 @@ public final class DeviceForm extends FormLayout {
         }
     }
 
-    public static class DownloadFileEvent extends DeviceFormEvent {
+    public static class DownloadEvent extends DeviceFormEvent {
         private DeviceDirectoryElement deviceDirectoryElement;
         private Dialog dialog;
         private IOSPackageType iosPackageType;
 
-        DownloadFileEvent(
+        DownloadEvent(
             DeviceForm source,
             Device device,
             DeviceDirectoryElement deviceDirectoryElement,

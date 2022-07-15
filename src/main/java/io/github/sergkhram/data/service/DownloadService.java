@@ -1,21 +1,25 @@
 package io.github.sergkhram.data.service;
 
 import com.vaadin.flow.server.StreamResource;
+import io.github.sergkhram.data.entity.Device;
+import io.github.sergkhram.data.entity.DeviceDirectoryElement;
+import io.github.sergkhram.data.enums.IOSPackageType;
 import io.github.sergkhram.data.enums.OsType;
 import io.github.sergkhram.managers.adb.AdbManager;
 import io.github.sergkhram.managers.idb.IdbManager;
-import io.github.sergkhram.views.list.forms.DeviceForm;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.springframework.stereotype.Service;
 import org.zeroturnaround.zip.ZipUtil;
 
 import java.io.*;
+import java.util.NoSuchElementException;
 
 import static io.github.sergkhram.utils.Const.DEFAULT_DOWNLOAD_PATH;
 
 @Service
+@Slf4j
 public class DownloadService {
     AdbManager adbManager;
     IdbManager idbManager;
@@ -26,58 +30,72 @@ public class DownloadService {
         this.idbManager = idbManager;
     }
 
-    @AllArgsConstructor
-    @NoArgsConstructor
-    public static class DownloadData {
-        public File file;
-        public StreamResource resource;
-        public String error;
+    @Builder
+    @Getter
+    public static class DownloadResponseData {
+        private final File file;
+        private final StreamResource resource;
     }
 
-    public DownloadData downloadFile(DeviceForm.DownloadFileEvent downloadFileEvent) throws FileNotFoundException {
-        File file = downloadFileEvent.getDevice().getOsType().equals(OsType.ANDROID)
+    @Builder
+    @Getter
+    public static class DownloadRequestData {
+        private final Device device;
+        private final DeviceDirectoryElement deviceDirectoryElement;
+        private final IOSPackageType iosPackageType;
+    }
+
+    public DownloadResponseData downloadFile(DownloadRequestData downloadRequestData) throws FileNotFoundException {
+        File file = downloadRequestData.getDevice().getOsType().equals(OsType.ANDROID)
             ? adbManager.downloadFile(
-                downloadFileEvent.getDevice(),
-                downloadFileEvent.getDeviceDirectoryElement(),
-                DEFAULT_DOWNLOAD_PATH
-            )
+            downloadRequestData.getDevice(),
+            downloadRequestData.getDeviceDirectoryElement(),
+            DEFAULT_DOWNLOAD_PATH
+        )
             : idbManager.downloadFile(
-                downloadFileEvent.getDevice(),
-                downloadFileEvent.getDeviceDirectoryElement(),
-                downloadFileEvent.getIosPackageType(),
-                DEFAULT_DOWNLOAD_PATH
-            );
+            downloadRequestData.getDevice(),
+            downloadRequestData.getDeviceDirectoryElement(),
+            downloadRequestData.getIosPackageType(),
+            DEFAULT_DOWNLOAD_PATH
+        );
         InputStream inputStream = new FileInputStream(
             file);
         StreamResource resource = new StreamResource(file.getName(), () -> inputStream);
-        return new DownloadData(file, resource, null);
+        return DownloadResponseData
+            .builder()
+            .file(file)
+            .resource(resource)
+            .build();
     }
 
-    public DownloadData downloadFolder(DeviceForm.DownloadFileEvent downloadFileEvent) throws IOException {
-        DownloadData downloadData = new DownloadData();
-        File directory = downloadFileEvent.getDevice().getOsType().equals(OsType.ANDROID)
+    public DownloadResponseData downloadFolder(DownloadRequestData downloadRequestData)
+        throws IOException, NoSuchElementException
+    {
+        File directory = downloadRequestData.getDevice().getOsType().equals(OsType.ANDROID)
             ? adbManager.downloadFolder(
-                downloadFileEvent.getDevice(),
-                downloadFileEvent.getDeviceDirectoryElement(),
-                DEFAULT_DOWNLOAD_PATH
-            )
+            downloadRequestData.getDevice(),
+            downloadRequestData.getDeviceDirectoryElement(),
+            DEFAULT_DOWNLOAD_PATH
+        )
             : idbManager.downloadFolder(
-                downloadFileEvent.getDevice(),
-                downloadFileEvent.getDeviceDirectoryElement(),
-                downloadFileEvent.getIosPackageType(),
-                DEFAULT_DOWNLOAD_PATH
-            );
-        if(directory.exists()) {
+            downloadRequestData.getDevice(),
+            downloadRequestData.getDeviceDirectoryElement(),
+            downloadRequestData.getIosPackageType(),
+            DEFAULT_DOWNLOAD_PATH
+        );
+        if (directory.exists()) {
             File zipFile = new File(directory + ZIP_EXTENSION);
             ZipUtil.pack(directory, zipFile);
             InputStream inputStream = new FileInputStream(
                 zipFile);
-            downloadData.resource = new StreamResource(zipFile.getName(), () -> inputStream);
             FileUtils.deleteDirectory(directory);
-            downloadData.file = zipFile;
+            return DownloadResponseData
+                .builder()
+                .file(zipFile)
+                .resource(new StreamResource(zipFile.getName(), () -> inputStream))
+                .build();
         } else {
-            downloadData.error = "Empty directory!";
+            throw new NoSuchElementException("Empty directory!");
         }
-        return downloadData;
     }
 }

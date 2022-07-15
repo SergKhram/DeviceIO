@@ -1,4 +1,4 @@
-package io.github.sergkhram.views.list;
+package io.github.sergkhram.ui.views.list;
 
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -7,7 +7,7 @@ import io.github.sergkhram.logic.DeviceRequestsService;
 import io.github.sergkhram.logic.HostRequestsService;
 import io.github.sergkhram.data.entity.Device;
 import io.github.sergkhram.data.entity.Host;
-import io.github.sergkhram.views.MainLayout;
+import io.github.sergkhram.ui.views.MainLayout;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
@@ -17,7 +17,7 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import io.github.sergkhram.views.list.forms.HostForm;
+import io.github.sergkhram.ui.views.list.forms.HostForm;
 import org.springframework.context.annotation.Scope;
 
 import java.io.IOException;
@@ -184,7 +184,7 @@ public final class HostsListView extends VerticalLayout {
         try {
             InetAddress address = InetAddress.getByName(host.getAddress());
             host.setIsActive(address.isReachable(5000));
-            if(host.getIsActive()) {
+            if (host.getIsActive()) {
                 hostRequestsService.saveHost(host);
             } else {
                 deviceRequestsService.getDBDevicesList(
@@ -192,8 +192,7 @@ public final class HostsListView extends VerticalLayout {
                     host.getId()
                 ).forEach(deviceRequestsService::deleteDevice);
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
             deviceRequestsService.getDBDevicesList(
                 "", host.getId()

@@ -16,7 +16,7 @@ import static io.github.sergkhram.utils.grpc.ErrorUtil.prepareGrpcError;
 
 @GrpcService
 @Slf4j
-public class HostsGrpcService extends HostsServiceGrpc.HostsServiceImplBase {
+public class HostsGrpcServiceImpl extends HostsServiceGrpc.HostsServiceImplBase {
 
     @Autowired
     HostRequestsService hostRequestsService;

@@ -1,9 +1,9 @@
-package io.github.sergkhram.views;
+package io.github.sergkhram.ui.views;
 
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
-import io.github.sergkhram.views.list.DevicesListView;
-import io.github.sergkhram.views.list.HostsListView;
+import io.github.sergkhram.ui.views.list.DevicesListView;
+import io.github.sergkhram.ui.views.list.HostsListView;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.html.H1;
