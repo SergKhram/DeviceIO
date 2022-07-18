@@ -9,7 +9,9 @@ import io.github.sergkhram.data.service.DownloadService;
 import io.github.sergkhram.managers.Manager;
 import io.github.sergkhram.managers.adb.AdbManager;
 import io.github.sergkhram.managers.idb.IdbManager;
+import io.github.sergkhram.ssh.SSHService;
 import lombok.extern.slf4j.Slf4j;
+import net.schmizz.sshj.SSHClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +32,8 @@ public class DeviceRequestsService {
     List<Manager> managers;
     @Autowired
     DownloadService downloadService;
+    @Autowired
+    SSHService sshService;
 
     public DeviceRequestsService(
         AdbManager adbManager,
@@ -133,4 +137,10 @@ public class DeviceRequestsService {
                 ? downloadService.downloadFolder(downloadRequestData)
                 : downloadService.downloadFile(downloadRequestData);
     }
+
+//    public void downloadSftp(DownloadService.DownloadRequestData downloadRequestData) throws IOException {
+//        DownloadService.DownloadResponseData data = download(downloadRequestData);
+//        SSHClient sshClient = sshService.setupSshj();
+//        sshService.sendFileToSftp(sshClient, data.getFile(), "/");
+//    }
 }
