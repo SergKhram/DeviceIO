@@ -34,6 +34,7 @@ public final class HostsListView extends VerticalLayout {
     Grid<Host> grid = new Grid<>(Host.class);
     TextField filterText = new TextField();
     HostForm form;
+    Button addHostButton = new Button("Add host");
 
     HostRequestsService hostRequestsService;
     DeviceRequestsService deviceRequestsService;
@@ -135,7 +136,6 @@ public final class HostsListView extends VerticalLayout {
         filterText.setValueChangeMode(ValueChangeMode.LAZY);
         filterText.addValueChangeListener(e -> updateList());
 
-        Button addHostButton = new Button("Add host");
         addHostButton.addClickListener(click -> addHost());
         Button updateHostsStateButton = new Button("Update the state of the hosts", new Icon(VaadinIcon.REFRESH));
         updateHostsStateButton.setIconAfterText(false);
