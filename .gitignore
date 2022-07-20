@@ -14,3 +14,4 @@ frontend/index.html
 .idea
 deviceio.iml
 node_modules
+/.allure/

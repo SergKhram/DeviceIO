@@ -1,9 +1,11 @@
 package io.github.sergkhram.api;
 
 import io.github.sergkhram.api.requests.HostsRequests;
+import io.qameta.allure.Epic;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import io.github.sergkhram.data.entity.Host;
 
@@ -12,6 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
+@Epic("API")
 public class HostsApiTests extends ApiTestsBase {
 
     @BeforeEach
@@ -20,6 +23,7 @@ public class HostsApiTests extends ApiTestsBase {
     }
 
     @Test
+    @DisplayName("Проверка списка хостов")
     public void checkHostsListTest() {
         Response response = HostsRequests.getHosts(getBaseUrl());
 
@@ -36,6 +40,7 @@ public class HostsApiTests extends ApiTestsBase {
     }
 
     @Test
+    @DisplayName("Проверка информации о хосте")
     public void checkHostInfoTest() {
         Host host = generateHosts(1).get(0);
         hostRepository.save(host);
