@@ -6,6 +6,8 @@ import com.vaadin.flow.data.provider.ListDataProvider;
 import io.github.sergkhram.data.entity.Host;
 import io.github.sergkhram.data.repository.HostRepository;
 import io.github.sergkhram.ui.views.list.forms.HostForm;
+import io.github.sergkhram.utils.Const;
+import lombok.SneakyThrows;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,12 +17,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import com.vaadin.flow.component.textfield.TextField;
 
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
-import static io.github.sergkhram.ui.generators.Generator.generateRandomString;
+import static io.github.sergkhram.Generator.generateHosts;
+import static io.github.sergkhram.Generator.generateRandomString;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -98,13 +101,13 @@ public class HostsListViewTest {
         Assertions.assertEquals(3, getGridAsList(grid).getItems().size());
         filterText.setValue(firstHost.getName());
         Assertions.assertEquals(1, getGridAsList(grid).getItems().size());
-        Assertions.assertEquals(firstHost.getName(), getGridAsList(grid).getItems().stream().findFirst().get().getName());
+        Assertions.assertEquals(firstHost.getName(), getFirstItem(grid).getName());
         filterText.setValue(secondHost.getName());
         Assertions.assertEquals(1, getGridAsList(grid).getItems().size());
-        Assertions.assertEquals(secondHost.getName(), getGridAsList(grid).getItems().stream().findFirst().get().getName());
+        Assertions.assertEquals(secondHost.getName(), getFirstItem(grid).getName());
         filterText.setValue(thirdHost.getName());
         Assertions.assertEquals(1, getGridAsList(grid).getItems().size());
-        Assertions.assertEquals(thirdHost.getName(), getGridAsList(grid).getItems().stream().findFirst().get().getName());
+        Assertions.assertEquals(thirdHost.getName(), getFirstItem(grid).getName());
         filterText.setValue("e");
         Assertions.assertEquals(2, getGridAsList(grid).getItems().size());
         Assertions.assertTrue(
@@ -119,6 +122,22 @@ public class HostsListViewTest {
         );
     }
 
+    @Test
+    public void checkDeleteAction() {
+        CopyOnWriteArrayList<Host> hosts = generateHosts(1);
+        hosts.parallelStream().forEach(it -> it.setAddress(Const.LOCAL_HOST));
+        hostRepository.saveAll(hosts);
+        Grid<Host> grid = hostsListView.grid;
+        grid.setItems(hostRepository.findAll());
+        Assertions.assertEquals(1, getGridAsList(grid).getItems().size());
+        Host firstContact = getFirstItem(grid);
+        grid.asSingleSelect().setValue(firstContact);
+        HostForm hostForm = hostsListView.form;
+        getFormDeleteButton(hostForm).click();
+        Assertions.assertEquals(0, getGridAsList(grid).getItems().size());
+        Assertions.assertEquals(0, hostRepository.findAll().size());
+    }
+
     private ListDataProvider<Host> getGridAsList(Grid<Host> grid) {
         return ((ListDataProvider<Host>) grid.getDataProvider());
     }
@@ -127,18 +146,10 @@ public class HostsListViewTest {
         return getGridAsList(grid).getItems().iterator().next();
     }
 
-    private List<Host> generateHosts(int count) {
-        CopyOnWriteArrayList<Host> hosts = new CopyOnWriteArrayList<>();
-        IntStream.range(0, count).parallel().forEach(
-            it -> {
-                Host host = new Host();
-                host.setName(generateRandomString());
-                host.setAddress(generateRandomString());
-                hosts.add(
-                    host
-                );
-            }
-        );
-        return hosts;
+    @SneakyThrows
+    private Button getFormDeleteButton(HostForm hostForm) {
+        Field deleteButtonField = HostForm.class.getDeclaredField("delete");
+        deleteButtonField.setAccessible(true);
+        return (Button) deleteButtonField.get(hostForm);
     }
 }
