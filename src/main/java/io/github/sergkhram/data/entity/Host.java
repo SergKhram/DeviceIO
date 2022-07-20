@@ -78,4 +78,17 @@ public class Host extends AbstractEntity {
     public List<Device> getDevices() {
         return devices;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(obj==null) return false;
+        Host current = (Host) this;
+        Host another = (Host) obj;
+        String currentPort = current.getPort()!=null ? current.getPort().toString() : "";
+        String anotherPort = another.getPort()!=null ? another.getPort().toString() : "";
+        return current.getName().equals(another.getName())
+            && current.getAddress().equals(another.getAddress())
+            && currentPort.equals(anotherPort)
+            && current.getId().equals(another.getId());
+    }
 }
