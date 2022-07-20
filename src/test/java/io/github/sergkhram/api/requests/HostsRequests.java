@@ -17,4 +17,17 @@ public class HostsRequests {
             .extract()
             .response();
     }
+
+    public static Response getHostById(String baseUrl, String id) {
+        return RestAssured
+            .given()
+            .when()
+            .log().all(false)
+            .get(baseUrl + "/host/" + id)
+            .then()
+            .log().all(false)
+            .statusCode(200)
+            .extract()
+            .response();
+    }
 }

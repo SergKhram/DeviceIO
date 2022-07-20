@@ -2,9 +2,7 @@ package io.github.sergkhram.grpc;
 
 import io.github.sergkhram.data.entity.Host;
 import io.github.sergkhram.data.repository.HostRepository;
-import io.github.sergkhram.proto.GetHostsListRequest;
-import io.github.sergkhram.proto.GetHostsListResponse;
-import io.github.sergkhram.proto.HostsServiceGrpc;
+import io.github.sergkhram.proto.*;
 import net.devh.boot.grpc.client.autoconfigure.GrpcClientAutoConfiguration;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.junit.jupiter.api.Assertions;
@@ -20,6 +18,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import java.util.List;
 
 import static io.github.sergkhram.Generator.generateHosts;
+import static io.github.sergkhram.grpc.converters.ProtoConverter.convertHostToHostProto;
 import static io.github.sergkhram.grpc.converters.ProtoConverter.convertHostsToHostsProto;
 
 
@@ -66,6 +65,22 @@ public class HostsGrpcTest {
         Assertions.assertEquals(
             convertHostsToHostsProto(hosts),
             response.getHostsList()
+        );
+    }
+
+    @Test
+    @DirtiesContext
+    public void checkHostInfoTest() {
+        Host host = generateHosts(1).get(0);
+        hostRepository.save(host);
+        host = hostRepository.findAll().get(0);
+        HostId request = HostId.newBuilder()
+            .setId(host.getId().toString())
+            .build();
+        HostProto response = hostService.getHostRequest(request);
+        Assertions.assertEquals(
+            convertHostToHostProto(host),
+            response
         );
     }
 }
