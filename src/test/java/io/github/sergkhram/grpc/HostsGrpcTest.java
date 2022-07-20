@@ -3,11 +3,13 @@ package io.github.sergkhram.grpc;
 import io.github.sergkhram.data.entity.Host;
 import io.github.sergkhram.data.repository.HostRepository;
 import io.github.sergkhram.proto.*;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
+import io.qameta.allure.grpc.AllureGrpc;
 import net.devh.boot.grpc.client.autoconfigure.GrpcClientAutoConfiguration;
 import net.devh.boot.grpc.client.inject.GrpcClient;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
@@ -34,6 +36,9 @@ import static io.github.sergkhram.grpc.converters.ProtoConverter.convertHostsToH
 @ImportAutoConfiguration({
     GrpcClientAutoConfiguration.class})
 @DirtiesContext
+@Epic("DeviceIO")
+@Feature("gRPC")
+@Story("Hosts")
 public class HostsGrpcTest {
 
     @GrpcClient("myClient")
@@ -45,10 +50,12 @@ public class HostsGrpcTest {
     @BeforeEach
     public void beforeTest() {
         hostRepository.deleteAll();
+        hostService = hostService.withInterceptors(new AllureGrpc());
     }
 
     @Test
     @DirtiesContext
+    @DisplayName("Check get hosts grpc request")
     public void checkHostsListRequest() {
         GetHostsListRequest request = GetHostsListRequest.newBuilder()
             .setStringFilter("")
@@ -70,6 +77,7 @@ public class HostsGrpcTest {
 
     @Test
     @DirtiesContext
+    @DisplayName("Check get host info by id api request")
     public void checkHostInfoTest() {
         Host host = generateHosts(1).get(0);
         hostRepository.save(host);

@@ -2,17 +2,18 @@ package io.github.sergkhram.api.requests;
 
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class HostsRequests {
 
     public static Response getHosts(String baseUrl) {
         return RestAssured
             .given()
             .when()
-            .log().all(false)
+            .filter(new MyAllureRestAssured(log))
             .get(baseUrl + "/hosts")
             .then()
-            .log().all(false)
             .statusCode(200)
             .extract()
             .response();
@@ -22,10 +23,9 @@ public class HostsRequests {
         return RestAssured
             .given()
             .when()
-            .log().all(false)
+            .filter(new MyAllureRestAssured(log))
             .get(baseUrl + "/host/" + id)
             .then()
-            .log().all(false)
             .statusCode(200)
             .extract()
             .response();
