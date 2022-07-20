@@ -24,7 +24,7 @@ import static io.github.sergkhram.grpc.converters.ProtoConverter.convertHostsToH
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(
-    webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT,
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = {
         "grpc.server.port=9091",
         "grpc.client.myClient.address=static://127.0.0.1:9091",
