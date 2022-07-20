@@ -2,6 +2,9 @@ package io.github.sergkhram.ui.views.list.forms;
 
 import com.vaadin.flow.component.button.Button;
 import io.github.sergkhram.ui.views.list.HostsListView;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,6 +24,9 @@ import static io.github.sergkhram.Generator.generateRandomString;
         "grpc.server.port=-1"
     }
 )
+@Epic("DeviceIO")
+@Feature("UI")
+@Story("Host form view")
 public class HostFormTest {
     @Autowired
     HostsListView hostsListView;

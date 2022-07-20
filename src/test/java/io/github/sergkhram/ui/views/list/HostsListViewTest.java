@@ -7,6 +7,9 @@ import io.github.sergkhram.data.entity.Host;
 import io.github.sergkhram.data.repository.HostRepository;
 import io.github.sergkhram.ui.views.list.forms.HostForm;
 import io.github.sergkhram.utils.Const;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,7 +29,14 @@ import static io.github.sergkhram.Generator.generateHosts;
 import static io.github.sergkhram.Generator.generateRandomString;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest
+@SpringBootTest(
+    properties = {
+        "grpc.server.port=-1"
+    }
+)
+@Epic("DeviceIO")
+@Feature("UI")
+@Story("Hosts list view")
 public class HostsListViewTest {
 
     @Autowired
