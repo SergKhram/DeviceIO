@@ -5,14 +5,13 @@ import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
 import io.restassured.response.Response;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import io.github.sergkhram.data.entity.Host;
 
 import static io.github.sergkhram.Generator.generateHosts;
-import static org.assertj.core.api.Assertions.assertThat;
+import static io.github.sergkhram.utils.CustomAssertions.*;
 
 import java.util.List;
 
@@ -31,16 +30,15 @@ public class HostsApiTests extends ApiTestsBase {
     public void checkHostsListTest() {
         Response response = HostsRequests.getHosts(getBaseUrl());
 
-        Assertions.assertTrue(response.jsonPath().getList("", Host.class).isEmpty());
+        assertTrueWithAllure(response.jsonPath().getList("", Host.class).isEmpty());
 
         List<Host> hosts = generateHosts(100);
         hostRepository.saveAll(hosts);
         hosts = hostRepository.findAll();
         response = HostsRequests.getHosts(getBaseUrl());
 
-        Assertions.assertEquals(hosts.size(), response.jsonPath().getList("", Host.class).size());
-        assertThat(response.jsonPath().getList("", Host.class))
-            .containsAll(hosts);
+        assertWithAllure(hosts.size(), response.jsonPath().getList("", Host.class).size());
+        assertContainsAllWithAllure(response.jsonPath().getList("", Host.class), hosts);
     }
 
     @Test
@@ -50,7 +48,7 @@ public class HostsApiTests extends ApiTestsBase {
         hostRepository.save(host);
         host = hostRepository.findAll().get(0);
         Response response = HostsRequests.getHostById(getBaseUrl(), host.getId().toString());
-        Assertions.assertEquals(
+        assertWithAllure(
             host,
             response.as(Host.class)
         );

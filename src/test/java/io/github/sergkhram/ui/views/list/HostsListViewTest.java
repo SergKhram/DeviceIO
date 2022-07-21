@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 
 import static io.github.sergkhram.Generator.generateHosts;
 import static io.github.sergkhram.Generator.generateRandomString;
+import static io.github.sergkhram.utils.CustomAssertions.*;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(
@@ -61,10 +62,10 @@ public class HostsListViewTest {
         grid.setItems(List.of(host));
         Host firstContact = getFirstItem(grid);
         HostForm form = hostsListView.form;
-        Assertions.assertFalse(form.isVisible());
+        assertFalseWithAllure(form.isVisible());
         grid.asSingleSelect().setValue(firstContact);
-        Assertions.assertTrue(form.isVisible());
-        Assertions.assertEquals(firstContact.getName(), form.name.getValue());
+        assertTrueWithAllure(form.isVisible());
+        assertWithAllure(firstContact.getName(), form.name.getValue());
     }
 
     @Test
@@ -73,30 +74,30 @@ public class HostsListViewTest {
         int count = 100;
         grid.setPageSize(count);
         List<Host> hosts = generateHosts(count);
-        Assertions.assertEquals(0, getGridAsList(grid).getItems().size());
+        assertWithAllure(0, getGridAsList(grid).getItems().size());
         grid.setItems(hosts);
-        Assertions.assertEquals(count, getGridAsList(grid).getItems().size());
-        Assertions.assertEquals(count, grid.getPageSize());
+        assertWithAllure(count, getGridAsList(grid).getItems().size());
+        assertWithAllure(count, grid.getPageSize());
     }
 
     @Test
     public void checkFilterTextUpdateValue() {
         TextField filterText = hostsListView.filterText;
         String value = generateRandomString();
-        Assertions.assertEquals("", filterText.getValue());
+        assertWithAllure("", filterText.getValue());
         filterText.setValue(value);
-        Assertions.assertEquals(value, filterText.getValue());
+        assertWithAllure(value, filterText.getValue());
         filterText.clear();
-        Assertions.assertEquals("", filterText.getValue());
+        assertWithAllure("", filterText.getValue());
     }
 
     @Test
     public void checkAddHostButtonAction() {
         Button addHostButton = hostsListView.addHostButton;
         HostForm form = hostsListView.form;
-        Assertions.assertFalse(form.isVisible());
+        assertFalseWithAllure(form.isVisible());
         addHostButton.click();
-        Assertions.assertTrue(form.isVisible());
+        assertTrueWithAllure(form.isVisible());
     }
 
     @Test
@@ -108,19 +109,19 @@ public class HostsListViewTest {
         hostRepository.saveAll(List.of(firstHost, secondHost, thirdHost));
         Grid<Host> grid = hostsListView.grid;
         grid.setItems(hostRepository.findAll());
-        Assertions.assertEquals(3, getGridAsList(grid).getItems().size());
+        assertWithAllure(3, getGridAsList(grid).getItems().size());
         filterText.setValue(firstHost.getName());
-        Assertions.assertEquals(1, getGridAsList(grid).getItems().size());
-        Assertions.assertEquals(firstHost.getName(), getFirstItem(grid).getName());
+        assertWithAllure(1, getGridAsList(grid).getItems().size());
+        assertWithAllure(firstHost.getName(), getFirstItem(grid).getName());
         filterText.setValue(secondHost.getName());
-        Assertions.assertEquals(1, getGridAsList(grid).getItems().size());
-        Assertions.assertEquals(secondHost.getName(), getFirstItem(grid).getName());
+        assertWithAllure(1, getGridAsList(grid).getItems().size());
+        assertWithAllure(secondHost.getName(), getFirstItem(grid).getName());
         filterText.setValue(thirdHost.getName());
-        Assertions.assertEquals(1, getGridAsList(grid).getItems().size());
-        Assertions.assertEquals(thirdHost.getName(), getFirstItem(grid).getName());
+        assertWithAllure(1, getGridAsList(grid).getItems().size());
+        assertWithAllure(thirdHost.getName(), getFirstItem(grid).getName());
         filterText.setValue("e");
-        Assertions.assertEquals(2, getGridAsList(grid).getItems().size());
-        Assertions.assertTrue(
+        assertWithAllure(2, getGridAsList(grid).getItems().size());
+        assertTrueWithAllure(
             getGridAsList(grid).getItems()
                 .stream()
                 .map(Host::getName)
@@ -139,13 +140,13 @@ public class HostsListViewTest {
         hostRepository.saveAll(hosts);
         Grid<Host> grid = hostsListView.grid;
         grid.setItems(hostRepository.findAll());
-        Assertions.assertEquals(1, getGridAsList(grid).getItems().size());
+        assertWithAllure(1, getGridAsList(grid).getItems().size());
         Host firstContact = getFirstItem(grid);
         grid.asSingleSelect().setValue(firstContact);
         HostForm hostForm = hostsListView.form;
         getFormDeleteButton(hostForm).click();
-        Assertions.assertEquals(0, getGridAsList(grid).getItems().size());
-        Assertions.assertEquals(0, hostRepository.findAll().size());
+        assertWithAllure(0, getGridAsList(grid).getItems().size());
+        assertWithAllure(0, hostRepository.findAll().size());
     }
 
     private ListDataProvider<Host> getGridAsList(Grid<Host> grid) {

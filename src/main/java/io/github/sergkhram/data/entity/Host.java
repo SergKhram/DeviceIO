@@ -2,6 +2,7 @@ package io.github.sergkhram.data.entity;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import org.springframework.format.annotation.NumberFormat;
 
 import javax.annotation.Nullable;
@@ -14,6 +15,7 @@ import java.util.List;
 @Entity
 @EqualsAndHashCode(callSuper = true)
 @Table(name = "host")
+@ToString(callSuper = true)
 public class Host extends AbstractEntity {
     @NotEmpty
     @Column(name = "name")
@@ -30,11 +32,11 @@ public class Host extends AbstractEntity {
     @Column(name = "isActive")
     private Boolean isActive = false;
 
-    @OneToMany(mappedBy = "host")
+    @OneToMany(mappedBy = "host", fetch = FetchType.EAGER)
     @Nullable
     private List<Device> devices;
 
-    public Host() {};
+    public Host() {}
 
     public Host(String name, String address, Integer port) {
         this.name = name;
@@ -82,7 +84,7 @@ public class Host extends AbstractEntity {
     @Override
     public boolean equals(Object obj) {
         if(obj==null) return false;
-        Host current = (Host) this;
+        Host current = this;
         Host another = (Host) obj;
         String currentPort = current.getPort()!=null ? current.getPort().toString() : "";
         String anotherPort = another.getPort()!=null ? another.getPort().toString() : "";

@@ -17,6 +17,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import java.lang.reflect.Field;
 
 import static io.github.sergkhram.Generator.generateRandomString;
+import static io.github.sergkhram.utils.CustomAssertions.*;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(
@@ -43,32 +44,32 @@ public class HostFormTest {
     @Test
     public void checkFormActiveButtonsTest() {
         HostForm form = clickAddNewHost();
-        Assertions.assertTrue(form.isVisible());
-        Assertions.assertTrue(form.close.isEnabled());
-        Assertions.assertTrue(form.delete.isEnabled());
-        Assertions.assertFalse(form.save.isEnabled());
+        assertTrueWithAllure(form.isVisible());
+        assertTrueWithAllure(form.close.isEnabled());
+        assertTrueWithAllure(form.delete.isEnabled());
+        assertFalseWithAllure(form.save.isEnabled());
     }
 
     @Test
     public void checkFormCloseButtonTest() {
         HostForm form = clickAddNewHost();
-        Assertions.assertTrue(form.isVisible());
+        assertTrueWithAllure(form.isVisible());
         form.close.click();
-        Assertions.assertFalse(form.isVisible());
+        assertFalseWithAllure(form.isVisible());
     }
 
     @Test
     public void checkAddHostValidation() {
         HostForm form = clickAddNewHost();
-        Assertions.assertFalse(form.save.isEnabled());
+        assertFalseWithAllure(form.save.isEnabled());
         form.name.setValue(generateRandomString());
         form.address.setValue(generateRandomString());
         form.port.setValue(100000);
-        Assertions.assertFalse(form.save.isEnabled());
+        assertFalseWithAllure(form.save.isEnabled());
         form.port.setValue(500);
-        Assertions.assertTrue(form.save.isEnabled());
+        assertTrueWithAllure(form.save.isEnabled());
         form.port.clear();
-        Assertions.assertTrue(form.save.isEnabled());
+        assertTrueWithAllure(form.save.isEnabled());
     }
 
     @SneakyThrows
