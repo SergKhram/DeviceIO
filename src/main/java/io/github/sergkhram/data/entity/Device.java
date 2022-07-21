@@ -16,7 +16,7 @@ public class Device extends AbstractEntity {
     private String serial;
     @Column(name = "isActive")
     private Boolean isActive = false;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "host_id", referencedColumnName = "id", nullable = false)
     @NotNull
     @JsonIgnoreProperties({"devices"})

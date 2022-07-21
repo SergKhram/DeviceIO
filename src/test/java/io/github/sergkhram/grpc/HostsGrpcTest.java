@@ -22,6 +22,7 @@ import java.util.List;
 import static io.github.sergkhram.Generator.generateHosts;
 import static io.github.sergkhram.grpc.converters.ProtoConverter.convertHostToHostProto;
 import static io.github.sergkhram.grpc.converters.ProtoConverter.convertHostsToHostsProto;
+import static io.github.sergkhram.utils.CustomAssertions.assertWithAllure;
 
 
 @ExtendWith(SpringExtension.class)
@@ -62,22 +63,24 @@ public class HostsGrpcTest {
             .build();
         GetHostsListResponse response = hostService.getHostsListRequest(request);
         Assertions.assertNotNull(response);
-        Assertions.assertEquals(
+        assertWithAllure(
             GetHostsListResponse.getDefaultInstance().getHostsList(),
-            response.getHostsList()
+            response.getHostsList(),
+            true
         );
         hostRepository.saveAll(generateHosts(100));
         List<Host> hosts = hostRepository.findAll();
         response = hostService.getHostsListRequest(request);
-        Assertions.assertEquals(
+        assertWithAllure(
             convertHostsToHostsProto(hosts),
-            response.getHostsList()
+            response.getHostsList(),
+            true
         );
     }
 
     @Test
     @DirtiesContext
-    @DisplayName("Check get host info by id api request")
+    @DisplayName("Check get host info by id grpc request")
     public void checkHostInfoTest() {
         Host host = generateHosts(1).get(0);
         hostRepository.save(host);
@@ -86,9 +89,10 @@ public class HostsGrpcTest {
             .setId(host.getId().toString())
             .build();
         HostProto response = hostService.getHostRequest(request);
-        Assertions.assertEquals(
+        assertWithAllure(
             convertHostToHostProto(host),
-            response
+            response,
+            true
         );
     }
 }
