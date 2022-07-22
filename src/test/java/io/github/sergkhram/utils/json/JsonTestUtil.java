@@ -2,15 +2,18 @@ package io.github.sergkhram.utils.json;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import lombok.SneakyThrows;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
-public class JsonUtil {
+public class JsonTestUtil {
     public static ObjectMapper objectMapper;
 
     static  {
         objectMapper = new ObjectMapper();
+        SimpleModule module = new SimpleModule();
+        objectMapper.registerModule(module);
     }
 
     @SneakyThrows
@@ -41,19 +44,19 @@ public class JsonUtil {
 
     @SneakyThrows
     public static <T> JsonNode convertModelToJsonNode(T model) {
-        ObjectMapper mapper = JsonUtil.objectMapper;
+        ObjectMapper mapper = JsonTestUtil.objectMapper;
         return mapper.readValue(mapper.writeValueAsBytes(model), JsonNode.class);
     }
 
     @SneakyThrows
     public static <T> String convertModelToString(T model) {
-        ObjectMapper mapper = JsonUtil.objectMapper;
+        ObjectMapper mapper = JsonTestUtil.objectMapper;
         return mapper.writeValueAsString(model);
     }
 
     @SneakyThrows
     public static JsonNode convertStringToJsonNode(String jsonString) {
-        ObjectMapper mapper = JsonUtil.objectMapper;
+        ObjectMapper mapper = JsonTestUtil.objectMapper;
         return mapper.readTree(jsonString);
     }
 }
