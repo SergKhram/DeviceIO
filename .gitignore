@@ -16,3 +16,5 @@ deviceio.iml
 node_modules
 /.allure/
 webpack.generated.js
+package-lock.json
+package.json
