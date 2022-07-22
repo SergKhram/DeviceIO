@@ -10,7 +10,7 @@
 
     <properties>
         <java.version>11</java.version>
-        <vaadin.version>23.1.0</vaadin.version>
+        <vaadin.version>23.1.2</vaadin.version>
         <selenium.version>4.1.2</selenium.version>
         <kotlin.version>1.5.0</kotlin.version>
         <allure.version>2.18.1</allure.version>
@@ -19,7 +19,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.7.0</version>
+        <version>2.7.1</version>
     </parent>
 
     <repositories>

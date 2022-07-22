@@ -15,3 +15,4 @@ frontend/index.html
 deviceio.iml
 node_modules
 /.allure/
+webpack.generated.js
