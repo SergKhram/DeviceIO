@@ -65,7 +65,7 @@ public class HostsApiTests extends ApiTestsBase {
         hosts.parallelStream().forEach(
             it -> {
                 try {
-                    getSetDeviceMethod().invoke(it, devices);
+                    getSetDevicesMethod().invoke(it, devices);
                 } catch (IllegalAccessException | InvocationTargetException ignored) {}
             }
         );
@@ -73,11 +73,11 @@ public class HostsApiTests extends ApiTestsBase {
 
     @SneakyThrows
     private void setDevices(Host host, List<Device> devices) {
-        getSetDeviceMethod().invoke(host, devices);
+        getSetDevicesMethod().invoke(host, devices);
     }
 
     @SneakyThrows
-    private Method getSetDeviceMethod() {
+    private Method getSetDevicesMethod() {
         Method setDevicesMethod = Host.class.getDeclaredMethod("setDevices", List.class);
         setDevicesMethod.setAccessible(true);
         return setDevicesMethod;
