@@ -9,7 +9,7 @@ import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import java.util.List;
 
-import static io.github.sergkhram.utils.json.JsonUtil.*;
+import static io.github.sergkhram.utils.json.JsonTestUtil.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j

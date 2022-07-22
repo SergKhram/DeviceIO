@@ -47,7 +47,7 @@ public class DeviceRequestsService {
     public List<Device> getDBDevicesList(String stringFilter, String hostId)
         throws NoSuchElementException, IllegalArgumentException
     {
-        return getDBDevicesList(stringFilter, hostId.isEmpty() ? null : UUID.fromString(hostId));
+        return getDBDevicesList(stringFilter, (hostId == null || hostId.isEmpty()) ? null : UUID.fromString(hostId));
     }
 
     public List<Device> getDBDevicesList(String stringFilter, UUID hostId)

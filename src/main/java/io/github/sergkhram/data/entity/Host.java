@@ -1,5 +1,6 @@
 package io.github.sergkhram.data.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -32,8 +33,9 @@ public class Host extends AbstractEntity {
     @Column(name = "isActive")
     private Boolean isActive = false;
 
-    @OneToMany(mappedBy = "host", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "host")
     @Nullable
+    @JsonIgnoreProperties({"host"})
     private List<Device> devices;
 
     public Host() {}
@@ -79,6 +81,10 @@ public class Host extends AbstractEntity {
     @Nullable
     public List<Device> getDevices() {
         return devices;
+    }
+
+    private void setDevices(List<Device> devices) {
+        this.devices = devices;
     }
 
     @Override
