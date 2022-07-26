@@ -31,6 +31,7 @@ public class IdbManager implements Manager {
     private final List<String> deviceInfoCmd = List.of(idbCmdPrefix, "describe", "--json", "--udid");
     private final List<String> listOfFilesCmd = List.of(idbCmdPrefix, "file", "ls", "--udid");
     private final List<String> pullFileCmd = List.of(idbCmdPrefix, "file", "pull", "--udid");
+    private final List<String> screenshotCmd = List.of(idbCmdPrefix, "screenshot", "--udid");
 
     @SneakyThrows
     @Override
@@ -431,5 +432,34 @@ public class IdbManager implements Manager {
             );
         }
         return createdFile.get();
+    }
+
+    @Override
+    public File makeScreenshot(Device device, String filePath) {
+        UUID processUuid = UUID.randomUUID();
+        File file = new File(filePath);
+        List<String> cmd = new ArrayList<>(screenshotCmd);
+        cmd.addAll(
+            List.of(
+                device.getSerial(),
+                filePath
+            )
+        );
+        CommandExecutor cmdExecutor = new CommandExecutor(cmd);
+        cmdExecutor.execute(
+            (code) -> log.info(String.format("[%s] Executing '%s'", processUuid, cmd)),
+            (outputCmdLine) -> {
+            },
+            (errorCmdLine) -> {},
+            (code) -> log.info(
+                String.format(
+                    "[%s] Screenshot process for '%s' udid finished with exit code %s",
+                    processUuid,
+                    device.getSerial(),
+                    code
+                )
+            )
+        );
+        return file;
     }
 }
