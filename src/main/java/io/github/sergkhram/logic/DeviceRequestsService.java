@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -132,5 +133,13 @@ public class DeviceRequestsService {
                 )
                 ? downloadService.downloadFolder(downloadRequestData)
                 : downloadService.downloadFile(downloadRequestData);
+    }
+
+    public File makeScreenshot(Device device, String path) {
+        switch (device.getOsType()) {
+            case ANDROID: return getManagerByType(managers, AdbManager.class).makeScreenshot(device, path);
+            case IOS: return getManagerByType(managers, IdbManager.class).makeScreenshot(device, path);
+            default: return null;
+        }
     }
 }

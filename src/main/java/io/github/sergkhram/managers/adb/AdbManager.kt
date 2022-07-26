@@ -45,7 +45,8 @@ class AdbManager: Manager {
 
     init {
         initAdbClient()
-        startAdb()
+        val isSuccessfulAdbStart = startAdb()
+        log.info("Adb starting finished with $isSuccessfulAdbStart")
     }
 
     @PreDestroy
@@ -56,12 +57,15 @@ class AdbManager: Manager {
         }
     }
 
-    fun startAdb(androidHomePath: String? = null) {
-        runBlocking {
+    fun startAdb(androidHomePath: String? = null): Boolean {
+        return runBlocking {
             log.info("Starting adb")
-            androidHomePath?.let {
-                StartAdbInteractor().execute(androidHome = File(androidHomePath))
-            } ?: StartAdbInteractor().execute()
+            val isSuccessfulStart = (
+                    androidHomePath?.let {
+                        return@let StartAdbInteractor().execute(androidHome = File(androidHomePath))
+                    } ?: StartAdbInteractor().execute()
+                )
+            return@runBlocking isSuccessfulStart
         }
     }
 
@@ -71,7 +75,8 @@ class AdbManager: Manager {
 
     fun reinitializeAdb(adbPath: String) {
         stopAdb()
-        startAdb(adbPath)
+        val isSuccessfulAdbStart = startAdb(adbPath)
+        if(!isSuccessfulAdbStart) startAdb()
     }
 
     override fun connectToHost(host: String?, port: Int?) {
@@ -210,15 +215,15 @@ class AdbManager: Manager {
         return devicesMap
     }
 
-    fun makeScreenshot(serial: String, fileName: String): File {
+    override fun makeScreenshot(device: DeviceEntity, filePath: String): File {
         return runBlocking {
             val adapter = RawImageScreenCaptureAdapter()
             val image = adb?.execute(
                 request = ScreenCaptureRequest(adapter),
-                serial = serial
+                serial = device.serial
             )?.toBufferedImage()
 
-            val imageFile = File("/target/$fileName.png");
+            val imageFile = File(filePath);
             if (!ImageIO.write(image, "png", imageFile)) {
                 throw IOException("Failed to find png writer")
             }
