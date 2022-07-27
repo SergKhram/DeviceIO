@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
@@ -32,6 +33,7 @@ public class IdbManager implements Manager {
     private final List<String> listOfFilesCmd = List.of(idbCmdPrefix, "file", "ls", "--udid");
     private final List<String> pullFileCmd = List.of(idbCmdPrefix, "file", "pull", "--udid");
     private final List<String> screenshotCmd = List.of(idbCmdPrefix, "screenshot", "--udid");
+    private final List<String> appsListCmd = List.of(idbCmdPrefix, "list-apps", "--json", "--udid");
 
     @SneakyThrows
     @Override
@@ -148,6 +150,28 @@ public class IdbManager implements Manager {
         device.setIosVersion(json.get("os_version").asText());
         device.setArchitecture(json.get("architecture").asText());
         return device;
+    }
+
+    private List<AppDescription> parseAppsListToListAppDescription(String output) {
+        List<String> outputs = List.of(output.split(System.lineSeparator()));
+        return outputs
+                    .parallelStream()
+                    .map(
+                        this::parseAppToAppDescription
+                    )
+                    .collect(
+                        Collectors.toList()
+                    );
+    }
+
+    private AppDescription parseAppToAppDescription(String output) {
+        JsonNode json = convertStringToJsonNode(output);
+        return AppDescription.builder()
+            .appPackage(json.get("bundle_id").asText())
+            .name(json.get("name").asText())
+            .appState(json.get("process_state").asText())
+            .isActive(json.get("process_state").asText().equals("Running"))
+            .build();
     }
 
     @Override
@@ -461,5 +485,25 @@ public class IdbManager implements Manager {
             )
         );
         return file;
+    }
+
+    @Override
+    public List<AppDescription> getAppsList(Device device) {
+        List<String> cmd = new ArrayList<>(appsListCmd);
+        cmd.add(device.getSerial());
+        CopyOnWriteArrayList<AppDescription> apps = new CopyOnWriteArrayList<>();
+
+        CommandExecutor cmdExecutor = new CommandExecutor(cmd);
+        cmdExecutor.execute(
+            (code) -> log.info(String.format("Executing '%s'", cmd)),
+            (outputCmdLine) -> {
+                apps.addAll(
+                    parseAppsListToListAppDescription(outputCmdLine)
+                );
+            },
+            (errorCmdLine) -> {},
+            (code) -> log.info("Get device apps list process finished with exit code " + code)
+        );
+        return apps;
     }
 }

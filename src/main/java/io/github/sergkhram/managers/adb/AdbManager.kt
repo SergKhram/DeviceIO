@@ -4,7 +4,6 @@ import com.malinskiy.adam.AndroidDebugBridgeClient
 import com.malinskiy.adam.AndroidDebugBridgeClientFactory
 import com.malinskiy.adam.interactor.StartAdbInteractor
 import com.malinskiy.adam.interactor.StopAdbInteractor
-import com.malinskiy.adam.request.Feature
 import com.malinskiy.adam.request.device.AsyncDeviceMonitorRequest
 import com.malinskiy.adam.request.device.Device
 import com.malinskiy.adam.request.device.ListDevicesRequest
@@ -13,12 +12,14 @@ import com.malinskiy.adam.request.framebuffer.ScreenCaptureRequest
 import com.malinskiy.adam.request.misc.ConnectDeviceRequest
 import com.malinskiy.adam.request.misc.DisconnectDeviceRequest
 import com.malinskiy.adam.request.misc.RebootRequest
+import com.malinskiy.adam.request.pkg.PmListRequest
 import com.malinskiy.adam.request.prop.GetPropRequest
 import com.malinskiy.adam.request.shell.v2.ShellCommandRequest
 import com.malinskiy.adam.request.shell.v2.ShellCommandResult
 import com.malinskiy.adam.request.sync.PullRequest
 import com.malinskiy.adam.request.sync.v1.ListFileRequest
 import com.malinskiy.adam.request.sync.v1.PullFileRequest
+import io.github.sergkhram.data.entity.AppDescription
 import io.github.sergkhram.data.entity.DeviceDirectoryElement
 import io.github.sergkhram.data.entity.Host
 import io.github.sergkhram.data.enums.OsType
@@ -317,6 +318,54 @@ class AdbManager: Manager {
         }
         return file
     }
+
+    override fun getAppsList(device: DeviceEntity): List<AppDescription> {
+        return runBlocking {
+            return@runBlocking withTimeoutOrNull(Const.TIMEOUT.toLong()) {
+                val processUuid = UUID.randomUUID()
+                log.debug("[$processUuid] Get list of apps process for device ${device.serial} started")
+                val packages = adb?.execute(
+                    request = PmListRequest(
+                        includePath = false
+                    ),
+                    serial = device.serial
+                )
+                val psCmd = "ps -A -o s,name | grep " + packages.orEmpty().map { "-e ${it.name} " }.reduce { acc, next -> acc + next }
+                val shellResult = executeShell(device, psCmd)
+                val packagesStatesInfo = shellResult.intern().split(System.lineSeparator()).map { line ->
+                    val splitLine = line.split(" ")
+                    PsCmdResult(
+                        splitLine.first().trim(),
+                        splitLine.last().trim()
+                    )
+
+                }
+
+                return@withTimeoutOrNull packages.orEmpty().map {
+                    val packageStateInfo = packagesStatesInfo.firstOrNull { stateInfo -> stateInfo.appPackageName == it.name }
+
+                    AppDescription(
+                        it.name,
+                        it.name
+                            .split(".")
+                            .last()
+                            .replaceFirstChar { char ->
+                                if (char.isLowerCase()) char.titlecase(Locale.getDefault())
+                                else it.toString()
+                            },
+                        it.path,
+                        packageStateInfo?.state ?: "",
+                        packageStateInfo?.state in listOf("R", "S")
+                    )
+                }
+            } ?: emptyList()
+        }
+    }
+
+    private class PsCmdResult(
+        val state: String,
+        val appPackageName: String
+    )
 
     suspend fun <A, B> Iterable<A>.pmap(f: suspend (A) -> B): List<B> = coroutineScope {
         map { async { f(it) } }.awaitAll()
