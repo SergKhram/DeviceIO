@@ -1,5 +1,6 @@
 package io.github.sergkhram.api.controllers.device;
 
+import io.github.sergkhram.data.entity.AppDescription;
 import io.github.sergkhram.data.service.DownloadService;
 import io.github.sergkhram.logic.DeviceRequestsService;
 import io.github.sergkhram.data.entity.Device;
@@ -218,6 +219,20 @@ public class DeviceController {
             if (currentFile != null && currentFile.exists()) {
                 FileUtils.deleteQuietly(currentFile);
             }
+        }
+    }
+
+    @GetMapping(path = "/device/{id}/apps")
+    @Throws(exceptionClasses = Exception.class)
+    public ResponseEntity<Object> getAppsListRequest(
+        @PathVariable(value = "id") String id
+    ) {
+        try {
+            Device device = deviceRequestsService.getDeviceInfo(id);
+            List<AppDescription> apps = deviceRequestsService.getAppsList(device);
+            return ResponseEntity.ok().body(convertModelToJsonNode(apps));
+        } catch (NoSuchElementException|IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getLocalizedMessage());
         }
     }
 }

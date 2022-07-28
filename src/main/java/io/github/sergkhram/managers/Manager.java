@@ -1,5 +1,6 @@
 package io.github.sergkhram.managers;
 
+import io.github.sergkhram.data.entity.AppDescription;
 import io.github.sergkhram.data.entity.Device;
 import io.github.sergkhram.data.entity.Host;
 
@@ -14,4 +15,5 @@ public interface Manager {
     Map<String, String> getDevicesStates();
     void rebootDevice(Device device);
     File makeScreenshot(Device device, String filePath);
+    List<AppDescription> getAppsList(Device device);
 }

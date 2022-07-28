@@ -20,6 +20,7 @@ service DevicesService {
   rpc postExecuteShellRequest(ExecuteShellRequest) returns (ExecuteShellResponse) {};
   rpc getFilesListOfDeviceRequest(GetDeviceFilesRequest) returns (GetDeviceFilesResponse) {}
   rpc postDownloadFileRequest(FileDownloadRequest) returns (stream DataChunk) {}
+  rpc getAppsListRequest(DeviceId) returns (GetAppsResponse) {};
 }
 
 message DeviceId {
@@ -131,4 +132,16 @@ message FileDownloadRequest {
   string id = 1;
   string iosPackageType = 2;
   DeviceDirectoryElementProto deviceDirectoryElementProto = 3;
+}
+
+message GetAppsResponse {
+  repeated AppDescriptionProto apps = 1;
+}
+
+message AppDescriptionProto {
+  string appPackage = 1;
+  string name = 2;
+  string path = 3;
+  string appState = 4;
+  bool isActive = 5;
 }

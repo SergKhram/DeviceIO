@@ -2,6 +2,7 @@ package io.github.sergkhram.grpc.services;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Empty;
+import io.github.sergkhram.data.entity.AppDescription;
 import io.github.sergkhram.data.entity.Device;
 import io.github.sergkhram.data.entity.DeviceDirectoryElement;
 import io.github.sergkhram.data.enums.IOSPackageType;
@@ -53,12 +54,12 @@ public class DevicesGrpcServiceImpl extends DevicesServiceGrpc.DevicesServiceImp
         try {
             List<Device> devices = request.getIsSaved()
                 ? deviceRequestsService.getDBDevicesList(
-                request.getStringFilter(),
-                request.getHostId()
-            )
+                    request.getStringFilter(),
+                    request.getHostId()
+                )
                 : deviceRequestsService.getCurrentDevicesList(
-                request.getHostId()
-            );
+                    request.getHostId()
+                );
 
             GetDevicesListResponse response = GetDevicesListResponse.newBuilder()
                 .addAllDevices(convertDevicesToProtoDevices(devices))
@@ -271,6 +272,27 @@ public class DevicesGrpcServiceImpl extends DevicesServiceGrpc.DevicesServiceImp
             if (currentFile != null && currentFile.exists()) {
                 FileUtils.deleteQuietly(currentFile);
             }
+        }
+    }
+
+    @Override
+    public void getAppsListRequest(
+        DeviceId request,
+        StreamObserver<GetAppsResponse> responseObserver
+    ) {
+        try {
+            Device device = deviceRequestsService.getDeviceInfo(request.getId());
+            List<AppDescription> apps = deviceRequestsService.getAppsList(device);
+            GetAppsResponse response = GetAppsResponse.newBuilder()
+                .addAllApps(convertListAppDescrToListAppDescrProto(apps))
+                .build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            responseObserver.onError(
+                prepareGrpcError(e)
+            );
         }
     }
 }

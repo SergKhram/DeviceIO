@@ -1,5 +1,6 @@
 package io.github.sergkhram.grpc.converters;
 
+import io.github.sergkhram.data.entity.AppDescription;
 import io.github.sergkhram.data.entity.Device;
 import io.github.sergkhram.data.entity.DeviceDirectoryElement;
 import io.github.sergkhram.data.entity.Host;
@@ -90,11 +91,6 @@ public class ProtoConverter {
 
     public static DeviceProto convertDeviceToDeviceProto(Device device) {
         DeviceProto deviceProto = DeviceProto.newBuilder()
-            .setDeviceType(
-                device.getDeviceType().equals(DeviceType.DEVICE)
-                    ? DeviceTypeProto.DEVICE
-                    : DeviceTypeProto.SIMULATOR
-            )
             .setId(
                 device.getId() != null
                     ? String.valueOf(device.getId())
@@ -111,6 +107,14 @@ public class ProtoConverter {
             .setState(device.getState())
             .setOsVersion(device.getOsVersion())
             .build();
+        DeviceType deviceType = device.getDeviceType();
+        if(deviceType!=null) {
+            deviceProto = deviceProto.toBuilder().setDeviceType(
+                device.getDeviceType().equals(DeviceType.DEVICE)
+                    ? DeviceTypeProto.DEVICE
+                    : DeviceTypeProto.SIMULATOR
+            ).build();
+        }
         Host host = device.getHost();
         if(host!=null) {
             HostInfoProto hostInfoProto = HostInfoProto.newBuilder()
@@ -214,5 +218,27 @@ public class ProtoConverter {
         dde.size = file.getSize();
         dde.isDirectory = file.getIsDirectory();
         return dde;
+    }
+
+    public static AppDescriptionProto convertAppDescrToAppDescrProto(AppDescription appDescription) {
+        AppDescriptionProto adp = AppDescriptionProto.newBuilder()
+            .setAppPackage(appDescription.getAppPackage())
+            .setName(appDescription.getName())
+            .setAppState(appDescription.getAppState())
+            .setIsActive(appDescription.getIsActive())
+            .build();
+        String path = appDescription.getPath();
+        if(path!=null) {
+            adp = adp.toBuilder().setPath(path).build();
+        }
+        return adp;
+    }
+
+    public static List<AppDescriptionProto> convertListAppDescrToListAppDescrProto(
+        List<AppDescription> appDescriptions
+    ) {
+        return appDescriptions.parallelStream()
+            .map(ProtoConverter::convertAppDescrToAppDescrProto)
+            .collect(Collectors.toList());
     }
 }

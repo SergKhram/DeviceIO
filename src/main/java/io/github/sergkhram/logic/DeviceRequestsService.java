@@ -1,5 +1,6 @@
 package io.github.sergkhram.logic;
 
+import io.github.sergkhram.data.entity.AppDescription;
 import io.github.sergkhram.data.entity.Device;
 import io.github.sergkhram.data.entity.DeviceDirectoryElement;
 import io.github.sergkhram.data.entity.Host;
@@ -140,6 +141,14 @@ public class DeviceRequestsService {
             case ANDROID: return getManagerByType(managers, AdbManager.class).makeScreenshot(device, path);
             case IOS: return getManagerByType(managers, IdbManager.class).makeScreenshot(device, path);
             default: return null;
+        }
+    }
+
+    public List<AppDescription> getAppsList(Device device) {
+        switch (device.getOsType()) {
+            case ANDROID: return getManagerByType(managers, AdbManager.class).getAppsList(device);
+            case IOS: return getManagerByType(managers, IdbManager.class).getAppsList(device);
+            default: return List.of();
         }
     }
 }
