@@ -36,7 +36,7 @@ public class ProtoConverter {
             .setPort(
                 Objects.requireNonNullElse(
                     host.getPort(),
-                    -1
+                    0
                 )
             )
             .build();
