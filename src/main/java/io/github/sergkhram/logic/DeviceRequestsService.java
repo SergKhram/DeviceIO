@@ -64,7 +64,7 @@ public class DeviceRequestsService {
     }
 
     public List<Device> getCurrentDevicesList(String hostId) {
-        Host host = hostId != null
+        Host host = (hostId != null && !hostId.isEmpty())
             ? hostRequestsService.getHostInfo(hostId)
             : null;
         CopyOnWriteArrayList<Device> currentListOfDevices = new CopyOnWriteArrayList<>();

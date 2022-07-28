@@ -33,12 +33,13 @@ public class ProtoConverter {
             .addAllDevices(
                 convertDevicesFromHost(host)
             )
+            .setPort(
+                Objects.requireNonNullElse(
+                    host.getPort(),
+                    -1
+                )
+            )
             .build();
-        if(host.getPort()!=null) {
-            hostObject = hostObject.toBuilder().setPort(
-                host.getPort()
-            ).build();
-        }
         return hostObject;
     }
 
@@ -63,7 +64,9 @@ public class ProtoConverter {
             return Objects.requireNonNull(host.getDevices()).parallelStream().map(
                 it -> DeviceProto.newBuilder()
                     .setDeviceType(
-                        it.getDeviceType().equals(DeviceType.DEVICE)
+                        Objects.requireNonNullElse(
+                            it.getDeviceType(), DeviceType.SIMULATOR
+                        ).equals(DeviceType.DEVICE)
                             ? DeviceTypeProto.DEVICE
                             : DeviceTypeProto.SIMULATOR
                     )
@@ -106,15 +109,15 @@ public class ProtoConverter {
             .setSerial(device.getSerial())
             .setState(device.getState())
             .setOsVersion(device.getOsVersion())
+            .setDeviceType(
+                Objects.requireNonNullElse(
+                    device.getDeviceType(), DeviceType.SIMULATOR
+                )
+                    .equals(DeviceType.DEVICE)
+                        ? DeviceTypeProto.DEVICE
+                        : DeviceTypeProto.SIMULATOR
+            )
             .build();
-        DeviceType deviceType = device.getDeviceType();
-        if(deviceType!=null) {
-            deviceProto = deviceProto.toBuilder().setDeviceType(
-                device.getDeviceType().equals(DeviceType.DEVICE)
-                    ? DeviceTypeProto.DEVICE
-                    : DeviceTypeProto.SIMULATOR
-            ).build();
-        }
         Host host = device.getHost();
         if(host!=null) {
             HostInfoProto hostInfoProto = HostInfoProto.newBuilder()
@@ -226,11 +229,13 @@ public class ProtoConverter {
             .setName(appDescription.getName())
             .setAppState(appDescription.getAppState())
             .setIsActive(appDescription.getIsActive())
+            .setPath(
+                Objects.requireNonNullElse(
+                    appDescription.getPath(),
+                    ""
+                )
+            )
             .build();
-        String path = appDescription.getPath();
-        if(path!=null) {
-            adp = adp.toBuilder().setPath(path).build();
-        }
         return adp;
     }
 
