@@ -3,6 +3,7 @@ package io.github.sergkhram.data.entity;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import net.badata.protobuf.converter.annotation.ProtoField;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.Column;
@@ -20,5 +21,6 @@ public abstract class AbstractEntity {
     @GeneratedValue
     @Type(type = "uuid-char")
     @Column(name = "id")
+    @ProtoField
     protected UUID id;
 }

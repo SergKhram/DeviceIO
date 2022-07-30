@@ -1,9 +1,13 @@
 package io.github.sergkhram.data.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.github.sergkhram.grpc.converters.ProtoConverter;
+import io.github.sergkhram.proto.HostProto;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import net.badata.protobuf.converter.annotation.ProtoClass;
+import net.badata.protobuf.converter.annotation.ProtoField;
 import org.springframework.format.annotation.NumberFormat;
 
 import javax.annotation.Nullable;
@@ -16,20 +20,25 @@ import java.util.List;
 @Entity
 @EqualsAndHashCode(callSuper = true)
 @Table(name = "host")
+@ProtoClass(HostProto.class)
 public class Host extends AbstractEntity {
     @NotEmpty
     @Column(name = "name")
+    @ProtoField
     private String name;
     @NotEmpty
     @Column(name = "address")
+    @ProtoField
     private String address;
     @Column(name = "port")
     @NumberFormat
     @Max(65535)
     @Min(0)
+    @ProtoField(converter = ProtoConverter.PortConverter.class)
     private Integer port;
     @Builder.Default
     @Column(name = "isActive")
+    @ProtoField
     private Boolean isActive = false;
 
     @OneToMany(mappedBy = "host")
