@@ -187,7 +187,7 @@ public class DevicesGrpcServiceImpl extends DevicesServiceGrpc.DevicesServiceImp
             Device device = deviceRequestsService.getDeviceInfo(request.getId());
             if (device.getOsType().equals(OsType.IOS)) {
                 responseObserver.onError(
-                    Status.CANCELLED
+                    Status.FAILED_PRECONDITION
                         .withDescription("Execute shell request allowed for ANDROID only")
                         .asRuntimeException()
                 );

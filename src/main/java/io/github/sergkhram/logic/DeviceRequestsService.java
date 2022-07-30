@@ -151,4 +151,21 @@ public class DeviceRequestsService {
             default: return List.of();
         }
     }
+
+    public void updateHostStateWithDeletingDevices(Host host) {
+        try {
+            Host updatedHost = hostRequestsService.updateHostState(host);
+            if (!updatedHost.getIsActive()) deleteAllHostDevices(host);
+        } catch (IOException e) {
+            log.info(e.getLocalizedMessage());
+            deleteAllHostDevices(host);
+        }
+    }
+
+    private void deleteAllHostDevices(Host host) {
+        getDBDevicesList(
+            "",
+            host.getId()
+        ).forEach(this::deleteDevice);
+    }
 }
