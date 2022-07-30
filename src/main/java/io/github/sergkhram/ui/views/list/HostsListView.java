@@ -181,23 +181,7 @@ public final class HostsListView extends VerticalLayout {
     }
 
     public void updateHostState(Host host) {
-        try {
-            InetAddress address = InetAddress.getByName(host.getAddress());
-            host.setIsActive(address.isReachable(5000));
-            if (host.getIsActive()) {
-                hostRequestsService.saveHost(host);
-            } else {
-                deviceRequestsService.getDBDevicesList(
-                    "",
-                    host.getId()
-                ).forEach(deviceRequestsService::deleteDevice);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            deviceRequestsService.getDBDevicesList(
-                "", host.getId()
-            ).forEach(deviceRequestsService::deleteDevice);
-        }
+        deviceRequestsService.updateHostStateWithDeletingDevices(host);
     }
 
     private void updateDeviceList(List<Device> dbListOfDevices, List<Device> currentListOfDevices) {

@@ -179,10 +179,12 @@ public class IdbManager implements Manager {
         if(!host.equals(LOCAL_HOST)) {
             UUID processUuid = UUID.randomUUID();
             List<String> cmd = new ArrayList<>(remoteHostConnectCmd);
-            cmd.addAll(List.of(host, port.toString()));
+            cmd.addAll(
+                List.of(host, port.toString())
+            );
             log.info(
                 String.format(
-                    "[%s] Connecting to host %s process started", processUuid, host + port
+                    "[%s] Connecting to host %s process started", processUuid, host + ":" + port
                 )
             );
             CommandExecutor cmdExecutor = new CommandExecutor(cmd);
@@ -190,7 +192,9 @@ public class IdbManager implements Manager {
                 (code) -> log.info(String.format("[%s] Executing '%s'", processUuid, cmd)),
                 (code) -> log.info(
                     String.format(
-                        "[%s] Connecting to host %s process finished with exit code " + code, processUuid
+                        "[%s] Connecting to host %s process finished with exit code " + code,
+                        processUuid,
+                        host + ":" + port
                     )
                 )
             );
@@ -205,7 +209,7 @@ public class IdbManager implements Manager {
             cmd.addAll(List.of(host, port.toString()));
             log.info(
                 String.format(
-                    "[%s] Disconnecting host %s process started", processUuid, host + port
+                    "[%s] Disconnecting host %s process started", processUuid, host + ":" + port
                 )
             );
             CommandExecutor cmdExecutor = new CommandExecutor(cmd);
@@ -213,7 +217,9 @@ public class IdbManager implements Manager {
                 (code) -> log.info(String.format("[%s] Executing '%s'", processUuid, cmd)),
                 (code) -> log.info(
                     String.format(
-                        "[%s] Disconnecting host %s process finished with exit code " + code, processUuid
+                        "[%s] Disconnecting host %s process finished with exit code " + code,
+                        processUuid,
+                        host + ":" + port
                     )
                 )
             );

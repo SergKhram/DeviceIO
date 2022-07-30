@@ -9,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.net.InetAddress;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -68,5 +70,16 @@ public class HostRequestsService {
                     host.getPort()
                 )
             );
+    }
+
+    public Host updateHostState(Host host) throws IOException {
+        InetAddress address = InetAddress.getByName(host.getAddress());
+        Boolean savedHostState = host.getIsActive();
+        Boolean currentHostState = address.isReachable(5000);
+        if(!savedHostState.equals(currentHostState)) {
+            host.setIsActive(currentHostState);
+            saveHost(host);
+        }
+        return host;
     }
 }
