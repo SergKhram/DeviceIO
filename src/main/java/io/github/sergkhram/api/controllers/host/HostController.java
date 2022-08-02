@@ -1,5 +1,6 @@
 package io.github.sergkhram.api.controllers.host;
 
+import io.github.sergkhram.logic.DeviceRequestsService;
 import io.github.sergkhram.logic.HostRequestsService;
 import io.github.sergkhram.data.entity.Host;
 import kotlin.jvm.Throws;
@@ -8,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
@@ -21,6 +23,9 @@ public class HostController {
 
     @Autowired
     HostRequestsService hostRequestsService;
+
+    @Autowired
+    DeviceRequestsService deviceRequestsService;
 
     @GetMapping(path = "/host/{id}")
     @Throws(exceptionClasses = Exception.class)
@@ -115,6 +120,23 @@ public class HostController {
             return ResponseEntity.ok().build();
         } catch (NoSuchElementException|IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping(path = "/host/{id}/updateState")
+    @Throws(exceptionClasses = Exception.class)
+    public ResponseEntity<Object> getUpdateHostStateWithDeletingDevices(
+        @PathVariable(value = "id") String id,
+        @RequestParam(value = "deleteDevices") Boolean deleteDevices
+    ) {
+        try {
+            Host host = hostRequestsService.getHostInfo(id);
+            if(deleteDevices)
+                deviceRequestsService.updateHostStateWithDeletingDevices(host);
+            else hostRequestsService.updateHostState(host);
+            return ResponseEntity.ok().build();
+        } catch (NoSuchElementException | IllegalArgumentException | IOException e) {
+            return ResponseEntity.badRequest().body(e.getLocalizedMessage());
         }
     }
 }
