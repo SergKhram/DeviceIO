@@ -125,14 +125,14 @@ public class HostController {
 
     @GetMapping(path = "/host/{id}/updateState")
     @Throws(exceptionClasses = Exception.class)
-    public ResponseEntity<Object> getUpdateHostStateWithDeletingDevices(
+    public ResponseEntity<Object> getUpdateHostStateWithDeviceRemoval(
         @PathVariable(value = "id") String id,
         @RequestParam(value = "deleteDevices") Boolean deleteDevices
     ) {
         try {
             Host host = hostRequestsService.getHostInfo(id);
             if(deleteDevices)
-                deviceRequestsService.updateHostStateWithDeletingDevices(host);
+                deviceRequestsService.updateHostStateWithDeviceRemoval(host);
             else hostRequestsService.updateHostState(host);
             return ResponseEntity.ok().build();
         } catch (NoSuchElementException | IllegalArgumentException | IOException e) {

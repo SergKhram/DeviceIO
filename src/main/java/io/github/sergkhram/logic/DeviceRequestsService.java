@@ -152,7 +152,7 @@ public class DeviceRequestsService {
         }
     }
 
-    public void updateHostStateWithDeletingDevices(Host host) {
+    public void updateHostStateWithDeviceRemoval(Host host) {
         try {
             Host updatedHost = hostRequestsService.updateHostState(host);
             if (!updatedHost.getIsActive()) deleteAllHostDevices(host);

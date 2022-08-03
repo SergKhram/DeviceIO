@@ -17,6 +17,7 @@ service HostsService {
   rpc deleteHostRequest(HostId) returns (google.protobuf.Empty) {}
   rpc postHostConnectionRequest(HostId) returns (google.protobuf.Empty) {}
   rpc postHostDisconnectionRequest(HostId) returns (google.protobuf.Empty) {}
+  rpc getUpdateHostStateWithDeviceRemoval(UpdateHostStateRequest) returns (google.protobuf.Empty) {}
 }
 
 message HostId {
@@ -51,4 +52,9 @@ message UpdateHostRequest {
   string name = 2;
   string address = 3;
   int32 port = 4;
+}
+
+message UpdateHostStateRequest {
+  string id = 1;
+  bool deleteDevices = 2;
 }
