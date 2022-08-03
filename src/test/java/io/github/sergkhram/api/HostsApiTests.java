@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.github.sergkhram.api.requests.HostsRequests;
 import io.github.sergkhram.data.entity.Device;
 import io.github.sergkhram.logic.HostRequestsService;
+import io.github.sergkhram.managers.adb.AdbManager;
 import io.github.sergkhram.managers.idb.IdbManager;
 import io.github.sergkhram.utils.Const;
 import io.qameta.allure.Epic;
@@ -36,6 +37,9 @@ public class HostsApiTests extends ApiTestsBase {
 
     @MockBean
     IdbManager idbManager;
+
+    @MockBean
+    AdbManager adbManager;
 
     @BeforeEach
     public void beforeTest() {
@@ -151,6 +155,7 @@ public class HostsApiTests extends ApiTestsBase {
         Host savedHost = hostRepository.save(host);
         String id = savedHost.getId().toString();
         Mockito.doNothing().when(this.idbManager).connectToHost("localhost", 65535);
+        Mockito.doNothing().when(this.adbManager).connectToHost("localhost", 65535);
         HostsRequests.connectHost(getBaseUrl(), id);
     }
 
@@ -164,6 +169,7 @@ public class HostsApiTests extends ApiTestsBase {
         Host savedHost = hostRepository.save(host);
         String id = savedHost.getId().toString();
         Mockito.doNothing().when(this.idbManager).disconnectHost("localhost", 65535);
+        Mockito.doNothing().when(this.adbManager).disconnectHost("localhost", 65535);
         HostsRequests.disconnectHost(getBaseUrl(), id);
     }
 
