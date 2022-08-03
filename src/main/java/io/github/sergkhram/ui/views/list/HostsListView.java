@@ -20,8 +20,6 @@ import com.vaadin.flow.router.Route;
 import io.github.sergkhram.ui.views.list.forms.HostForm;
 import org.springframework.context.annotation.Scope;
 
-import java.io.IOException;
-import java.net.InetAddress;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -181,7 +179,7 @@ public final class HostsListView extends VerticalLayout {
     }
 
     public void updateHostState(Host host) {
-        deviceRequestsService.updateHostStateWithDeletingDevices(host);
+        deviceRequestsService.updateHostStateWithDeviceRemoval(host);
     }
 
     private void updateDeviceList(List<Device> dbListOfDevices, List<Device> currentListOfDevices) {

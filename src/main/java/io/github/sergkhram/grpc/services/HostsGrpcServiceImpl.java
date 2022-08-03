@@ -1,6 +1,7 @@
 package io.github.sergkhram.grpc.services;
 
 import com.google.protobuf.Empty;
+import io.github.sergkhram.logic.DeviceRequestsService;
 import io.github.sergkhram.proto.*;
 import io.github.sergkhram.logic.HostRequestsService;
 import io.github.sergkhram.data.entity.Host;
@@ -20,6 +21,9 @@ public class HostsGrpcServiceImpl extends HostsServiceGrpc.HostsServiceImplBase 
 
     @Autowired
     HostRequestsService hostRequestsService;
+
+    @Autowired
+    DeviceRequestsService deviceRequestsService;
 
     @Override
     public void getHostRequest(HostId request, StreamObserver<HostProto> responseObserver) {
@@ -130,6 +134,28 @@ public class HostsGrpcServiceImpl extends HostsServiceGrpc.HostsServiceImplBase 
         try {
             Host host = hostRequestsService.getHostInfo(request.getId());
             hostRequestsService.disconnect(host);
+
+            Empty response = Empty.getDefaultInstance();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            responseObserver.onError(
+                prepareGrpcError(e)
+            );
+        }
+    }
+
+    @Override
+    public void getUpdateHostStateWithDeviceRemoval(
+        UpdateHostStateRequest request,
+        StreamObserver<Empty> responseObserver
+    ) {
+        try {
+            Host host = hostRequestsService.getHostInfo(request.getId());
+            if(request.getDeleteDevices())
+                deviceRequestsService.updateHostStateWithDeviceRemoval(host);
+            else hostRequestsService.updateHostState(host);
 
             Empty response = Empty.getDefaultInstance();
 
