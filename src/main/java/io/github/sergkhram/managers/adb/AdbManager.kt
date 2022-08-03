@@ -39,7 +39,7 @@ import io.github.sergkhram.data.entity.Device as DeviceEntity
 
 @Service
 @Slf4j
-class AdbManager: Manager {
+open class AdbManager: Manager {
     private var adb: AndroidDebugBridgeClient? = null
     private val DEFAULT_PORT: Int = 5555
     companion object : Logger()
