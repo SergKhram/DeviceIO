@@ -1,7 +1,11 @@
 package io.github.sergkhram.api;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.github.sergkhram.api.requests.HostsRequests;
 import io.github.sergkhram.data.entity.Device;
+import io.github.sergkhram.logic.HostRequestsService;
+import io.github.sergkhram.utils.Const;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
@@ -12,12 +16,15 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import io.github.sergkhram.data.entity.Host;
 
-import static io.github.sergkhram.Generator.generateHosts;
+import static io.github.sergkhram.Generator.*;
 import static io.github.sergkhram.utils.CustomAssertions.*;
+import static io.github.sergkhram.utils.json.JsonTestUtil.*;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 @Epic("DeviceIO")
 @Feature("API")
@@ -57,6 +64,114 @@ public class HostsApiTests extends ApiTestsBase {
         assertWithAllure(
             host,
             response.as(Host.class)
+        );
+    }
+
+    @Test
+    @DisplayName("Check post host api request")
+    public void checkCreateHostRequest() {
+        Host host = generateHosts(1).get(0);
+        Response response = HostsRequests.postHost(
+            getBaseUrl(),
+            convertModelToStringWONullValues(host)
+        );
+        String id = response.jsonPath().getString("id");
+        JsonNode expectedHost = convertModelToJsonNode(host);
+        ((ObjectNode)expectedHost).put("id", "regexp:(.*)");
+        assertWithAllureWRegex(
+            expectedHost,
+            response.as(JsonNode.class)
+        );
+        ((ObjectNode)expectedHost).putArray("devices");
+        response = HostsRequests.getHostById(getBaseUrl(), id);
+        assertWithAllureWRegex(
+            expectedHost,
+            response.as(JsonNode.class)
+        );
+    }
+
+    @Test
+    @DisplayName("Check update host api request")
+    public void checkUpdateHostRequest() {
+        Host host = generateHosts(1).get(0);
+        Host savedHost = hostRepository.save(host);
+        String id = savedHost.getId().toString();
+        host.setName(generateRandomString());
+        host.setAddress(generateRandomString());
+        host.setPort(generateRandomInt(0, 65535));
+
+        Response response = HostsRequests.updateHost(
+            getBaseUrl(),
+            id,
+            convertModelToStringWONullValues(host)
+        );
+
+        host.setId(UUID.fromString(id));
+        JsonNode expectedHost = convertModelToJsonNode(host);
+        assertWithAllureWRegex(
+            expectedHost,
+            response.as(JsonNode.class)
+        );
+
+        ((ObjectNode)expectedHost).putArray("devices");
+        response = HostsRequests.getHostById(getBaseUrl(), id);
+        assertWithAllureWRegex(
+            expectedHost,
+            response.as(JsonNode.class)
+        );
+    }
+
+    @Test
+    @DisplayName("Check delete host api request")
+    public void checkDeleteHostRequest() {
+        Host host = generateHosts(1).get(0);
+        Host savedHost = hostRepository.save(host);
+        String id = savedHost.getId().toString();
+        HostsRequests.deleteHost(getBaseUrl(), id);
+        Response response = HostsRequests.getHostById(getBaseUrl(), id, 400);
+        assertWithAllure(
+            "There is no host with id " + id,
+            response.getBody().prettyPrint()
+        );
+    }
+
+    @Test
+    @DisplayName("Check connect host api request")
+    public void checkConnectHostRequest() {
+        Host host = new Host();
+        host.setName(generateRandomString());
+        host.setAddress("localhost");
+        host.setPort(65535);
+        Host savedHost = hostRepository.save(host);
+        String id = savedHost.getId().toString();
+        HostsRequests.connectHost(getBaseUrl(), id);
+    }
+
+    @Test
+    @DisplayName("Check disconnect host api request")
+    public void checkDisconnectHostRequest() {
+        Host host = new Host();
+        host.setName(generateRandomString());
+        host.setAddress("localhost");
+        host.setPort(65535);
+        Host savedHost = hostRepository.save(host);
+        String id = savedHost.getId().toString();
+        HostsRequests.disconnectHost(getBaseUrl(), id);
+    }
+
+    @Test
+    @DisplayName("Check update host state api request")
+    public void checkUpdateHostStateRequest() {
+        Host host = new Host();
+        host.setName(generateRandomString());
+        host.setAddress(Const.LOCAL_HOST);
+        Host savedHost = hostRepository.save(host);
+        String id = savedHost.getId().toString();
+        HostsRequests.updateHostState(getBaseUrl(), id, Map.of("deleteDevices", false));
+        Response response = HostsRequests.getHostById(getBaseUrl(), id);
+        assertWithAllure(
+            true,
+            response.jsonPath().getBoolean("isActive")
         );
     }
 

@@ -1,5 +1,6 @@
 package io.github.sergkhram.utils.json;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -9,11 +10,16 @@ import org.skyscreamer.jsonassert.JSONCompareMode;
 
 public class JsonTestUtil {
     public static ObjectMapper objectMapper;
+    public static ObjectMapper objectMapperWONull;
 
     static  {
         objectMapper = new ObjectMapper();
+        objectMapperWONull = new ObjectMapper();
+        objectMapperWONull.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         SimpleModule module = new SimpleModule();
         objectMapper.registerModule(module);
+        SimpleModule moduleWONull = new SimpleModule();
+        objectMapperWONull.registerModule(moduleWONull);
     }
 
     @SneakyThrows
@@ -51,6 +57,12 @@ public class JsonTestUtil {
     @SneakyThrows
     public static <T> String convertModelToString(T model) {
         ObjectMapper mapper = JsonTestUtil.objectMapper;
+        return mapper.writeValueAsString(model);
+    }
+
+    @SneakyThrows
+    public static <T> String convertModelToStringWONullValues(T model) {
+        ObjectMapper mapper = JsonTestUtil.objectMapperWONull;
         return mapper.writeValueAsString(model);
     }
 

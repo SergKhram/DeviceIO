@@ -1,5 +1,6 @@
 package io.github.sergkhram.api.controllers.host;
 
+import com.malinskiy.adam.exception.RequestRejectedException;
 import io.github.sergkhram.logic.DeviceRequestsService;
 import io.github.sergkhram.logic.HostRequestsService;
 import io.github.sergkhram.data.entity.Host;
@@ -49,7 +50,7 @@ public class HostController {
             List<Host> hosts = hostRequestsService.getHostsList(stringFilter);
             return ResponseEntity.ok().body(convertModelToJsonNode(hosts));
         } catch (NoSuchElementException|IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(e.getLocalizedMessage());
         }
     }
 
@@ -62,7 +63,7 @@ public class HostController {
             Host savedHost = hostRequestsService.saveHost(host);
             return ResponseEntity.ok().body(convertModelToJsonNode(savedHost));
         } catch (NoSuchElementException|IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(e.getLocalizedMessage());
         }
     }
 
@@ -77,7 +78,7 @@ public class HostController {
             Host savedHost = hostRequestsService.saveHost(host);
             return ResponseEntity.ok().body(convertModelToJsonNode(savedHost));
         } catch (NoSuchElementException|IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(e.getLocalizedMessage());
         }
     }
 
@@ -105,7 +106,7 @@ public class HostController {
             hostRequestsService.connect(host);
             return ResponseEntity.ok().build();
         } catch (NoSuchElementException|IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(e.getLocalizedMessage());
         }
     }
 
@@ -118,8 +119,10 @@ public class HostController {
             Host host = hostRequestsService.getHostInfo(id);
             hostRequestsService.disconnect(host);
             return ResponseEntity.ok().build();
+        } catch (RequestRejectedException e) {
+            return ResponseEntity.ok().body("Warning: " + e.getLocalizedMessage());
         } catch (NoSuchElementException|IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(e.getLocalizedMessage());
         }
     }
 
