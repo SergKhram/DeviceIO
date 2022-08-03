@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.github.sergkhram.api.requests.HostsRequests;
 import io.github.sergkhram.data.entity.Device;
 import io.github.sergkhram.logic.HostRequestsService;
+import io.github.sergkhram.managers.idb.IdbManager;
 import io.github.sergkhram.utils.Const;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
@@ -15,6 +16,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import io.github.sergkhram.data.entity.Host;
+import org.mockito.Mockito;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
 import static io.github.sergkhram.Generator.*;
 import static io.github.sergkhram.utils.CustomAssertions.*;
@@ -30,6 +33,9 @@ import java.util.UUID;
 @Feature("API")
 @Story("Hosts")
 public class HostsApiTests extends ApiTestsBase {
+
+    @MockBean
+    IdbManager idbManager;
 
     @BeforeEach
     public void beforeTest() {
@@ -144,6 +150,7 @@ public class HostsApiTests extends ApiTestsBase {
         host.setPort(65535);
         Host savedHost = hostRepository.save(host);
         String id = savedHost.getId().toString();
+        Mockito.doNothing().when(this.idbManager).connectToHost("localhost", 65535);
         HostsRequests.connectHost(getBaseUrl(), id);
     }
 
@@ -156,6 +163,7 @@ public class HostsApiTests extends ApiTestsBase {
         host.setPort(65535);
         Host savedHost = hostRepository.save(host);
         String id = savedHost.getId().toString();
+        Mockito.doNothing().when(this.idbManager).disconnectHost("localhost", 65535);
         HostsRequests.disconnectHost(getBaseUrl(), id);
     }
 
