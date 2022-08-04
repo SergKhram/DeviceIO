@@ -8,6 +8,7 @@ import io.github.sergkhram.data.entity.DeviceDirectoryElement;
 import io.github.sergkhram.data.enums.IOSPackageType;
 import io.github.sergkhram.data.enums.OsType;
 import io.github.sergkhram.data.service.DownloadService;
+import io.github.sergkhram.grpc.interceptors.LogGrpcServerInterceptor;
 import io.github.sergkhram.logic.DeviceRequestsService;
 import io.github.sergkhram.proto.*;
 import io.grpc.Status;
@@ -26,7 +27,7 @@ import java.util.UUID;
 import static io.github.sergkhram.grpc.converters.ProtoConverter.*;
 import static io.github.sergkhram.utils.grpc.ErrorUtil.prepareGrpcError;
 
-@GrpcService
+@GrpcService(interceptors = LogGrpcServerInterceptor.class)
 @Slf4j
 public class DevicesGrpcServiceImpl extends DevicesServiceGrpc.DevicesServiceImplBase {
 

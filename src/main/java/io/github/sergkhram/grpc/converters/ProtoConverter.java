@@ -61,7 +61,8 @@ public class ProtoConverter {
 
     public static List<DeviceProto> convertDevicesFromHost(Host host) {
         try {
-            return Objects.requireNonNull(host.getDevices()).parallelStream().map(
+            List<Device> emptyList = Collections.emptyList();
+            return Objects.requireNonNullElse(host.getDevices(), emptyList).parallelStream().map(
                 it -> DeviceProto.newBuilder()
                     .setDeviceType(
                         Objects.requireNonNullElse(
