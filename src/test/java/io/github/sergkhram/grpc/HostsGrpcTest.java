@@ -2,7 +2,10 @@ package io.github.sergkhram.grpc;
 
 import io.github.sergkhram.data.entity.Host;
 import io.github.sergkhram.data.repository.HostRepository;
+import io.github.sergkhram.managers.adb.AdbManager;
+import io.github.sergkhram.managers.idb.IdbManager;
 import io.github.sergkhram.proto.*;
+import io.grpc.StatusRuntimeException;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
@@ -14,12 +17,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.List;
+import java.util.UUID;
 
-import static io.github.sergkhram.Generator.generateHosts;
+import static io.github.sergkhram.Generator.*;
 import static io.github.sergkhram.grpc.converters.ProtoConverter.convertHostToHostProto;
 import static io.github.sergkhram.grpc.converters.ProtoConverter.convertHostsToHostsProto;
 import static io.github.sergkhram.utils.CustomAssertions.assertWithAllure;
@@ -48,10 +53,16 @@ public class HostsGrpcTest {
     @Autowired
     HostRepository hostRepository;
 
+    @MockBean
+    IdbManager idbManager;
+
+    @MockBean
+    AdbManager adbManager;
+
     @BeforeEach
     public void beforeTest() {
         hostRepository.deleteAll();
-        hostService = hostService.withInterceptors(new AllureGrpc());
+        hostService = hostService.withInterceptors(new AllureGrpc(), new LogGrpcInterceptor());
     }
 
     @Test
@@ -93,6 +104,88 @@ public class HostsGrpcTest {
             convertHostToHostProto(host),
             response,
             true
+        );
+    }
+
+    @Test
+    @DisplayName("Check post host grpc request")
+    public void checkCreateHostRequest() {
+        Host host = generateHosts(1).get(0);
+        HostProto response = hostService.postHostRequest(
+            PostHostRequest.newBuilder()
+                .setName(host.getName())
+                .setAddress(host.getAddress())
+                .build()
+        );
+
+        String id = response.getId();
+        host.setId(UUID.fromString(id));
+        assertWithAllure(
+            convertHostToHostProto(host),
+            response,
+            true
+        );
+        response = hostService.getHostRequest(
+            HostId.newBuilder().setId(id).build()
+        );
+        assertWithAllure(
+            convertHostToHostProto(host),
+            response,
+            true
+        );
+    }
+
+    @Test
+    @DisplayName("Check update host grpc request")
+    public void checkUpdateHostRequest() {
+        Host host = generateHosts(1).get(0);
+        Host savedHost = hostRepository.save(host);
+        String id = savedHost.getId().toString();
+        host.setName(generateRandomString());
+        host.setAddress(generateRandomString());
+        host.setPort(generateRandomInt(0, 65535));
+
+        HostProto response = hostService.updateHostRequest(
+            UpdateHostRequest.newBuilder()
+                .setId(id)
+                .setName(host.getName())
+                .setAddress(host.getAddress())
+                .setPort(host.getPort())
+                .build()
+        );
+
+        host.setId(UUID.fromString(id));
+        assertWithAllure(
+            convertHostToHostProto(host),
+            response,
+            true
+        );
+
+        response = hostService.getHostRequest(
+            HostId.newBuilder().setId(id).build()
+        );
+        assertWithAllure(
+            convertHostToHostProto(host),
+            response,
+            true
+        );
+    }
+
+    @Test
+    @DisplayName("Check delete host grpc request")
+    public void checkDeleteHostRequest() {
+        Host host = generateHosts(1).get(0);
+        Host savedHost = hostRepository.save(host);
+        String id = savedHost.getId().toString();
+        hostService.deleteHostRequest(HostId.newBuilder().setId(id).build());
+
+        StatusRuntimeException e = Assertions.assertThrows(
+            io.grpc.StatusRuntimeException.class,
+            () -> hostService.getHostRequest(HostId.newBuilder().setId(id).build())
+        );
+        assertWithAllure(
+            "UNKNOWN: No value present",
+            e.getLocalizedMessage()
         );
     }
 }

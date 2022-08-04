@@ -1,6 +1,7 @@
 package io.github.sergkhram.grpc.services;
 
 import com.google.protobuf.Empty;
+import io.github.sergkhram.grpc.interceptors.LogGrpcServerInterceptor;
 import io.github.sergkhram.logic.DeviceRequestsService;
 import io.github.sergkhram.proto.*;
 import io.github.sergkhram.logic.HostRequestsService;
@@ -15,7 +16,7 @@ import java.util.*;
 import static io.github.sergkhram.grpc.converters.ProtoConverter.*;
 import static io.github.sergkhram.utils.grpc.ErrorUtil.prepareGrpcError;
 
-@GrpcService
+@GrpcService(interceptors = LogGrpcServerInterceptor.class)
 @Slf4j
 public class HostsGrpcServiceImpl extends HostsServiceGrpc.HostsServiceImplBase {
 
