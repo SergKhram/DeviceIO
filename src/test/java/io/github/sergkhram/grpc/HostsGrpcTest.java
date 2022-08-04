@@ -5,6 +5,7 @@ import io.github.sergkhram.data.repository.HostRepository;
 import io.github.sergkhram.managers.adb.AdbManager;
 import io.github.sergkhram.managers.idb.IdbManager;
 import io.github.sergkhram.proto.*;
+import io.github.sergkhram.utils.Const;
 import io.grpc.StatusRuntimeException;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
@@ -14,6 +15,7 @@ import net.devh.boot.grpc.client.autoconfigure.GrpcClientAutoConfiguration;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -186,6 +188,55 @@ public class HostsGrpcTest {
         assertWithAllure(
             "UNKNOWN: No value present",
             e.getLocalizedMessage()
+        );
+    }
+
+    @Test
+    @DisplayName("Check connect host grpc request")
+    public void checkConnectHostRequest() {
+        Host host = new Host();
+        host.setName(generateRandomString());
+        host.setAddress("localhost");
+        host.setPort(65535);
+        Host savedHost = hostRepository.save(host);
+        String id = savedHost.getId().toString();
+        Mockito.doNothing().when(this.idbManager).connectToHost("localhost", 65535);
+        Mockito.doNothing().when(this.adbManager).connectToHost("localhost", 65535);
+        hostService.postHostConnectionRequest(HostId.newBuilder().setId(id).build());
+    }
+
+    @Test
+    @DisplayName("Check disconnect host grpc request")
+    public void checkDisconnectHostRequest() {
+        Host host = new Host();
+        host.setName(generateRandomString());
+        host.setAddress("localhost");
+        host.setPort(65535);
+        Host savedHost = hostRepository.save(host);
+        String id = savedHost.getId().toString();
+        Mockito.doNothing().when(this.idbManager).disconnectHost("localhost", 65535);
+        Mockito.doNothing().when(this.adbManager).disconnectHost("localhost", 65535);
+        hostService.postHostDisconnectionRequest(HostId.newBuilder().setId(id).build());
+    }
+
+    @Test
+    @DisplayName("Check update host state grpc request")
+    public void checkUpdateHostStateRequest() {
+        Host host = new Host();
+        host.setName(generateRandomString());
+        host.setAddress(Const.LOCAL_HOST);
+        Host savedHost = hostRepository.save(host);
+        String id = savedHost.getId().toString();
+        hostService.getUpdateHostStateWithDeviceRemoval(
+            UpdateHostStateRequest.newBuilder()
+                .setId(id)
+                .setDeleteDevices(false)
+                .build()
+        );
+        HostProto response = hostService.getHostRequest(HostId.newBuilder().setId(id).build());
+        assertWithAllure(
+            true,
+            response.getIsActive()
         );
     }
 }
