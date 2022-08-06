@@ -18,12 +18,10 @@ import org.junit.jupiter.api.Test;
 import io.github.sergkhram.data.entity.Host;
 import org.mockito.Mockito;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.annotation.DirtiesContext;
 
 import static io.github.sergkhram.Generator.*;
 import static io.github.sergkhram.utils.CustomAssertions.*;
 import static io.github.sergkhram.utils.json.JsonTestUtil.*;
-import static org.springframework.test.annotation.DirtiesContext.ClassMode.BEFORE_CLASS;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -34,7 +32,6 @@ import java.util.UUID;
 @Epic("DeviceIO")
 @Feature("API")
 @Story("Hosts")
-@DirtiesContext(classMode = BEFORE_CLASS)
 public class HostsApiTests extends ApiTestsBase {
 
     @MockBean

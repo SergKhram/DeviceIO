@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import com.vaadin.flow.component.textfield.TextField;
 
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
 import static io.github.sergkhram.Generator.generateHosts;
 import static io.github.sergkhram.Generator.generateRandomString;
 import static io.github.sergkhram.utils.CustomAssertions.*;
+import static org.springframework.test.annotation.DirtiesContext.ClassMode.BEFORE_CLASS;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(
@@ -38,6 +40,7 @@ import static io.github.sergkhram.utils.CustomAssertions.*;
 @Epic("DeviceIO")
 @Feature("UI")
 @Story("Hosts list view")
+@DirtiesContext(classMode = BEFORE_CLASS)
 public class HostsListViewTest {
 
     @Autowired

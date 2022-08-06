@@ -6,7 +6,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+
+import static org.springframework.test.annotation.DirtiesContext.ClassMode.BEFORE_CLASS;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(
@@ -15,6 +18,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
         "grpc.server.port=-1"
     }
 )
+@DirtiesContext(classMode = BEFORE_CLASS)
 public abstract class ApiTestsBase {
     @Autowired
     HostRepository hostRepository;
