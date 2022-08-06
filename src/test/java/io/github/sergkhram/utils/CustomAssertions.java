@@ -5,6 +5,7 @@ import io.qameta.allure.Allure;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.function.Executable;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import java.util.List;
@@ -132,7 +133,7 @@ public class CustomAssertions {
         Assertions.assertTrue(isSuccess);
     }
 
-    private static String checkNull(Object o, Boolean isProto) {
+    public static String checkNull(Object o, Boolean isProto) {
         if(o != null) {
             return isProto
                 ? o.toString()
@@ -159,5 +160,22 @@ public class CustomAssertions {
 
     public static <T> void assertContainsOnlyWithAllure(T expected, List<T> actual) {
         assertContainsOnlyWithAllure(expected, actual, false);
+    }
+
+    public static <T> Executable prepareAssertion(T expected, T actual, Boolean isProto) {
+        return () -> {
+            Allure.addAttachment("expected " + expected.getClass().getName(), checkNull(expected, isProto));
+            Allure.addAttachment("actual " + actual.getClass().getName(), checkNull(actual, isProto));
+            Assertions.assertEquals(expected, actual);
+        };
+    }
+
+    public static <T> void assertAllWithAllure(List<Executable> finalAssertions) {
+        Allure.step(
+            "Check expected result",
+            () -> {
+                Assertions.assertAll(finalAssertions);
+            }
+        );
     }
 }

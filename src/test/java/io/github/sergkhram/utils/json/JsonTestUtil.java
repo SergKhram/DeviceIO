@@ -71,4 +71,10 @@ public class JsonTestUtil {
         ObjectMapper mapper = JsonTestUtil.objectMapper;
         return mapper.readTree(jsonString);
     }
+
+    @SneakyThrows
+    public static <T> JsonNode convertModelToJsonNodeWONullValues(T model) {
+        ObjectMapper mapper = JsonTestUtil.objectMapperWONull;
+        return mapper.readValue(mapper.writeValueAsBytes(model), JsonNode.class);
+    }
 }

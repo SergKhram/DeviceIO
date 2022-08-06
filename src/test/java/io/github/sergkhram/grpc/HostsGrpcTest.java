@@ -30,6 +30,7 @@ import static io.github.sergkhram.Generator.*;
 import static io.github.sergkhram.grpc.converters.ProtoConverter.convertHostToHostProto;
 import static io.github.sergkhram.grpc.converters.ProtoConverter.convertHostsToHostsProto;
 import static io.github.sergkhram.utils.CustomAssertions.assertWithAllure;
+import static org.springframework.test.annotation.DirtiesContext.ClassMode.BEFORE_CLASS;
 
 
 @ExtendWith(SpringExtension.class)
@@ -43,7 +44,7 @@ import static io.github.sergkhram.utils.CustomAssertions.assertWithAllure;
 )
 @ImportAutoConfiguration({
     GrpcClientAutoConfiguration.class})
-@DirtiesContext
+@DirtiesContext(classMode = BEFORE_CLASS)
 @Epic("DeviceIO")
 @Feature("gRPC")
 @Story("Hosts")
@@ -68,9 +69,8 @@ public class HostsGrpcTest {
     }
 
     @Test
-    @DirtiesContext
     @DisplayName("Check get hosts grpc request")
-    public void checkHostsListRequest() {
+    public void checkGetHostsRequest() {
         GetHostsListRequest request = GetHostsListRequest.newBuilder()
             .setStringFilter("")
             .build();
@@ -92,9 +92,8 @@ public class HostsGrpcTest {
     }
 
     @Test
-    @DirtiesContext
     @DisplayName("Check get host info by id grpc request")
-    public void checkHostInfoTest() {
+    public void checkGetHostRequest() {
         Host host = generateHosts(1).get(0);
         hostRepository.save(host);
         host = hostRepository.findAll().get(0);
