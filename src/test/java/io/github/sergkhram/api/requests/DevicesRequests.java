@@ -117,4 +117,36 @@ public class DevicesRequests {
             .extract()
             .response();
     }
+
+    public static Response postDeviceReboot(String baseUrl, String id) {
+        return postDeviceReboot(baseUrl, id, 200);
+    }
+
+    public static Response postDeviceReboot(String baseUrl, String id, int code) {
+        return RestAssured
+            .given()
+            .spec(specification)
+            .when()
+            .post(baseUrl + "/device/" + id + "/reboot")
+            .then()
+            .statusCode(code)
+            .extract()
+            .response();
+    }
+
+    public static Response getDevicesStates(String baseUrl) {
+        return getDevicesStates(baseUrl, 200);
+    }
+
+    public static Response getDevicesStates(String baseUrl, int code) {
+        return RestAssured
+            .given()
+            .spec(specification)
+            .when()
+            .get(baseUrl + "/devices/states")
+            .then()
+            .statusCode(code)
+            .extract()
+            .response();
+    }
 }

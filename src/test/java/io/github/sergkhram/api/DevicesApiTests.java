@@ -17,8 +17,8 @@ import io.restassured.response.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.List;
 import java.util.Map;
@@ -27,12 +27,10 @@ import java.util.UUID;
 import static io.github.sergkhram.Generator.*;
 import static io.github.sergkhram.utils.CustomAssertions.*;
 import static io.github.sergkhram.utils.json.JsonTestUtil.*;
-import static org.springframework.test.annotation.DirtiesContext.ClassMode.BEFORE_CLASS;
 
 @Epic("DeviceIO")
 @Feature("API")
 @Story("Devices")
-@DirtiesContext(classMode = BEFORE_CLASS)
 public class DevicesApiTests extends ApiTestsBase{
 
     @MockBean
@@ -176,6 +174,36 @@ public class DevicesApiTests extends ApiTestsBase{
         assertWithAllureWRegex(
             expectedDevices,
             response.as(JsonNode.class)
+        );
+    }
+
+    @Test
+    @DisplayName("Check reboot device api request")
+    public void checkRebootDeviceRequest() {
+        Host host = generateHosts(1).get(0);
+        hostRepository.save(host);
+        host = hostRepository.findAll().get(0);
+        Device device = generateDevices(host, 1, DeviceType.DEVICE, OsType.IOS).get(0);
+        Device savedDevice = deviceRepository.save(device);
+        String id = savedDevice.getId().toString();
+        Mockito.doNothing().when(this.idbManager).rebootDevice(savedDevice);
+        DevicesRequests.postDeviceReboot(getBaseUrl(), id);
+    }
+
+    @Test
+    @DisplayName("Check get devices states api request")
+    public void checkGetDevicesStatesRequest() {
+        Host host = generateHosts(1).get(0);
+        hostRepository.save(host);
+        host = hostRepository.findAll().get(0);
+        Device device = generateDevices(host, 1, DeviceType.DEVICE, OsType.IOS).get(0);
+        Device savedDevice = deviceRepository.save(device);
+        Map<String, String> expectedMap = Map.of(savedDevice.getSerial(), "Connected");
+        Mockito.doReturn(expectedMap).when(this.idbManager).getDevicesStates();
+        Response response = DevicesRequests.getDevicesStates(getBaseUrl());
+        assertWithAllure(
+            expectedMap,
+            response.as(Map.class)
         );
     }
 }

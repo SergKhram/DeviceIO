@@ -9,7 +9,7 @@ public class Utils {
         return (T) managers
             .stream()
             .filter(
-                it -> it.getClass().isAssignableFrom(type)
+                it -> type.isInstance(it)
             )
             .findFirst()
             .get();
