@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.github.sergkhram.api.requests.HostsRequests;
 import io.github.sergkhram.data.entity.Device;
-import io.github.sergkhram.logic.HostRequestsService;
 import io.github.sergkhram.managers.adb.AdbManager;
 import io.github.sergkhram.managers.idb.IdbManager;
 import io.github.sergkhram.utils.Const;
@@ -19,10 +18,12 @@ import org.junit.jupiter.api.Test;
 import io.github.sergkhram.data.entity.Host;
 import org.mockito.Mockito;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.annotation.DirtiesContext;
 
 import static io.github.sergkhram.Generator.*;
 import static io.github.sergkhram.utils.CustomAssertions.*;
 import static io.github.sergkhram.utils.json.JsonTestUtil.*;
+import static org.springframework.test.annotation.DirtiesContext.ClassMode.BEFORE_CLASS;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -33,6 +34,7 @@ import java.util.UUID;
 @Epic("DeviceIO")
 @Feature("API")
 @Story("Hosts")
+@DirtiesContext(classMode = BEFORE_CLASS)
 public class HostsApiTests extends ApiTestsBase {
 
     @MockBean
@@ -48,24 +50,23 @@ public class HostsApiTests extends ApiTestsBase {
 
     @Test
     @DisplayName("Check get hosts api request")
-    public void checkHostsListTest() {
+    public void checkGetHostsRequest() {
         Response response = HostsRequests.getHosts(getBaseUrl());
-
         assertTrueWithAllure(response.jsonPath().getList("", Host.class).isEmpty());
-
-        List<Host> hosts = generateHosts(100);
+        int hostsCount = 100;
+        List<Host> hosts = generateHosts(hostsCount);
         hostRepository.saveAll(hosts);
         hosts = hostRepository.findAll();
         setDevices(hosts, List.of());
         response = HostsRequests.getHosts(getBaseUrl());
-
-        assertWithAllure(hosts.size(), response.jsonPath().getList("", Host.class).size());
-        assertContainsAllWithAllure(hosts, response.jsonPath().getList("", Host.class));
+        List<Host> responseHosts = response.jsonPath().getList("", Host.class);
+        assertWithAllure(hostsCount, responseHosts.size());
+        assertContainsAllWithAllure(hosts, responseHosts);
     }
 
     @Test
     @DisplayName("Check get host info by id api request")
-    public void checkHostInfoTest() {
+    public void checkGetHostRequest() {
         Host host = generateHosts(1).get(0);
         hostRepository.save(host);
         host = hostRepository.findAll().get(0);

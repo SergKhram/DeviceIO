@@ -1,11 +1,11 @@
 package io.github.sergkhram.api;
 
+import io.github.sergkhram.data.repository.DeviceRepository;
 import io.github.sergkhram.data.repository.HostRepository;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
@@ -15,10 +15,12 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
         "grpc.server.port=-1"
     }
 )
-@DirtiesContext
 public abstract class ApiTestsBase {
     @Autowired
     HostRepository hostRepository;
+
+    @Autowired
+    DeviceRepository deviceRepository;
 
     @Autowired
     private TestRestTemplate restTemplate;
