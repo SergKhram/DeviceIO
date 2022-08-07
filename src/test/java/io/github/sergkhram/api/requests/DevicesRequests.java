@@ -149,4 +149,42 @@ public class DevicesRequests {
             .extract()
             .response();
     }
+
+    public static Response executeShell(String baseUrl, String id, String body) {
+        return executeShell(baseUrl, id, body, 200);
+    }
+
+    public static Response executeShell(String baseUrl, String id, String body, int code) {
+        return RestAssured
+            .given()
+            .spec(specification)
+            .body(body)
+            .when()
+            .post(baseUrl + "/device/" + id + "/executeShell")
+            .then()
+            .statusCode(code)
+            .extract()
+            .response();
+    }
+
+    public static Response getFilesList(String baseUrl, String id, Map<String, String> params) {
+        return getFilesList(baseUrl, id, params, 200);
+    }
+
+    public static Response getFilesList(String baseUrl, String id) {
+        return getFilesList(baseUrl, id, Map.of(), 200);
+    }
+
+    public static Response getFilesList(String baseUrl, String id, Map<String, String> params, int code) {
+        return RestAssured
+            .given()
+            .spec(specification)
+            .queryParams(params)
+            .when()
+            .get(baseUrl + "/device/" + id + "/files")
+            .then()
+            .statusCode(code)
+            .extract()
+            .response();
+    }
 }

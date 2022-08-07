@@ -3,10 +3,13 @@ package io.github.sergkhram.api;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.github.sergkhram.api.controllers.device.ShellResult;
 import io.github.sergkhram.api.requests.DevicesRequests;
 import io.github.sergkhram.data.entity.Device;
+import io.github.sergkhram.data.entity.DeviceDirectoryElement;
 import io.github.sergkhram.data.entity.Host;
 import io.github.sergkhram.data.enums.DeviceType;
+import io.github.sergkhram.data.enums.IOSPackageType;
 import io.github.sergkhram.data.enums.OsType;
 import io.github.sergkhram.managers.adb.AdbManager;
 import io.github.sergkhram.managers.idb.IdbManager;
@@ -61,13 +64,13 @@ public class DevicesApiTests extends ApiTestsBase{
         assertAllWithAllure(
             List.of(
                 prepareAssertion(
-                    responseOsDevice.as(Device.class),
                     osDevice,
+                    responseOsDevice.as(Device.class),
                     false
                 ),
                 prepareAssertion(
-                    responseAndroidSimulator.as(Device.class),
                     androidSimulator,
+                    responseAndroidSimulator.as(Device.class),
                     false
                 )
             )
@@ -156,7 +159,7 @@ public class DevicesApiTests extends ApiTestsBase{
         Response response = DevicesRequests.getDeviceById(getBaseUrl(), id, 400);
         assertWithAllure(
             "There is no device with id " + id,
-            response.getBody().prettyPrint()
+            response.asString()
         );
     }
 
@@ -204,6 +207,73 @@ public class DevicesApiTests extends ApiTestsBase{
         assertWithAllure(
             expectedMap,
             response.as(Map.class)
+        );
+    }
+
+    @Test
+    @DisplayName("Check post device execute shell api request")
+    public void checkExecuteShellRequest() {
+        Host host = generateHosts(1).get(0);
+        hostRepository.save(host);
+        host = hostRepository.findAll().get(0);
+        Device iosDevice = generateDevices(host, 1, DeviceType.DEVICE, OsType.IOS).get(0);
+        Device savedIosDevice = deviceRepository.save(iosDevice);
+        Device androidDevice = generateDevices(host, 1, DeviceType.DEVICE, OsType.ANDROID).get(0);
+        Device savedAndroidDevice = deviceRepository.save(androidDevice);
+        String shellRequestBody = generateRandomString();
+        String expectedShellResponse = generateRandomString();
+        Response iosResponse = DevicesRequests.executeShell(getBaseUrl(), savedIosDevice.getId().toString(), shellRequestBody, 400);
+        Mockito.doReturn(expectedShellResponse).when(this.adbManager).executeShell(savedAndroidDevice, shellRequestBody);
+        Response androidResponse = DevicesRequests.executeShell(getBaseUrl(), savedAndroidDevice.getId().toString(), shellRequestBody);
+        assertAllWithAllure(
+            List.of(
+                prepareAssertion(
+                    "Execute shell request allowed for ANDROID only",
+                    iosResponse.asString(),
+                    false
+                ),
+                prepareAssertion(
+                    convertModelToJsonNode(
+                        ShellResult
+                            .builder()
+                            .result(expectedShellResponse)
+                            .build()
+                    ),
+                    androidResponse.as(JsonNode.class),
+                    false
+                )
+            )
+        );
+    }
+
+    @Test
+    @DisplayName("Check get files list api request")
+    public void checkGetFilesListRequest() {
+        Host host = generateHosts(1).get(0);
+        hostRepository.save(host);
+        host = hostRepository.findAll().get(0);
+        Device iosDevice = generateDevices(host, 1, DeviceType.DEVICE, OsType.IOS).get(0);
+        Device savedIosDevice = deviceRepository.save(iosDevice);
+        Device androidDevice = generateDevices(host, 1, DeviceType.DEVICE, OsType.ANDROID).get(0);
+        Device savedAndroidDevice = deviceRepository.save(androidDevice);
+        List<DeviceDirectoryElement> expectedFiles = generateFilesList(10);
+        Mockito.doReturn(expectedFiles).when(this.idbManager).getListFiles(savedIosDevice, "", IOSPackageType.APPLICATION);
+        Mockito.doReturn(expectedFiles).when(this.adbManager).getListFiles(savedAndroidDevice, "");
+        Response iosResponse = DevicesRequests.getFilesList(getBaseUrl(), savedIosDevice.getId().toString());
+        Response androidResponse = DevicesRequests.getFilesList(getBaseUrl(), savedAndroidDevice.getId().toString());
+        assertAllWithAllure(
+            List.of(
+                prepareAssertion(
+                    convertModelToJsonNode(expectedFiles),
+                    iosResponse.as(JsonNode.class),
+                    false
+                ),
+                prepareAssertion(
+                    convertModelToJsonNode(expectedFiles),
+                    androidResponse.as(JsonNode.class),
+                    false
+                )
+            )
         );
     }
 }

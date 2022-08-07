@@ -139,7 +139,7 @@ public class HostsApiTests extends ApiTestsBase {
         Response response = HostsRequests.getHostById(getBaseUrl(), id, 400);
         assertWithAllure(
             "There is no host with id " + id,
-            response.getBody().prettyPrint()
+            response.asString()
         );
     }
 
