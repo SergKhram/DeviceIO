@@ -175,7 +175,7 @@ open class AdbManager: Manager {
         }
     }
 
-    fun executeShell(device: DeviceEntity, cmd: String): String {
+    open fun executeShell(device: DeviceEntity, cmd: String): String {
         var response: ShellCommandResult?
         runBlocking {
             response = withTimeoutOrNull(Const.TIMEOUT.toLong()) {
@@ -232,7 +232,7 @@ open class AdbManager: Manager {
         }
     }
 
-    fun getListFiles(device: DeviceEntity, path: String): List<DeviceDirectoryElement> {
+    open fun getListFiles(device: DeviceEntity, path: String): List<DeviceDirectoryElement> {
         val list: MutableList<DeviceDirectoryElement> = mutableListOf()
         runBlocking {
             withTimeoutOrNull(Const.TIMEOUT.toLong()) {

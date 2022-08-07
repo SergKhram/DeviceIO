@@ -155,7 +155,8 @@ public class DeviceController {
                 return ResponseEntity.badRequest().body("Execute shell request allowed for ANDROID only");
 
             String result = deviceRequestsService.executeShell(device, body);
-            return ResponseEntity.ok().body(convertModelToJsonNode(result));
+            ShellResult shellResult = ShellResult.builder().result(result).build();
+            return ResponseEntity.ok().body(convertModelToJsonNode(shellResult));
         } catch (NoSuchElementException|IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getLocalizedMessage());
         }

@@ -2,12 +2,15 @@ package io.github.sergkhram;
 
 import com.mifmif.common.regex.Generex;
 import io.github.sergkhram.data.entity.Device;
+import io.github.sergkhram.data.entity.DeviceDirectoryElement;
 import io.github.sergkhram.data.entity.Host;
 import io.github.sergkhram.data.enums.DeviceType;
 import io.github.sergkhram.data.enums.OsType;
 import lombok.SneakyThrows;
 
 import java.security.SecureRandom;
+import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.IntStream;
@@ -80,5 +83,22 @@ public class Generator {
 
     public static CopyOnWriteArrayList<Device> generateDevices(Host host, int count) {
         return generateDevices(host, count, DeviceType.SIMULATOR, OsType.ANDROID);
+    }
+
+    public static List<DeviceDirectoryElement> generateFilesList(int count) {
+        Random random = new Random();
+        CopyOnWriteArrayList<DeviceDirectoryElement> files = new CopyOnWriteArrayList<>();
+        IntStream.range(0, count).parallel().forEach(
+            it -> {
+                DeviceDirectoryElement dde = new DeviceDirectoryElement(
+                    generateRandomString(),
+                    generateRandomString()
+                );
+                dde.isDirectory = random.nextBoolean();
+                dde.size = generateRandomInt().toString();
+                files.add(dde);
+            }
+        );
+        return files;
     }
 }
