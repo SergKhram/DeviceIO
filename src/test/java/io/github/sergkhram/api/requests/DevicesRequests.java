@@ -187,4 +187,26 @@ public class DevicesRequests {
             .extract()
             .response();
     }
+
+    public static Response postDownloadFile(String baseUrl, String id, String body, Map<String, String> params) {
+        return postDownloadFile(baseUrl, id, body, params, 200);
+    }
+
+    public static Response postDownloadFile(String baseUrl, String id, String body) {
+        return postDownloadFile(baseUrl, id, body, Map.of(), 200);
+    }
+
+    public static Response postDownloadFile(String baseUrl, String id, String body, Map<String, String> params, int code) {
+        return RestAssured
+            .given()
+            .spec(specification)
+            .queryParams(params)
+            .body(body)
+            .when()
+            .post(baseUrl + "/device/" + id + "/files/download")
+            .then()
+            .statusCode(code)
+            .extract()
+            .response();
+    }
 }

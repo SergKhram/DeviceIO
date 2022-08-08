@@ -259,7 +259,7 @@ open class AdbManager: Manager {
         return list
     }
 
-    fun downloadFile(device: DeviceEntity, deviceDirectoryElement: DeviceDirectoryElement, destination: String): File {
+    open fun downloadFile(device: DeviceEntity, deviceDirectoryElement: DeviceDirectoryElement, destination: String): File {
         val file = File(destination + File.separator + deviceDirectoryElement.name)
         runBlocking {
             withTimeoutOrNull(30000) {
@@ -291,7 +291,7 @@ open class AdbManager: Manager {
         return file
     }
 
-    fun downloadFolder(device: DeviceEntity, deviceDirectoryElement: DeviceDirectoryElement, destination: String): File {
+    open fun downloadFolder(device: DeviceEntity, deviceDirectoryElement: DeviceDirectoryElement, destination: String): File {
         val file = File(destination + File.separator + deviceDirectoryElement.name)
         runBlocking {
             withTimeoutOrNull(30000) {

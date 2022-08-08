@@ -17,12 +17,13 @@ import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
 import io.restassured.response.Response;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import lombok.SneakyThrows;
+import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
+import java.io.*;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -30,6 +31,8 @@ import java.util.UUID;
 import static io.github.sergkhram.Generator.*;
 import static io.github.sergkhram.utils.CustomAssertions.*;
 import static io.github.sergkhram.utils.json.JsonTestUtil.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 
 @Epic("DeviceIO")
 @Feature("API")
@@ -275,5 +278,77 @@ public class DevicesApiTests extends ApiTestsBase{
                 )
             )
         );
+    }
+
+    @SneakyThrows
+    @Test
+    @DisplayName("Check download files api request")
+    public void checkPostDownloadFilesRequest() {
+        Host host = generateHosts(1).get(0);
+        hostRepository.save(host);
+        host = hostRepository.findAll().get(0);
+        Device iosDevice = generateDevices(host, 1, DeviceType.DEVICE, OsType.IOS).get(0);
+        Device savedIosDevice = deviceRepository.save(iosDevice);
+        Device androidDevice = generateDevices(host, 1, DeviceType.DEVICE, OsType.ANDROID).get(0);
+        Device savedAndroidDevice = deviceRepository.save(androidDevice);
+        DeviceDirectoryElement downloadRequestBody = new DeviceDirectoryElement(generateRandomString(), "");
+        downloadRequestBody.isDirectory=false;
+        downloadRequestBody.size = "";
+
+        String iosText = generateRandomString();
+        File iosTemp = createTempFileWContent(iosText);
+        String iosFileName = iosTemp.getName();
+        Mockito.doReturn(iosTemp).when(this.idbManager).downloadFile(
+            any(Device.class), any(DeviceDirectoryElement.class), any(IOSPackageType.class), anyString()
+        );
+
+        String androidText = generateRandomString();
+        File andTemp = createTempFileWContent(androidText);
+        String androidFileName = andTemp.getName();
+        Mockito.doReturn(andTemp).when(this.adbManager).downloadFile(
+            any(Device.class), any(DeviceDirectoryElement.class), anyString()
+        );
+
+        Response iosResponse = DevicesRequests.postDownloadFile(
+            getBaseUrl(), savedIosDevice.getId().toString(), convertModelToString(downloadRequestBody)
+        );
+
+        Response androidResponse = DevicesRequests.postDownloadFile(
+            getBaseUrl(), savedAndroidDevice.getId().toString(), convertModelToString(downloadRequestBody)
+        );
+
+        assertAllWithAllure(
+            List.of(
+                prepareAssertion(
+                    iosText,
+                    iosResponse.asString(),
+                    false
+                ),
+                prepareAssertion(
+                    androidText,
+                    androidResponse.asString(),
+                    false
+                ),
+                prepareAssertion(
+                    "attachment; filename=\"" + iosFileName + "\"",
+                    iosResponse.getHeader("Content-Disposition"),
+                    false
+                ),
+                prepareAssertion(
+                    "attachment; filename=\"" + androidFileName + "\"",
+                    androidResponse.getHeader("Content-Disposition"),
+                    false
+                )
+            )
+        );
+    }
+
+    @SneakyThrows
+    private File createTempFileWContent(String text) {
+        File tempFile = Files.createTempFile("temp", ".tmp").toFile();
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(tempFile))) {
+            bw.write(text);
+        }
+        return tempFile;
     }
 }
