@@ -1,6 +1,7 @@
 package io.github.sergkhram;
 
 import com.mifmif.common.regex.Generex;
+import io.github.sergkhram.data.entity.AppDescription;
 import io.github.sergkhram.data.entity.Device;
 import io.github.sergkhram.data.entity.DeviceDirectoryElement;
 import io.github.sergkhram.data.entity.Host;
@@ -100,5 +101,23 @@ public class Generator {
             }
         );
         return files;
+    }
+
+    public static List<AppDescription> generateAppsList(int count) {
+        Random random = new Random();
+        CopyOnWriteArrayList<AppDescription> apps = new CopyOnWriteArrayList<>();
+        IntStream.range(0, count).parallel().forEach(
+            it -> {
+                AppDescription app = AppDescription.builder()
+                    .name(generateRandomString())
+                    .appState(generateRandomString())
+                    .isActive(random.nextBoolean())
+                    .appPackage(generateRandomString())
+                    .path(generateRandomString())
+                    .build();
+                apps.add(app);
+            }
+        );
+        return apps;
     }
 }

@@ -209,4 +209,20 @@ public class DevicesRequests {
             .extract()
             .response();
     }
+
+    public static Response getDeviceApps(String baseUrl, String id) {
+        return getDeviceApps(baseUrl, id, 200);
+    }
+
+    public static Response getDeviceApps(String baseUrl, String id, int code) {
+        return RestAssured
+            .given()
+            .spec(specification)
+            .when()
+            .get(baseUrl + "/device/" + id + "/apps")
+            .then()
+            .statusCode(code)
+            .extract()
+            .response();
+    }
 }
