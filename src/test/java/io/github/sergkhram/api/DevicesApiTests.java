@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.github.sergkhram.api.controllers.device.ShellResult;
 import io.github.sergkhram.api.requests.DevicesRequests;
+import io.github.sergkhram.data.entity.AppDescription;
 import io.github.sergkhram.data.entity.Device;
 import io.github.sergkhram.data.entity.DeviceDirectoryElement;
 import io.github.sergkhram.data.entity.Host;
@@ -280,7 +281,6 @@ public class DevicesApiTests extends ApiTestsBase{
         );
     }
 
-    @SneakyThrows
     @Test
     @DisplayName("Check download files api request")
     public void checkPostDownloadFilesRequest() {
@@ -337,6 +337,37 @@ public class DevicesApiTests extends ApiTestsBase{
                 prepareAssertion(
                     "attachment; filename=\"" + androidFileName + "\"",
                     androidResponse.getHeader("Content-Disposition"),
+                    false
+                )
+            )
+        );
+    }
+
+    @Test
+    @DisplayName("Check get device apps api request")
+    public void checkGetDeviceAppsRequest() {
+        Host host = generateHosts(1).get(0);
+        hostRepository.save(host);
+        host = hostRepository.findAll().get(0);
+        Device iosDevice = generateDevices(host, 1, DeviceType.DEVICE, OsType.IOS).get(0);
+        Device savedIosDevice = deviceRepository.save(iosDevice);
+        Device androidDevice = generateDevices(host, 1, DeviceType.DEVICE, OsType.ANDROID).get(0);
+        Device savedAndroidDevice = deviceRepository.save(androidDevice);
+        List<AppDescription> expectedApps = generateAppsList(10);
+        Mockito.doReturn(expectedApps).when(this.idbManager).getAppsList(savedIosDevice);
+        Mockito.doReturn(expectedApps).when(this.adbManager).getAppsList(savedAndroidDevice);
+        Response iosResponse = DevicesRequests.getDeviceApps(getBaseUrl(), savedIosDevice.getId().toString());
+        Response androidResponse = DevicesRequests.getDeviceApps(getBaseUrl(), savedAndroidDevice.getId().toString());
+        assertAllWithAllure(
+            List.of(
+                prepareAssertion(
+                    convertModelToJsonNode(expectedApps),
+                    iosResponse.as(JsonNode.class),
+                    false
+                ),
+                prepareAssertion(
+                    convertModelToJsonNode(expectedApps),
+                    androidResponse.as(JsonNode.class),
                     false
                 )
             )
