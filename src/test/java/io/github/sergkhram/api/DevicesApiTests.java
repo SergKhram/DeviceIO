@@ -12,8 +12,6 @@ import io.github.sergkhram.data.entity.Host;
 import io.github.sergkhram.data.enums.DeviceType;
 import io.github.sergkhram.data.enums.IOSPackageType;
 import io.github.sergkhram.data.enums.OsType;
-import io.github.sergkhram.managers.adb.AdbManager;
-import io.github.sergkhram.managers.idb.IdbManager;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
@@ -21,7 +19,6 @@ import io.restassured.response.Response;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
-import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -39,12 +36,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 @Feature("API")
 @Story("Devices")
 public class DevicesApiTests extends ApiTestsBase{
-
-    @MockBean
-    IdbManager idbManager;
-
-    @MockBean
-    AdbManager adbManager;
 
     @BeforeEach
     public void beforeTest() {
