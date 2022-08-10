@@ -4,8 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.github.sergkhram.api.requests.HostsRequests;
 import io.github.sergkhram.data.entity.Device;
-import io.github.sergkhram.managers.adb.AdbManager;
-import io.github.sergkhram.managers.idb.IdbManager;
 import io.github.sergkhram.utils.Const;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
@@ -17,7 +15,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import io.github.sergkhram.data.entity.Host;
 import org.mockito.Mockito;
-import org.springframework.boot.test.mock.mockito.MockBean;
 
 import static io.github.sergkhram.Generator.*;
 import static io.github.sergkhram.utils.CustomAssertions.*;
@@ -33,12 +30,6 @@ import java.util.UUID;
 @Feature("API")
 @Story("Hosts")
 public class HostsApiTests extends ApiTestsBase {
-
-    @MockBean
-    IdbManager idbManager;
-
-    @MockBean
-    AdbManager adbManager;
 
     @BeforeEach
     public void beforeTest() {
