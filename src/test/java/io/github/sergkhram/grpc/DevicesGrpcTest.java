@@ -1,6 +1,8 @@
 package io.github.sergkhram.grpc;
 
+import com.google.protobuf.ByteString;
 import com.google.protobuf.Empty;
+import io.github.sergkhram.data.entity.AppDescription;
 import io.github.sergkhram.data.entity.Device;
 import io.github.sergkhram.data.entity.DeviceDirectoryElement;
 import io.github.sergkhram.data.entity.Host;
@@ -13,17 +15,20 @@ import io.grpc.StatusRuntimeException;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
+import lombok.SneakyThrows;
 import net.devh.boot.grpc.client.inject.GrpcClient;
+import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.nio.file.Files;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static io.github.sergkhram.Generator.*;
@@ -31,6 +36,8 @@ import static io.github.sergkhram.Generator.generateRandomString;
 import static io.github.sergkhram.grpc.converters.ProtoConverter.*;
 import static io.github.sergkhram.utils.CustomAssertions.*;
 import static io.github.sergkhram.utils.CustomAssertions.assertContainsAllWithAllure;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 
 @Epic("DeviceIO")
 @Feature("gRPC")
@@ -306,6 +313,99 @@ public class DevicesGrpcTest extends GrpcTestsBase {
         );
     }
 
+    @Test
+    @DisplayName("Check download files grpc request")
+    public void checkPostDownloadFilesRequest() {
+        Host host = generateHosts(1).get(0);
+        hostRepository.save(host);
+        host = hostRepository.findAll().get(0);
+        Device iosDevice = generateDevices(host, 1, DeviceType.DEVICE, OsType.IOS).get(0);
+        Device savedIosDevice = deviceRepository.save(iosDevice);
+        Device androidDevice = generateDevices(host, 1, DeviceType.DEVICE, OsType.ANDROID).get(0);
+        Device savedAndroidDevice = deviceRepository.save(androidDevice);
+        DeviceDirectoryElement downloadRequestBody = new DeviceDirectoryElement(generateRandomString(), "");
+        downloadRequestBody.isDirectory=false;
+        downloadRequestBody.size = "";
+
+        String iosText = generateRandomString();
+        File iosTemp = createTempFileWContent(iosText);
+        ByteString iosByteString = returnByteStringFromFile(iosTemp);
+        Mockito.doReturn(iosTemp).when(this.idbManager).downloadFile(
+            any(Device.class), any(DeviceDirectoryElement.class), any(IOSPackageType.class), anyString()
+        );
+
+        String androidText = generateRandomString();
+        File andTemp = createTempFileWContent(androidText);
+        ByteString androidByteString = returnByteStringFromFile(andTemp);
+        Mockito.doReturn(andTemp).when(this.adbManager).downloadFile(
+            any(Device.class), any(DeviceDirectoryElement.class), anyString()
+        );
+
+        Iterator<DataChunk> iosResponse = deviceService.postDownloadFileRequest(
+            FileDownloadRequest.newBuilder()
+                .setId(savedIosDevice.getId().toString())
+                .setDeviceDirectoryElementProto(convertDDElementToDDElementProto(downloadRequestBody))
+                .build()
+        );
+
+        Iterator<DataChunk> androidResponse = deviceService.postDownloadFileRequest(
+            FileDownloadRequest.newBuilder()
+                .setId(savedAndroidDevice.getId().toString())
+                .setDeviceDirectoryElementProto(convertDDElementToDDElementProto(downloadRequestBody))
+                .build()
+        );
+
+        assertAllWithAllure(
+            List.of(
+                prepareAssertion(
+                    iosByteString,
+                    iosResponse.next().getData(),
+                    true
+                ),
+                prepareAssertion(
+                    androidByteString,
+                    androidResponse.next().getData(),
+                    true
+                )
+            )
+        );
+    }
+
+    @Test
+    @DisplayName("Check get device apps grpc request")
+    public void checkGetDeviceAppsRequest() {
+        Host host = generateHosts(1).get(0);
+        hostRepository.save(host);
+        host = hostRepository.findAll().get(0);
+        Device iosDevice = generateDevices(host, 1, DeviceType.DEVICE, OsType.IOS).get(0);
+        Device savedIosDevice = deviceRepository.save(iosDevice);
+        Device androidDevice = generateDevices(host, 1, DeviceType.DEVICE, OsType.ANDROID).get(0);
+        Device savedAndroidDevice = deviceRepository.save(androidDevice);
+        List<AppDescription> expectedApps = generateAppsList(10);
+        Mockito.doReturn(expectedApps).when(this.idbManager).getAppsList(savedIosDevice);
+        Mockito.doReturn(expectedApps).when(this.adbManager).getAppsList(savedAndroidDevice);
+        GetAppsResponse iosResponse = deviceService.getAppsListRequest(
+            DeviceId.newBuilder().setId(savedIosDevice.getId().toString()).build()
+        );
+        GetAppsResponse androidResponse = deviceService.getAppsListRequest(
+            DeviceId.newBuilder().setId(savedAndroidDevice.getId().toString()).build()
+        );
+        assertAllWithAllure(
+            List.of(
+                prepareAssertion(
+                    convertListAppDescrToListAppDescrProto(expectedApps),
+                    iosResponse.getAppsList(),
+                    true
+                ),
+                prepareAssertion(
+                    convertListAppDescrToListAppDescrProto(expectedApps),
+                    androidResponse.getAppsList(),
+                    true
+                )
+            )
+        );
+    }
+
     private PostDeviceRequest convertToPostDeviceProto(Device device) {
         Host savedDeviceHost = device.getHost();
         return PostDeviceRequest.newBuilder()
@@ -355,5 +455,21 @@ public class DevicesGrpcTest extends GrpcTestsBase {
             it -> builder.addDevices(convertToPostDeviceProto(it))
         );
         return builder.build();
+    }
+
+    @SneakyThrows
+    private File createTempFileWContent(String text) {
+        File tempFile = Files.createTempFile("temp", ".tmp").toFile();
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(tempFile))) {
+            bw.write(text);
+        }
+        return tempFile;
+    }
+
+    @SneakyThrows
+    private ByteString returnByteStringFromFile(File file) {
+        return ByteString.copyFrom(
+            FileUtils.readFileToByteArray(file)
+        );
     }
 }
