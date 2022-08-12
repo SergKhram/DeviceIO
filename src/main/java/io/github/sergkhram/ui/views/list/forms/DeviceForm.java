@@ -6,17 +6,22 @@ import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.contextmenu.GridContextMenu;
 import com.vaadin.flow.component.html.Anchor;
-import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.tabs.Tab;
+import com.vaadin.flow.component.tabs.Tabs;
+import com.vaadin.flow.component.tabs.TabsVariant;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.treegrid.TreeGrid;
@@ -24,6 +29,7 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.provider.hierarchy.HierarchicalDataProvider;
 import com.vaadin.flow.shared.Registration;
 import com.vaadin.flow.theme.lumo.Lumo;
+import io.github.sergkhram.data.entity.AppDescription;
 import io.github.sergkhram.data.enums.OsType;
 import io.github.sergkhram.data.enums.IOSPackageType;
 import io.github.sergkhram.ui.providers.IOSDeviceDirectoriesDataProvider;
@@ -31,10 +37,12 @@ import io.github.sergkhram.logic.DeviceRequestsService;
 import io.github.sergkhram.data.entity.Device;
 import io.github.sergkhram.data.entity.DeviceDirectoryElement;
 import io.github.sergkhram.ui.providers.AndroidDeviceDirectoriesDataProvider;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
+import java.util.Comparator;
 
-
+@Slf4j
 public final class DeviceForm extends FormLayout {
     Binder<Device> binder = new Binder<>(Device.class);
 
@@ -42,25 +50,35 @@ public final class DeviceForm extends FormLayout {
     TextField shellRequest = new TextField("Type your shell request");
     VerticalLayout shellCmdLayout;
     TreeGrid<DeviceDirectoryElement> fileExplorerGrid = new TreeGrid<>();
+    Grid<AppDescription> appsGrid = new Grid<>(AppDescription.class);
+    VerticalLayout appsLayout;
     HierarchicalDataProvider dataProvider;
     Dialog downloadDialog = new Dialog();
-    HorizontalLayout deviceFileExplorer;
     Anchor anchorElement;
     Text downloadDialogText = new Text("");
     Device device;
     File currentFile;
     ComboBox<IOSPackageType> iosPackageTypeComboBox;
     TextField iosBundle = new TextField("Type your bundle");
-    VerticalLayout iosExplorerTunerLayout;
+    Details iosExplorerTuner;
+
+    public Tab fileExplorerTab;
+    public Tab appsTab;
+    public Tab executeShellTab;
+    public VerticalLayout tabContent;
+    private Div actionsTabsDiv;
+    private Tabs tabs;
 
     public DeviceForm() {
         addClassName("device-form");
         prepareDialog();
+        prepareIosFileExplorerTuner();
+        prepareDeviceFileExplorer();
+        prepareShellCmdLayout();
+        prepareAppsGrid();
         add(
             prepareDeviceInfoForm(),
-            prepareShellCmdLayout(),
-            prepareIosFileExplorerTuner(),
-            prepareDeviceFileExplorer()
+            prepareTabs()
         );
     }
 
@@ -141,7 +159,7 @@ public final class DeviceForm extends FormLayout {
         this.currentFile = file;
     }
 
-    private VerticalLayout prepareDeviceFileExplorer() {
+    private Grid prepareDeviceFileExplorer() {
         fileExplorerGrid.setSelectionMode(Grid.SelectionMode.SINGLE);
         fileExplorerGrid.addHierarchyColumn(DeviceDirectoryElement::getName)
             .setAutoWidth(true)
@@ -165,15 +183,73 @@ public final class DeviceForm extends FormLayout {
                 downloadDialog.open();
             }
         );
+        return fileExplorerGrid;
+    }
 
-        H3 gridTitle = new H3("File explorer");
-        gridTitle.getStyle().set("margin", "0");
-        deviceFileExplorer = new HorizontalLayout(gridTitle);
-        deviceFileExplorer.setAlignItems(FlexComponent.Alignment.BASELINE);
-        return new VerticalLayout(
-            deviceFileExplorer,
-            fileExplorerGrid
+    private Div prepareTabs() {
+        fileExplorerTab = new Tab("File Explorer");
+        appsTab = new Tab("Apps");
+        executeShellTab = new Tab("Execute shell");
+
+        executeShellTab.setEnabled(false);
+
+        tabs = new Tabs(fileExplorerTab, appsTab, executeShellTab);
+        tabs.addThemeVariants(TabsVariant.LUMO_CENTERED);
+        tabs.addSelectedChangeListener(
+            event -> fireEvent(
+                new ReinitTabsEvent(
+                    this,
+                    device,
+                    event.getSelectedTab(),
+                    iosExplorerTuner,
+                    fileExplorerGrid,
+                    shellCmdLayout,
+                    appsLayout
+                )
+            )
         );
+
+        tabContent = new VerticalLayout();
+        tabContent.setSpacing(false);
+        setContent(tabs.getSelectedTab());
+        actionsTabsDiv = new Div();
+        actionsTabsDiv.add(
+            tabs,
+            tabContent
+        );
+        return actionsTabsDiv;
+    }
+
+    private void setContent(Tab tab) {
+        clearTabs();
+        if (tab.equals(fileExplorerTab)) {
+            tabContent.add(
+                iosExplorerTuner,
+                fileExplorerGrid
+            );
+        } else if(tab.equals(appsTab)) {
+            tabContent.add(
+
+            );
+        } else {
+            tabContent.add(
+                shellCmdLayout
+            );
+        }
+    }
+
+    public void clearTabs() {
+        tabContent.removeAll();
+        try {
+            clearDeviceExplorer();
+        } catch (Exception e) {
+            log.info(e.getLocalizedMessage());
+        }
+        try {
+            clearShellLayout();
+        } catch (Exception e) {
+            log.info(e.getLocalizedMessage());
+        }
     }
 
     public void setDevice(Device device) {
@@ -203,37 +279,46 @@ public final class DeviceForm extends FormLayout {
     public void clearDeviceExplorer() {
         fileExplorerGrid.setVisible(false);
         dataProvider = null;
-        deviceFileExplorer.setVisible(false);
         anchorElement = null;
-    }
-
-    public void setVisibleShellLayout(boolean visible) {
-        visible = visible && device.getIsActive();
-        shellCmdLayout.setVisible(visible);
     }
 
     public void setVisibleIOSLayoutForExplorer(boolean visible) {
         visible = visible && device.getIsActive();
-        iosExplorerTunerLayout.setVisible(visible);
+        iosExplorerTuner.setVisible(visible);
+    }
+
+    public void setEnabledShellTab(boolean enabled) {
+        executeShellTab.setEnabled(enabled);
+        shellCmdLayout.setVisible(enabled);
+    }
+
+    public void setVisibleTabs(boolean visible) {
+        visible = visible && device.getIsActive();
+        actionsTabsDiv.setVisible(visible);
     }
 
     public void initDeviceExplorer(DeviceRequestsService deviceRequestsService) {
-        if(device.getIsActive()) {
-            dataProvider = device.getOsType().equals(OsType.ANDROID)
-                ? new AndroidDeviceDirectoriesDataProvider(
-                    device,
-                    deviceRequestsService
-                )
-                : new IOSDeviceDirectoriesDataProvider(
-                    device,
-                    deviceRequestsService,
-                    "",
-                    iosPackageTypeComboBox.getValue()
-                );
-            fileExplorerGrid.setDataProvider(dataProvider);
-            fileExplorerGrid.setVisible(true);
-            deviceFileExplorer.setVisible(true);
-        }
+        dataProvider = device.getOsType().equals(OsType.ANDROID)
+            ? new AndroidDeviceDirectoriesDataProvider(
+                device,
+                deviceRequestsService
+            )
+            : new IOSDeviceDirectoriesDataProvider(
+                device,
+                deviceRequestsService,
+                "",
+                iosPackageTypeComboBox.getValue()
+            );
+        fileExplorerGrid.setDataProvider(dataProvider);
+        fileExplorerGrid.setVisible(true);
+    }
+
+    public void updateAppsGrid(DeviceRequestsService deviceRequestsService) {
+        appsGrid.setItems(deviceRequestsService.getAppsList(device));
+    }
+
+    public void setDefaultTab() {
+        tabs.setSelectedTab(fileExplorerTab);
     }
 
     private VerticalLayout prepareShellCmdLayout() {
@@ -250,7 +335,7 @@ public final class DeviceForm extends FormLayout {
         return shellCmdLayout;
     }
 
-    private VerticalLayout prepareIosFileExplorerTuner() {
+    private Details prepareIosFileExplorerTuner() {
         Button executeButton = new Button("Open");
         executeButton.setThemeName(Lumo.DARK);
         executeButton.addClickListener(click ->
@@ -265,12 +350,41 @@ public final class DeviceForm extends FormLayout {
         iosPackageTypeComboBox.setItems(IOSPackageType.values());
         iosPackageTypeComboBox.setItemLabelGenerator(IOSPackageType::name);
         iosPackageTypeComboBox.setValue(IOSPackageType.ROOT);
-        iosExplorerTunerLayout = new VerticalLayout(
+        HorizontalLayout summary = new HorizontalLayout();
+        summary.setSpacing(false);
+        summary.add(new Text("iOS Tuner"));
+        FormLayout content = new FormLayout();
+        content.add(
             iosPackageTypeComboBox,
             hl
         );
-        iosExplorerTunerLayout.setVisible(false);
-        return iosExplorerTunerLayout;
+        iosExplorerTuner = new Details(summary, content);
+        iosExplorerTuner.setVisible(false);
+        return iosExplorerTuner;
+    }
+
+    private VerticalLayout prepareAppsGrid() {
+        Button updateButton = new Button("Update", new Icon(VaadinIcon.REFRESH));
+        updateButton.setIconAfterText(false);
+        updateButton.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
+        updateButton.addClickListener(
+            click -> {
+                fireEvent(new UpdateAppsListEvent(this, device));
+            }
+        );
+        appsGrid.setColumns("name", "appPackage", "path", "appState");
+        appsGrid.addColumn(AppDescription::getIsActive).setHeader("Active").setComparator(
+            Comparator.comparing(AppDescription::getIsActive)
+        );
+        appsGrid.getColumns().forEach(col -> {
+                col.setAutoWidth(true);
+                col.setFlexGrow(0);
+                col.setResizable(true);
+            }
+        );
+        appsLayout = new VerticalLayout(updateButton, appsGrid);
+        appsLayout.addClassName("shellCmd");
+        return appsLayout;
     }
 
     private void executeShellCmd() {
@@ -367,6 +481,58 @@ public final class DeviceForm extends FormLayout {
         }
     }
 
+    public static class ReinitTabsEvent extends DeviceFormEvent {
+        private final Tab currentTab;
+        private final Details iosExplorerTuner;
+        private final Grid fileExplorerGrid;
+        private final VerticalLayout shellCmdLayout;
+        private final VerticalLayout appsLayout;
+
+        ReinitTabsEvent(
+            DeviceForm source,
+            Device device,
+            Tab tab,
+            Details iosExplorerTuner,
+            Grid fileExplorerGrid,
+            VerticalLayout shellCmdLayout,
+            VerticalLayout appsLayout
+        ) {
+            super(source, device);
+            this.currentTab = tab;
+            this.fileExplorerGrid = fileExplorerGrid;
+            this.iosExplorerTuner = iosExplorerTuner;
+            this.shellCmdLayout = shellCmdLayout;
+            this.appsLayout = appsLayout;
+        }
+
+        public Tab getCurrentTab() {
+            return currentTab;
+        }
+
+        public Details getIosExplorerTuner() {
+            return iosExplorerTuner;
+        }
+
+
+        public Grid getFileExplorerGrid() {
+            return fileExplorerGrid;
+        }
+
+        public VerticalLayout getShellCmdLayout() {
+            return shellCmdLayout;
+        }
+
+        public VerticalLayout getAppsLayout() {
+            return appsLayout;
+        }
+    }
+
+    public static class UpdateAppsListEvent extends DeviceFormEvent {
+
+        protected UpdateAppsListEvent(DeviceForm source, Device device) {
+            super(source, device);
+        }
+    }
 
     public <T extends ComponentEvent<?>> Registration addListener(Class<T> eventType,
                                                                   ComponentEventListener<T> listener) {
