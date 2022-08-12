@@ -189,11 +189,45 @@ public final class DevicesListView extends VerticalLayout {
 
     public void configureForm() {
         form = new DeviceForm();
-        form.setWidth("35em");
+        form.setWidth("40em");
         form.addListener(DeviceForm.ExecuteShellEvent.class, this::executeShell);
         form.addListener(DeviceForm.DownloadEvent.class, this::download);
         form.addListener(DeviceForm.DeleteFilesEvent.class, this::deleteFiles);
         form.addListener(DeviceForm.ReinitFileExplorerEvent.class, this::reinitExplorer);
+        form.addListener(DeviceForm.ReinitTabsEvent.class, this::reinitTabs);
+        form.addListener(DeviceForm.UpdateAppsListEvent.class, this::updateApps);
+    }
+
+    private void updateApps(DeviceForm.UpdateAppsListEvent updateAppsListEvent) {
+        form.updateAppsGrid(deviceRequestsService);
+    }
+
+    private void reinitTabs(DeviceForm.ReinitTabsEvent reinitTabsEvent) {
+        form.clearTabs();
+        if(reinitTabsEvent.getDevice().getIsActive()) {
+            if (reinitTabsEvent.getCurrentTab().equals(form.fileExplorerTab)) {
+                form.tabContent.add(
+                    reinitTabsEvent.getIosExplorerTuner(),
+                    reinitTabsEvent.getFileExplorerGrid()
+                );
+                form.initDeviceExplorer(deviceRequestsService);
+                form.setVisibleIOSLayoutForExplorer(
+                    reinitTabsEvent.getDevice().getOsType().equals(OsType.IOS)
+                );
+            } else if(reinitTabsEvent.getCurrentTab().equals(form.appsTab)){
+                form.tabContent.add(
+                    reinitTabsEvent.getAppsLayout()
+                );
+                form.updateAppsGrid(deviceRequestsService);
+            } else {
+                form.setEnabledShellTab(
+                    reinitTabsEvent.getDevice().getOsType().equals(OsType.ANDROID)
+                );
+                form.tabContent.add(
+                    reinitTabsEvent.getShellCmdLayout()
+                );
+            }
+        }
     }
 
     private void executeShell(DeviceForm.ExecuteShellEvent executeShellEvent) {
@@ -270,14 +304,18 @@ public final class DevicesListView extends VerticalLayout {
         } else {
             form.setDevice(device);
             form.setVisible(true);
-            if (device.getOsType().equals(OsType.IOS)) {
-                form.setVisibleIOSLayoutForExplorer(true);
-                form.setVisibleShellLayout(false);
-            } else {
-                form.setVisibleIOSLayoutForExplorer(false);
-                form.setVisibleShellLayout(true);
+            form.setVisibleTabs(device.getIsActive());
+            if(device.getIsActive()) {
+                form.setDefaultTab();
+                if (device.getOsType().equals(OsType.IOS)) {
+                    form.setVisibleIOSLayoutForExplorer(true);
+                    form.setEnabledShellTab(false);
+                } else {
+                    form.setVisibleIOSLayoutForExplorer(false);
+                    form.setEnabledShellTab(true);
+                }
+                form.initDeviceExplorer(deviceRequestsService);
             }
-            form.initDeviceExplorer(deviceRequestsService);
             addClassName("device-interact");
         }
     }
