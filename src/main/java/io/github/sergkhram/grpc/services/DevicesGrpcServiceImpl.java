@@ -96,7 +96,7 @@ public class DevicesGrpcServiceImpl extends DevicesServiceGrpc.DevicesServiceImp
     public void updateDeviceRequest(UpdateDeviceRequest request, StreamObserver<DeviceProto> responseObserver) {
         try {
             Device device = convertUpdateDeviceProtoRequestToDevice(request);
-            device.setId(UUID.fromString(request.getId()));
+            device.setId(request.getId());
             Device savedDevice = deviceRequestsService.saveDevice(device);
 
             DeviceProto response = convertDeviceToDeviceProto(savedDevice);

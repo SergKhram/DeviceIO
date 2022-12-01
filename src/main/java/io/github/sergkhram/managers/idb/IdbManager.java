@@ -39,7 +39,7 @@ public class IdbManager implements Manager {
     @Override
     public List<Device> getListOfDevices(Host host) {
         UUID processUuid = UUID.randomUUID();
-        List<IOSDevice> iosDeviceList = new ArrayList();
+        ArrayList<IOSDevice> iosDeviceList = new ArrayList<>();
         log.info(String.format("[%s] Get list of devices process started", processUuid));
 
         CommandExecutor cmdExecutor = new CommandExecutor(devicesListCmd);
@@ -180,7 +180,7 @@ public class IdbManager implements Manager {
             UUID processUuid = UUID.randomUUID();
             List<String> cmd = new ArrayList<>(remoteHostConnectCmd);
             cmd.addAll(
-                List.of(host, port.toString())
+                List.of(host, port!=null ? port.toString() : "")
             );
             log.info(
                 String.format(
@@ -206,7 +206,7 @@ public class IdbManager implements Manager {
         if(!host.equals(LOCAL_HOST)) {
             UUID processUuid = UUID.randomUUID();
             List<String> cmd = new ArrayList<>(remoteHostDisconnectCmd);
-            cmd.addAll(List.of(host, port.toString()));
+            cmd.addAll(List.of(host, port!=null ? port.toString() : ""));
             log.info(
                 String.format(
                     "[%s] Disconnecting host %s process started", processUuid, host + ":" + port
@@ -234,9 +234,7 @@ public class IdbManager implements Manager {
         CommandExecutor cmdExecutor = new CommandExecutor(cmd);
         cmdExecutor.execute(
             (code) -> log.info(String.format("Executing '%s'", cmd)),
-            (outputCmdLine) -> {
-                iosDevice.set(parseDescribeToIOSDevice(outputCmdLine));
-            },
+            (outputCmdLine) -> iosDevice.set(parseDescribeToIOSDevice(outputCmdLine)),
             (errorCmdLine) -> {},
             (code) -> log.info("Get device info process finished with exit code " + code)
         );
@@ -256,9 +254,7 @@ public class IdbManager implements Manager {
         CommandExecutor cmdExecutor = new CommandExecutor(cmd);
         cmdExecutor.execute(
             (code) -> log.info(String.format("Executing '%s'", cmd)),
-            (outputCmdLine) -> {
-                iosCompanionInfo.set(parseToCompanionInfo(outputCmdLine));
-            },
+            (outputCmdLine) -> iosCompanionInfo.set(parseToCompanionInfo(outputCmdLine)),
             (errorCmdLine) -> {},
             (code) -> log.info(
                 String.format("Receiving %s device companion info finished with exit code " + code, device.getSerial())
@@ -326,7 +322,7 @@ public class IdbManager implements Manager {
                     "[%s] Get list files process for '%s' path and '%s' package finished with exit code %s",
                     processUuid,
                     path,
-                    iosPackageType.name(),
+                    iosPackageType != null ? iosPackageType.name() : "",
                     code
                 )
             )
@@ -502,11 +498,9 @@ public class IdbManager implements Manager {
         CommandExecutor cmdExecutor = new CommandExecutor(cmd);
         cmdExecutor.execute(
             (code) -> log.info(String.format("Executing '%s'", cmd)),
-            (outputCmdLine) -> {
-                apps.addAll(
-                    parseAppsListToListAppDescription(outputCmdLine)
-                );
-            },
+            (outputCmdLine) -> apps.addAll(
+                parseAppsListToListAppDescription(outputCmdLine)
+            ),
             (errorCmdLine) -> {},
             (code) -> log.info("Get device apps list process finished with exit code " + code)
         );

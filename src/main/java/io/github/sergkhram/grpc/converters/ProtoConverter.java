@@ -7,12 +7,10 @@ import io.github.sergkhram.data.entity.Host;
 import io.github.sergkhram.data.enums.DeviceType;
 import io.github.sergkhram.data.enums.OsType;
 import io.github.sergkhram.proto.*;
-import org.hibernate.LazyInitializationException;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class ProtoConverter {
@@ -25,7 +23,7 @@ public class ProtoConverter {
     }
 
     public static HostProto convertHostToHostProto(Host host) {
-        HostProto hostObject = HostProto.newBuilder()
+        return HostProto.newBuilder()
             .setId(String.valueOf(host.getId()))
             .setName(host.getName())
             .setAddress(host.getAddress())
@@ -40,7 +38,6 @@ public class ProtoConverter {
                 )
             )
             .build();
-        return hostObject;
     }
 
     public static Host convertHostProtoRequestToHost(PostHostRequest hostRequest) {
@@ -88,7 +85,7 @@ public class ProtoConverter {
                     .setOsVersion(it.getOsVersion())
                     .build()
             ).collect(Collectors.toList());
-        } catch (LazyInitializationException e) {
+        } catch (Exception e) {
             return Collections.emptyList();
         }
     }
@@ -179,7 +176,7 @@ public class ProtoConverter {
     public static Host convertHostInfoProtoToHost(HostInfoProto hostInfoProto) {
         Host host = new Host();
         host.setName(hostInfoProto.getName());
-        host.setId(UUID.fromString(hostInfoProto.getId()));
+        host.setId(hostInfoProto.getId());
         host.setIsActive(hostInfoProto.getIsActive());
         host.setAddress(hostInfoProto.getAddress());
         if(hostInfoProto.getPort()!=0) host.setPort(hostInfoProto.getPort());
@@ -225,7 +222,7 @@ public class ProtoConverter {
     }
 
     public static AppDescriptionProto convertAppDescrToAppDescrProto(AppDescription appDescription) {
-        AppDescriptionProto adp = AppDescriptionProto.newBuilder()
+        return AppDescriptionProto.newBuilder()
             .setAppPackage(appDescription.getAppPackage())
             .setName(appDescription.getName())
             .setAppState(appDescription.getAppState())
@@ -237,7 +234,6 @@ public class ProtoConverter {
                 )
             )
             .build();
-        return adp;
     }
 
     public static List<AppDescriptionProto> convertListAppDescrToListAppDescrProto(

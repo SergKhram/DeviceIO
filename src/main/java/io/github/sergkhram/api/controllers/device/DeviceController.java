@@ -83,7 +83,7 @@ public class DeviceController {
         @RequestBody Device device
     ) {
         try {
-            device.setId(UUID.fromString(id));
+            device.setId(id);
             Device savedDevice = deviceRequestsService.saveDevice(device);
             return ResponseEntity.ok().body(convertModelToJsonNode(savedDevice));
         } catch (NoSuchElementException|IllegalArgumentException e) {

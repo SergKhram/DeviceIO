@@ -1,33 +1,33 @@
 package io.github.sergkhram.data.repository;
 
 import io.github.sergkhram.data.entity.Device;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.mongodb.repository.Aggregation;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
-import java.util.UUID;
 
-public interface DeviceRepository extends JpaRepository<Device, UUID> {
-    @Query("select d from Device d LEFT JOIN Host h ON d.host=h.id " +
-        "where lower(d.serial) like lower(concat('%', :searchTerm, '%')) " +
-        "or lower(d.name) like lower(concat('%', :searchTerm, '%'))")
+public interface DeviceRepository extends MongoRepository<Device, String> {
+
+    @Query("{'$or': [{'serial': {'$regex': /?0/, '$options': 'i'}},{'name': {'$regex': /?0/, '$options': 'i'}}]}")
     List<Device> search(@Param("searchTerm") String searchTerm);
 
-    @Query("select d from Device d LEFT JOIN Host h ON d.host=h.id " +
-        "where (lower(d.serial) like lower(concat('%', :searchTerm, '%')) " +
-        "or lower(d.name) like lower(concat('%', :searchTerm, '%'))) " +
-        "and lower(d.host) like lower(concat('%', :hostId, '%')) " +
-        "and h.isActive = :isActiveHost")
+    @Aggregation(pipeline = {
+        "{'$lookup':{'from': 'host', 'localField': 'host', 'foreignField': '_id', 'as': 'aggregationField'}}",
+        "{'$set':{'aggregationField': { $arrayElemAt: ['$aggregationField', 0] }}}",
+        "{'$match':{'$and' :[{'$or': [{ 'serial': {'$regex': /?0/, '$options': 'i'}},{'name': {'$regex': /?0/, '$options': 'i'}}]},{'aggregationField.id': ?1},{'aggregationField.isActive': ?2}]}}"
+    })
     List<Device> search(
         @Param("searchTerm") String searchTerm,
         @Param("hostId") String hostId,
         @Param("isActiveHost") Boolean isActiveHost
     );
 
-    @Query("select d from Device d LEFT JOIN Host h ON d.host=h.id " +
-        "where (lower(d.serial) like lower(concat('%', :searchTerm, '%')) " +
-        "or lower(d.name) like lower(concat('%', :searchTerm, '%'))) " +
-        "and lower(d.host) like lower(concat('%', :hostId, '%'))")
+    @Aggregation(pipeline = {
+        "{'$lookup':{'from': 'host', 'localField': 'host', 'foreignField': '_id', 'as': 'aggregationField'}}",
+        "{'$set':{'aggregationField': { $arrayElemAt: ['$aggregationField', 0] }}}",
+        "{'$match':{'$and' :[{'$or': [{ 'serial': {'$regex': /?0/, '$options': 'i'}},{'name': {'$regex': /?0/, '$options': 'i'}}]},{'aggregationField.id': ?1}]}}"
+    })
     List<Device> search(@Param("searchTerm") String searchTerm, @Param("hostId") String hostId);
 }

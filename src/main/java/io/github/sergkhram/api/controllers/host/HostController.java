@@ -74,7 +74,7 @@ public class HostController {
         @RequestBody Host host
     ) {
         try {
-            host.setId(UUID.fromString(id));
+            host.setId(id);
             Host savedHost = hostRequestsService.saveHost(host);
             return ResponseEntity.ok().body(convertModelToJsonNode(savedHost));
         } catch (NoSuchElementException|IllegalArgumentException e) {
