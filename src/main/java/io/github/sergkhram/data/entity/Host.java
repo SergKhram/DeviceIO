@@ -1,41 +1,33 @@
 package io.github.sergkhram.data.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
+import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.format.annotation.NumberFormat;
 
 import javax.annotation.Nullable;
-import javax.persistence.*;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotEmpty;
+import java.util.Collections;
 import java.util.List;
 
-@Entity
-@EqualsAndHashCode(callSuper = true)
-@Table(name = "host")
+@AllArgsConstructor
+@Document(collection = "host")
 public class Host extends AbstractEntity {
     @NotEmpty
-    @Column(name = "name")
     private String name;
     @NotEmpty
-    @Column(name = "address")
     private String address;
-    @Column(name = "port")
     @NumberFormat
     @Max(65535)
     @Min(0)
     private Integer port;
     @Builder.Default
-    @Column(name = "isActive")
     private Boolean isActive = false;
-
-    @OneToMany(mappedBy = "host")
-    @Nullable
     @JsonIgnoreProperties({"host"})
-    private List<Device> devices;
+    private List<Device> devices = Collections.emptyList();
 
     public Host() {}
 
@@ -82,13 +74,14 @@ public class Host extends AbstractEntity {
         return devices;
     }
 
-    private void setDevices(List<Device> devices) {
+    public void setDevices(List<Device> devices) {
         this.devices = devices;
     }
 
     @Override
     public boolean equals(Object obj) {
         if(obj==null) return false;
+        if(!(obj instanceof Host)) return false;
         Host current = this;
         Host another = (Host) obj;
         String currentPort = current.getPort()!=null ? current.getPort().toString() : "";

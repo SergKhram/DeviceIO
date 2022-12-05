@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.github.sergkhram.api.requests.HostsRequests;
 import io.github.sergkhram.data.entity.Device;
-import io.github.sergkhram.utils.Const;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
@@ -15,16 +14,16 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import io.github.sergkhram.data.entity.Host;
 import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 
 import static io.github.sergkhram.Generator.*;
+import static io.github.sergkhram.utils.Const.LOCAL_HOST;
 import static io.github.sergkhram.utils.CustomAssertions.*;
 import static io.github.sergkhram.utils.json.JsonTestUtil.*;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 @Epic("DeviceIO")
 @Feature("API")
@@ -35,6 +34,9 @@ public class HostsApiTests extends ApiTestsBase {
     public void beforeTest() {
         hostRepository.deleteAll();
     }
+
+    @Autowired
+    private Environment env;
 
     @Test
     @DisplayName("Check get hosts api request")
@@ -58,8 +60,8 @@ public class HostsApiTests extends ApiTestsBase {
         Host host = generateHosts(1).get(0);
         hostRepository.save(host);
         host = hostRepository.findAll().get(0);
-        setDevices(host, List.of());
-        Response response = HostsRequests.getHostById(getBaseUrl(), host.getId().toString());
+        host.setDevices(List.of());
+        Response response = HostsRequests.getHostById(getBaseUrl(), host.getId());
         assertWithAllure(
             host,
             response.as(Host.class)
@@ -94,7 +96,7 @@ public class HostsApiTests extends ApiTestsBase {
     public void checkUpdateHostRequest() {
         Host host = generateHosts(1).get(0);
         Host savedHost = hostRepository.save(host);
-        String id = savedHost.getId().toString();
+        String id = savedHost.getId();
         host.setName(generateRandomString());
         host.setAddress(generateRandomString());
         host.setPort(generateRandomInt(0, 65535));
@@ -105,7 +107,7 @@ public class HostsApiTests extends ApiTestsBase {
             convertModelToStringWONullValues(host)
         );
 
-        host.setId(UUID.fromString(id));
+        host.setId(id);
         JsonNode expectedHost = convertModelToJsonNode(host);
         assertWithAllureWRegex(
             expectedHost,
@@ -125,7 +127,7 @@ public class HostsApiTests extends ApiTestsBase {
     public void checkDeleteHostRequest() {
         Host host = generateHosts(1).get(0);
         Host savedHost = hostRepository.save(host);
-        String id = savedHost.getId().toString();
+        String id = savedHost.getId();
         HostsRequests.deleteHost(getBaseUrl(), id);
         Response response = HostsRequests.getHostById(getBaseUrl(), id, 400);
         assertWithAllure(
@@ -142,7 +144,7 @@ public class HostsApiTests extends ApiTestsBase {
         host.setAddress("localhost");
         host.setPort(65535);
         Host savedHost = hostRepository.save(host);
-        String id = savedHost.getId().toString();
+        String id = savedHost.getId();
         Mockito.doNothing().when(this.idbManager).connectToHost("localhost", 65535);
         Mockito.doNothing().when(this.adbManager).connectToHost("localhost", 65535);
         HostsRequests.connectHost(getBaseUrl(), id);
@@ -156,7 +158,7 @@ public class HostsApiTests extends ApiTestsBase {
         host.setAddress("localhost");
         host.setPort(65535);
         Host savedHost = hostRepository.save(host);
-        String id = savedHost.getId().toString();
+        String id = savedHost.getId();
         Mockito.doNothing().when(this.idbManager).disconnectHost("localhost", 65535);
         Mockito.doNothing().when(this.adbManager).disconnectHost("localhost", 65535);
         HostsRequests.disconnectHost(getBaseUrl(), id);
@@ -167,9 +169,9 @@ public class HostsApiTests extends ApiTestsBase {
     public void checkUpdateHostStateRequest() {
         Host host = new Host();
         host.setName(generateRandomString());
-        host.setAddress(Const.LOCAL_HOST);
+        host.setAddress(LOCAL_HOST);
         Host savedHost = hostRepository.save(host);
-        String id = savedHost.getId().toString();
+        String id = savedHost.getId();
         HostsRequests.updateHostState(getBaseUrl(), id, Map.of("deleteDevices", false));
         Response response = HostsRequests.getHostById(getBaseUrl(), id);
         assertWithAllure(
@@ -181,23 +183,7 @@ public class HostsApiTests extends ApiTestsBase {
     @SneakyThrows
     private void setDevices(List<Host> hosts, List<Device> devices) {
         hosts.parallelStream().forEach(
-            it -> {
-                try {
-                    getSetDevicesMethod().invoke(it, devices);
-                } catch (IllegalAccessException | InvocationTargetException ignored) {}
-            }
+            it -> it.setDevices(devices)
         );
-    }
-
-    @SneakyThrows
-    private void setDevices(Host host, List<Device> devices) {
-        getSetDevicesMethod().invoke(host, devices);
-    }
-
-    @SneakyThrows
-    private Method getSetDevicesMethod() {
-        Method setDevicesMethod = Host.class.getDeclaredMethod("setDevices", List.class);
-        setDevicesMethod.setAccessible(true);
-        return setDevicesMethod;
     }
 }

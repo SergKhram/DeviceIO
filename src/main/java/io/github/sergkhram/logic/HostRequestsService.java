@@ -31,14 +31,22 @@ public class HostRequestsService {
     public Host getHostInfo(String id)
         throws NoSuchElementException, IllegalArgumentException
     {
-        return crmService.getHostById(id);
+        Host host = crmService.getHostById(id);
+        host.setDevices(
+            crmService.findAllDevices("", id)
+        );
+        return host;
     }
 
     public List<Host> getHostsList(String stringFilter)
         throws NoSuchElementException, IllegalArgumentException
     {
         if(stringFilter == null) stringFilter = "";
-        return crmService.findAllHosts(stringFilter);
+        List<Host> hosts = crmService.findAllHosts(stringFilter);
+        hosts.parallelStream().forEach(host -> host.setDevices(
+            crmService.findAllDevices("", host.getId())
+        ));
+        return hosts;
     }
 
     public Host saveHost(Host host) {

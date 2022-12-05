@@ -2,7 +2,6 @@ package io.github.sergkhram.grpc;
 
 import io.github.sergkhram.data.entity.Host;
 import io.github.sergkhram.proto.*;
-import io.github.sergkhram.utils.Const;
 import io.grpc.StatusRuntimeException;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
@@ -13,11 +12,11 @@ import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
 
 import java.util.List;
-import java.util.UUID;
 
 import static io.github.sergkhram.Generator.*;
 import static io.github.sergkhram.grpc.converters.ProtoConverter.convertHostToHostProto;
 import static io.github.sergkhram.grpc.converters.ProtoConverter.convertHostsToHostsProto;
+import static io.github.sergkhram.utils.Const.LOCAL_HOST;
 import static io.github.sergkhram.utils.CustomAssertions.assertWithAllure;
 
 @Epic("DeviceIO")
@@ -64,7 +63,7 @@ public class HostsGrpcTest extends GrpcTestsBase {
         hostRepository.save(host);
         host = hostRepository.findAll().get(0);
         HostId request = HostId.newBuilder()
-            .setId(host.getId().toString())
+            .setId(host.getId())
             .build();
         HostProto response = hostService.getHostRequest(request);
         assertWithAllure(
@@ -86,7 +85,7 @@ public class HostsGrpcTest extends GrpcTestsBase {
         );
 
         String id = response.getId();
-        host.setId(UUID.fromString(id));
+        host.setId(id);
         assertWithAllure(
             convertHostToHostProto(host),
             response,
@@ -107,7 +106,7 @@ public class HostsGrpcTest extends GrpcTestsBase {
     public void checkUpdateHostRequest() {
         Host host = generateHosts(1).get(0);
         Host savedHost = hostRepository.save(host);
-        String id = savedHost.getId().toString();
+        String id = savedHost.getId();
         host.setName(generateRandomString());
         host.setAddress(generateRandomString());
         host.setPort(generateRandomInt(0, 65535));
@@ -121,7 +120,7 @@ public class HostsGrpcTest extends GrpcTestsBase {
                 .build()
         );
 
-        host.setId(UUID.fromString(id));
+        host.setId(id);
         assertWithAllure(
             convertHostToHostProto(host),
             response,
@@ -143,7 +142,7 @@ public class HostsGrpcTest extends GrpcTestsBase {
     public void checkDeleteHostRequest() {
         Host host = generateHosts(1).get(0);
         Host savedHost = hostRepository.save(host);
-        String id = savedHost.getId().toString();
+        String id = savedHost.getId();
         hostService.deleteHostRequest(HostId.newBuilder().setId(id).build());
 
         StatusRuntimeException e = Assertions.assertThrows(
@@ -164,7 +163,7 @@ public class HostsGrpcTest extends GrpcTestsBase {
         host.setAddress("localhost");
         host.setPort(65535);
         Host savedHost = hostRepository.save(host);
-        String id = savedHost.getId().toString();
+        String id = savedHost.getId();
         Mockito.doNothing().when(this.idbManager).connectToHost("localhost", 65535);
         Mockito.doNothing().when(this.adbManager).connectToHost("localhost", 65535);
         hostService.postHostConnectionRequest(HostId.newBuilder().setId(id).build());
@@ -178,7 +177,7 @@ public class HostsGrpcTest extends GrpcTestsBase {
         host.setAddress("localhost");
         host.setPort(65535);
         Host savedHost = hostRepository.save(host);
-        String id = savedHost.getId().toString();
+        String id = savedHost.getId();
         Mockito.doNothing().when(this.idbManager).disconnectHost("localhost", 65535);
         Mockito.doNothing().when(this.adbManager).disconnectHost("localhost", 65535);
         hostService.postHostDisconnectionRequest(HostId.newBuilder().setId(id).build());
@@ -189,9 +188,9 @@ public class HostsGrpcTest extends GrpcTestsBase {
     public void checkUpdateHostStateRequest() {
         Host host = new Host();
         host.setName(generateRandomString());
-        host.setAddress(Const.LOCAL_HOST);
+        host.setAddress(LOCAL_HOST);
         Host savedHost = hostRepository.save(host);
-        String id = savedHost.getId().toString();
+        String id = savedHost.getId();
         hostService.getUpdateHostStateWithDeviceRemoval(
             UpdateHostStateRequest.newBuilder()
                 .setId(id)

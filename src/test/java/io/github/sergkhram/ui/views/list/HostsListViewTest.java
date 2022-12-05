@@ -6,20 +6,23 @@ import com.vaadin.flow.data.provider.ListDataProvider;
 import io.github.sergkhram.data.entity.Host;
 import io.github.sergkhram.data.repository.HostRepository;
 import io.github.sergkhram.ui.views.list.forms.HostForm;
-import io.github.sergkhram.utils.Const;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
 import lombok.SneakyThrows;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import com.vaadin.flow.component.textfield.TextField;
+import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -28,6 +31,8 @@ import java.util.stream.Collectors;
 
 import static io.github.sergkhram.Generator.generateHosts;
 import static io.github.sergkhram.Generator.generateRandomString;
+import static io.github.sergkhram.utils.TestConst.mongoContainer;
+import static io.github.sergkhram.utils.Const.LOCAL_HOST;
 import static io.github.sergkhram.utils.CustomAssertions.*;
 import static org.springframework.test.annotation.DirtiesContext.ClassMode.BEFORE_CLASS;
 
@@ -41,6 +46,7 @@ import static org.springframework.test.annotation.DirtiesContext.ClassMode.BEFOR
 @Feature("UI")
 @Story("Hosts list view")
 @DirtiesContext(classMode = BEFORE_CLASS)
+@Testcontainers
 public class HostsListViewTest {
 
     @Autowired
@@ -48,6 +54,14 @@ public class HostsListViewTest {
 
     @Autowired
     HostRepository hostRepository;
+
+    @Container
+    public static MongoDBContainer container = new MongoDBContainer(mongoContainer);
+
+    @DynamicPropertySource
+    static void mongoDbProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.data.mongodb.uri", container::getReplicaSetUrl);
+    }
 
     @BeforeEach
     public void beforeTest() {
@@ -139,7 +153,7 @@ public class HostsListViewTest {
     @Test
     public void checkDeleteAction() {
         CopyOnWriteArrayList<Host> hosts = generateHosts(1);
-        hosts.parallelStream().forEach(it -> it.setAddress(Const.LOCAL_HOST));
+        hosts.parallelStream().forEach(it -> it.setAddress(LOCAL_HOST));
         hostRepository.saveAll(hosts);
         Grid<Host> grid = hostsListView.grid;
         grid.setItems(hostRepository.findAll());

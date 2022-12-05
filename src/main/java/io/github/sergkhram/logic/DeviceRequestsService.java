@@ -49,14 +49,9 @@ public class DeviceRequestsService {
     public List<Device> getDBDevicesList(String stringFilter, String hostId)
         throws NoSuchElementException, IllegalArgumentException
     {
-        return getDBDevicesList(stringFilter, (hostId == null || hostId.isEmpty()) ? null : UUID.fromString(hostId));
-    }
-
-    public List<Device> getDBDevicesList(String stringFilter, UUID hostId)
-        throws NoSuchElementException, IllegalArgumentException
-    {
+        hostId = (hostId == null || hostId.isEmpty()) ? null : hostId;
         if(stringFilter == null) stringFilter = "";
-        if(hostId != null && !hostId.toString().isEmpty()) {
+        if(hostId != null) {
             return crmService.findAllDevices(stringFilter, hostId);
         } else {
             return crmService.findAllDevices(stringFilter);
@@ -74,10 +69,6 @@ public class DeviceRequestsService {
                 it -> currentListOfDevices.addAll(it.getListOfDevices(host))
             );
         return currentListOfDevices;
-    }
-
-    public List<Device> getCurrentDevicesList(UUID hostId) {
-        return getCurrentDevicesList(String.valueOf(hostId));
     }
 
     public Device saveDevice(Device device) {

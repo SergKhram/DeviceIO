@@ -10,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @Slf4j
@@ -46,7 +45,7 @@ public class CrmService {
     public void deleteHost(Host host) {
         deviceRepository.search(
             "",
-            host.getId().toString()
+            host.getId()
         ).forEach(
             deviceRepository::delete
         );
@@ -73,12 +72,12 @@ public class CrmService {
         }
     }
 
-    public List<Device> findAllDevices(String stringFilter, UUID id) {
-        return deviceRepository.search(stringFilter, id.toString());
+    public List<Device> findAllDevices(String stringFilter, String id) {
+        return deviceRepository.search(stringFilter, id);
     }
 
-    public List<Device> findAllDevices(String stringFilter, UUID id, Boolean isActiveHost) {
-        return deviceRepository.search(stringFilter, id.toString(), isActiveHost);
+    public List<Device> findAllDevices(String stringFilter, String id, Boolean isActiveHost) {
+        return deviceRepository.search(stringFilter, id, isActiveHost);
     }
 
     public void saveSettings(Settings settings) {
@@ -99,13 +98,13 @@ public class CrmService {
 
     public Device getDeviceById(String id) {
         return id!=null
-            ? deviceRepository.findById(UUID.fromString(id)).get()
+            ? deviceRepository.findById(id).get()
             : null;
     }
 
     public Host getHostById(String id) {
         return id!=null
-            ? hostRepository.findById(UUID.fromString(id)).get()
+            ? hostRepository.findById(id).get()
             : null;
     }
 }

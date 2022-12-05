@@ -64,8 +64,8 @@ public class DevicesGrpcTest extends GrpcTestsBase {
         deviceRepository.saveAll(List.of(iosDevice, androidSimulator));
         iosDevice = deviceRepository.search(iosDevice.getName()).get(0);
         androidSimulator = deviceRepository.search(androidSimulator.getName()).get(0);
-        DeviceProto responseOsDevice = deviceService.getDeviceRequest(DeviceId.newBuilder().setId(iosDevice.getId().toString()).build());
-        DeviceProto responseAndroidSimulator = deviceService.getDeviceRequest(DeviceId.newBuilder().setId(androidSimulator.getId().toString()).build());
+        DeviceProto responseOsDevice = deviceService.getDeviceRequest(DeviceId.newBuilder().setId(iosDevice.getId()).build());
+        DeviceProto responseAndroidSimulator = deviceService.getDeviceRequest(DeviceId.newBuilder().setId(androidSimulator.getId()).build());
         assertAllWithAllure(
             List.of(
                 prepareAssertion(
@@ -97,7 +97,7 @@ public class DevicesGrpcTest extends GrpcTestsBase {
             GetDevicesListRequest.newBuilder()
                 .setIsSaved(true)
                 .build()
-        );;
+        );
         assertWithAllure(20, response.getDevicesList().size());
         assertContainsAllWithAllure(
             convertDevicesToProtoDevices(devices),
@@ -117,7 +117,7 @@ public class DevicesGrpcTest extends GrpcTestsBase {
             convertToPostDeviceProto(iosDevice)
         );
         String id = response.getId();
-        iosDevice.setId(UUID.fromString(id));
+        iosDevice.setId(id);
         assertWithAllure(
             convertDeviceToDeviceProto(iosDevice),
             response,
@@ -139,7 +139,7 @@ public class DevicesGrpcTest extends GrpcTestsBase {
         host = hostRepository.findAll().get(0);
         Device device = generateDevices(host, 1, DeviceType.DEVICE, OsType.IOS).get(0);
         Device savedDevice = deviceRepository.save(device);
-        String id = savedDevice.getId().toString();
+        String id = savedDevice.getId();
         device.setOsVersion(generateRandomString());
         device.setDeviceType(DeviceType.SIMULATOR);
         device.setSerial(generateRandomString());
@@ -150,7 +150,7 @@ public class DevicesGrpcTest extends GrpcTestsBase {
         DeviceProto response = deviceService.updateDeviceRequest(
             convertToUpdateDeviceProto(device, id)
         );
-        device.setId(UUID.fromString(id));
+        device.setId(id);
         assertWithAllure(
             convertDeviceToDeviceProto(device),
             response,
@@ -172,7 +172,7 @@ public class DevicesGrpcTest extends GrpcTestsBase {
         host = hostRepository.findAll().get(0);
         Device device = generateDevices(host, 1, DeviceType.DEVICE, OsType.IOS).get(0);
         Device savedDevice = deviceRepository.save(device);
-        String id = savedDevice.getId().toString();
+        String id = savedDevice.getId();
         deviceService.deleteDeviceRequest(DeviceId.newBuilder().setId(id).build());
         StatusRuntimeException e = Assertions.assertThrows(
             io.grpc.StatusRuntimeException.class,
@@ -211,7 +211,7 @@ public class DevicesGrpcTest extends GrpcTestsBase {
         host = hostRepository.findAll().get(0);
         Device device = generateDevices(host, 1, DeviceType.DEVICE, OsType.IOS).get(0);
         Device savedDevice = deviceRepository.save(device);
-        String id = savedDevice.getId().toString();
+        String id = savedDevice.getId();
         Mockito.doNothing().when(this.idbManager).rebootDevice(savedDevice);
         Assertions.assertDoesNotThrow(
             () -> deviceService.postDeviceRebootRequest(DeviceId.newBuilder().setId(id).build())
@@ -251,13 +251,13 @@ public class DevicesGrpcTest extends GrpcTestsBase {
         StatusRuntimeException e = Assertions.assertThrows(
             io.grpc.StatusRuntimeException.class,
             () -> deviceService.postExecuteShellRequest(
-                ExecuteShellRequest.newBuilder().setId(savedIosDevice.getId().toString()).setBody(shellRequestBody).build()
+                ExecuteShellRequest.newBuilder().setId(savedIosDevice.getId()).setBody(shellRequestBody).build()
             )
         );
         Mockito.doReturn(expectedShellResponse).when(this.adbManager).executeShell(savedAndroidDevice, shellRequestBody);
         ExecuteShellResponse androidResponse = deviceService.postExecuteShellRequest(
             ExecuteShellRequest.newBuilder()
-                .setId(savedAndroidDevice.getId().toString())
+                .setId(savedAndroidDevice.getId())
                 .setBody(shellRequestBody)
                 .build()
         );
@@ -292,10 +292,10 @@ public class DevicesGrpcTest extends GrpcTestsBase {
         Mockito.doReturn(expectedFiles).when(this.adbManager).getListFiles(savedAndroidDevice, "");
 
         GetDeviceFilesResponse iosResponse = deviceService.getFilesListOfDeviceRequest(
-            GetDeviceFilesRequest.newBuilder().setId(savedIosDevice.getId().toString()).build()
+            GetDeviceFilesRequest.newBuilder().setId(savedIosDevice.getId()).build()
         );
         GetDeviceFilesResponse androidResponse = deviceService.getFilesListOfDeviceRequest(
-            GetDeviceFilesRequest.newBuilder().setId(savedAndroidDevice.getId().toString()).build()
+            GetDeviceFilesRequest.newBuilder().setId(savedAndroidDevice.getId()).build()
         );
         assertAllWithAllure(
             List.of(
@@ -343,14 +343,14 @@ public class DevicesGrpcTest extends GrpcTestsBase {
 
         Iterator<DataChunk> iosResponse = deviceService.postDownloadFileRequest(
             FileDownloadRequest.newBuilder()
-                .setId(savedIosDevice.getId().toString())
+                .setId(savedIosDevice.getId())
                 .setDeviceDirectoryElementProto(convertDDElementToDDElementProto(downloadRequestBody))
                 .build()
         );
 
         Iterator<DataChunk> androidResponse = deviceService.postDownloadFileRequest(
             FileDownloadRequest.newBuilder()
-                .setId(savedAndroidDevice.getId().toString())
+                .setId(savedAndroidDevice.getId())
                 .setDeviceDirectoryElementProto(convertDDElementToDDElementProto(downloadRequestBody))
                 .build()
         );
@@ -385,10 +385,10 @@ public class DevicesGrpcTest extends GrpcTestsBase {
         Mockito.doReturn(expectedApps).when(this.idbManager).getAppsList(savedIosDevice);
         Mockito.doReturn(expectedApps).when(this.adbManager).getAppsList(savedAndroidDevice);
         GetAppsResponse iosResponse = deviceService.getAppsListRequest(
-            DeviceId.newBuilder().setId(savedIosDevice.getId().toString()).build()
+            DeviceId.newBuilder().setId(savedIosDevice.getId()).build()
         );
         GetAppsResponse androidResponse = deviceService.getAppsListRequest(
-            DeviceId.newBuilder().setId(savedAndroidDevice.getId().toString()).build()
+            DeviceId.newBuilder().setId(savedAndroidDevice.getId()).build()
         );
         assertAllWithAllure(
             List.of(
@@ -411,7 +411,7 @@ public class DevicesGrpcTest extends GrpcTestsBase {
         return PostDeviceRequest.newBuilder()
             .setHost(
                 HostInfoProto.newBuilder()
-                    .setId(savedDeviceHost.getId().toString())
+                    .setId(savedDeviceHost.getId())
                     .setPort(Objects.requireNonNullElse(savedDeviceHost.getPort(), 0))
                     .setAddress(savedDeviceHost.getAddress())
                     .setName(savedDeviceHost.getName())
@@ -433,7 +433,7 @@ public class DevicesGrpcTest extends GrpcTestsBase {
             .setId(id)
             .setHost(
                 HostInfoProto.newBuilder()
-                    .setId(savedDeviceHost.getId().toString())
+                    .setId(savedDeviceHost.getId())
                     .setPort(Objects.requireNonNullElse(savedDeviceHost.getPort(), 0))
                     .setAddress(savedDeviceHost.getAddress())
                     .setName(savedDeviceHost.getName())
@@ -451,7 +451,7 @@ public class DevicesGrpcTest extends GrpcTestsBase {
 
     private PostDevicesRequest convertToPostDevicesProto(List<Device> devices) {
         PostDevicesRequest.Builder builder = PostDevicesRequest.newBuilder();
-        devices.stream().forEach(
+        devices.forEach(
             it -> builder.addDevices(convertToPostDeviceProto(it))
         );
         return builder.build();

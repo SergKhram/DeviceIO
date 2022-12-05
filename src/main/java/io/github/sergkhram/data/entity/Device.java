@@ -1,36 +1,33 @@
 package io.github.sergkhram.data.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.github.sergkhram.data.enums.DeviceType;
 import io.github.sergkhram.data.enums.OsType;
 import lombok.EqualsAndHashCode;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.DocumentReference;
 
-import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 
-@Entity
-@Table(name = "device")
+
 @EqualsAndHashCode(callSuper = true)
+@Document(collection = "device")
 public class Device extends AbstractEntity {
-    @Column(name = "serial")
     private String serial;
-    @Column(name = "isActive")
     private Boolean isActive = false;
-    @ManyToOne
-    @JoinColumn(name = "host_id", referencedColumnName = "id", nullable = false)
     @NotNull
-    @JsonIgnoreProperties({"devices"})
+    @JsonIgnoreProperties({"devices", "source", "target"})
+    @DocumentReference
     private Host host;
-    @Column(name = "osType")
     private OsType osType;
-    @Column(name = "state")
     private String state;
-    @Column(name = "name")
     private String name;
-    @Column(name = "deviceType")
     private DeviceType deviceType;
-    @Column(name = "osVersion")
     private String osVersion;
+
+    @JsonIgnore
+    private Host aggregationField;
 
     public void setSerial(String serial) {
         this.serial = serial;

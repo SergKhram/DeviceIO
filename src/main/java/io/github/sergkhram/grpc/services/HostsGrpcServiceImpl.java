@@ -82,7 +82,7 @@ public class HostsGrpcServiceImpl extends HostsServiceGrpc.HostsServiceImplBase 
     public void updateHostRequest(UpdateHostRequest request, StreamObserver<HostProto> responseObserver) {
         try {
             Host host = convertUpdateHostProtoRequestToHost(request);
-            host.setId(UUID.fromString(request.getId()));
+            host.setId(request.getId());
             Host savedHost = hostRequestsService.saveHost(host);
 
             HostProto response = convertHostToHostProto(savedHost);

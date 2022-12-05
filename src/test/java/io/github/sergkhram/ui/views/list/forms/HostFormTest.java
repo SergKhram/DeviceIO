@@ -12,12 +12,18 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.lang.reflect.Field;
 
 import static io.github.sergkhram.Generator.generateRandomString;
 import static io.github.sergkhram.utils.CustomAssertions.*;
+import static io.github.sergkhram.utils.TestConst.mongoContainer;
 import static org.springframework.test.annotation.DirtiesContext.ClassMode.BEFORE_CLASS;
 
 @ExtendWith(SpringExtension.class)
@@ -30,9 +36,18 @@ import static org.springframework.test.annotation.DirtiesContext.ClassMode.BEFOR
 @Feature("UI")
 @Story("Host form view")
 @DirtiesContext(classMode = BEFORE_CLASS)
+@Testcontainers
 public class HostFormTest {
     @Autowired
     HostsListView hostsListView;
+
+    @Container
+    public static MongoDBContainer container = new MongoDBContainer(mongoContainer);
+
+    @DynamicPropertySource
+    static void mongoDbProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.data.mongodb.uri", container::getReplicaSetUrl);
+    }
 
     @BeforeEach
     public void beforeTest() {

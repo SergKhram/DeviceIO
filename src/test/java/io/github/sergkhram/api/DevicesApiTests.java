@@ -54,8 +54,8 @@ public class DevicesApiTests extends ApiTestsBase{
         deviceRepository.saveAll(List.of(osDevice, androidSimulator));
         osDevice = deviceRepository.search(osDevice.getName()).get(0);
         androidSimulator = deviceRepository.search(androidSimulator.getName()).get(0);
-        Response responseOsDevice = DevicesRequests.getDeviceById(getBaseUrl(), osDevice.getId().toString());
-        Response responseAndroidSimulator = DevicesRequests.getDeviceById(getBaseUrl(), androidSimulator.getId().toString());
+        Response responseOsDevice = DevicesRequests.getDeviceById(getBaseUrl(), osDevice.getId());
+        Response responseAndroidSimulator = DevicesRequests.getDeviceById(getBaseUrl(), androidSimulator.getId());
         assertAllWithAllure(
             List.of(
                 prepareAssertion(
@@ -119,7 +119,7 @@ public class DevicesApiTests extends ApiTestsBase{
         host = hostRepository.findAll().get(0);
         Device device = generateDevices(host, 1, DeviceType.DEVICE, OsType.IOS).get(0);
         Device savedDevice = deviceRepository.save(device);
-        String id = savedDevice.getId().toString();
+        String id = savedDevice.getId();
         device.setOsVersion(generateRandomString());
         device.setDeviceType(DeviceType.SIMULATOR);
         device.setSerial(generateRandomString());
@@ -128,7 +128,7 @@ public class DevicesApiTests extends ApiTestsBase{
         device.setOsType(OsType.ANDROID);
         device.setName(generateRandomString());
         Response response = DevicesRequests.updateDevice(getBaseUrl(), id, convertModelToStringWONullValues(device));
-        device.setId(UUID.fromString(id));
+        device.setId(id);
         JsonNode expectedDevice = convertModelToJsonNode(device);
         assertWithAllureWRegex(
             expectedDevice,
@@ -149,7 +149,7 @@ public class DevicesApiTests extends ApiTestsBase{
         host = hostRepository.findAll().get(0);
         Device device = generateDevices(host, 1, DeviceType.DEVICE, OsType.IOS).get(0);
         Device savedDevice = deviceRepository.save(device);
-        String id = savedDevice.getId().toString();
+        String id = savedDevice.getId();
         DevicesRequests.deleteDevice(getBaseUrl(), id);
         Response response = DevicesRequests.getDeviceById(getBaseUrl(), id, 400);
         assertWithAllure(
@@ -167,7 +167,7 @@ public class DevicesApiTests extends ApiTestsBase{
         List<Device> osDevices = generateDevices(host, 10, DeviceType.DEVICE, OsType.IOS);
         DevicesRequests.postDevices(getBaseUrl(), convertModelToString(osDevices));
         JsonNode expectedDevices = convertModelToJsonNode(osDevices);
-        ((ArrayNode)expectedDevices).forEach(it -> ((ObjectNode)it).put("id", "regexp:(.*)"));
+        expectedDevices.forEach(it -> ((ObjectNode)it).put("id", "regexp:(.*)"));
         Response response = DevicesRequests.getDevices(getBaseUrl(), Map.of("isSaved", true));
         assertWithAllureWRegex(
             expectedDevices,
@@ -183,7 +183,7 @@ public class DevicesApiTests extends ApiTestsBase{
         host = hostRepository.findAll().get(0);
         Device device = generateDevices(host, 1, DeviceType.DEVICE, OsType.IOS).get(0);
         Device savedDevice = deviceRepository.save(device);
-        String id = savedDevice.getId().toString();
+        String id = savedDevice.getId();
         Mockito.doNothing().when(this.idbManager).rebootDevice(savedDevice);
         DevicesRequests.postDeviceReboot(getBaseUrl(), id);
     }
@@ -217,9 +217,9 @@ public class DevicesApiTests extends ApiTestsBase{
         Device savedAndroidDevice = deviceRepository.save(androidDevice);
         String shellRequestBody = generateRandomString();
         String expectedShellResponse = generateRandomString();
-        Response iosResponse = DevicesRequests.executeShell(getBaseUrl(), savedIosDevice.getId().toString(), shellRequestBody, 400);
+        Response iosResponse = DevicesRequests.executeShell(getBaseUrl(), savedIosDevice.getId(), shellRequestBody, 400);
         Mockito.doReturn(expectedShellResponse).when(this.adbManager).executeShell(savedAndroidDevice, shellRequestBody);
-        Response androidResponse = DevicesRequests.executeShell(getBaseUrl(), savedAndroidDevice.getId().toString(), shellRequestBody);
+        Response androidResponse = DevicesRequests.executeShell(getBaseUrl(), savedAndroidDevice.getId(), shellRequestBody);
         assertAllWithAllure(
             List.of(
                 prepareAssertion(
@@ -254,8 +254,8 @@ public class DevicesApiTests extends ApiTestsBase{
         List<DeviceDirectoryElement> expectedFiles = generateFilesList(10);
         Mockito.doReturn(expectedFiles).when(this.idbManager).getListFiles(savedIosDevice, "", IOSPackageType.APPLICATION);
         Mockito.doReturn(expectedFiles).when(this.adbManager).getListFiles(savedAndroidDevice, "");
-        Response iosResponse = DevicesRequests.getFilesList(getBaseUrl(), savedIosDevice.getId().toString());
-        Response androidResponse = DevicesRequests.getFilesList(getBaseUrl(), savedAndroidDevice.getId().toString());
+        Response iosResponse = DevicesRequests.getFilesList(getBaseUrl(), savedIosDevice.getId());
+        Response androidResponse = DevicesRequests.getFilesList(getBaseUrl(), savedAndroidDevice.getId());
         assertAllWithAllure(
             List.of(
                 prepareAssertion(
@@ -301,11 +301,11 @@ public class DevicesApiTests extends ApiTestsBase{
         );
 
         Response iosResponse = DevicesRequests.postDownloadFile(
-            getBaseUrl(), savedIosDevice.getId().toString(), convertModelToString(downloadRequestBody)
+            getBaseUrl(), savedIosDevice.getId(), convertModelToString(downloadRequestBody)
         );
 
         Response androidResponse = DevicesRequests.postDownloadFile(
-            getBaseUrl(), savedAndroidDevice.getId().toString(), convertModelToString(downloadRequestBody)
+            getBaseUrl(), savedAndroidDevice.getId(), convertModelToString(downloadRequestBody)
         );
 
         assertAllWithAllure(
@@ -347,8 +347,8 @@ public class DevicesApiTests extends ApiTestsBase{
         List<AppDescription> expectedApps = generateAppsList(10);
         Mockito.doReturn(expectedApps).when(this.idbManager).getAppsList(savedIosDevice);
         Mockito.doReturn(expectedApps).when(this.adbManager).getAppsList(savedAndroidDevice);
-        Response iosResponse = DevicesRequests.getDeviceApps(getBaseUrl(), savedIosDevice.getId().toString());
-        Response androidResponse = DevicesRequests.getDeviceApps(getBaseUrl(), savedAndroidDevice.getId().toString());
+        Response iosResponse = DevicesRequests.getDeviceApps(getBaseUrl(), savedIosDevice.getId());
+        Response androidResponse = DevicesRequests.getDeviceApps(getBaseUrl(), savedAndroidDevice.getId());
         assertAllWithAllure(
             List.of(
                 prepareAssertion(
