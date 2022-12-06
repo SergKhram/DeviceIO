@@ -28,6 +28,7 @@ services:
       dockerfile: Dockerfile
     image: deviceio:latest
     ports:
-      - "8090:8090"
+      - "9900:9900"
+      - "9901:9901"
 volumes:
   mongodb_data_container:
