@@ -1,0 +1,33 @@
+version: "3.9"
+services:
+  adb-fastboot:
+    container_name: adb-fastboot
+    image: alexandreoda/adb-fastboot
+    restart: "no"
+    privileged: true
+    volumes:
+      - "${HOME}:/home/adb"
+      - "/dev/bus/usb:/dev/bus/usb"
+    ports:
+      - "5037:5037"
+  mongodb:
+    container_name: mongodb
+    image: mongo:5.0.14
+    privileged: true
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "root"
+      MONGO_INITDB_ROOT_PASSWORD: "rootpassword"
+    volumes:
+      - "mongodb_data_container:/data/db"
+  device-io:
+    container_name: device-io
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    image: deviceio:latest
+    ports:
+      - "8090:8090"
+volumes:
+  mongodb_data_container:
