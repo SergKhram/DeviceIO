@@ -420,6 +420,7 @@
                 <version>${vaadin.version}</version>
                 <executions>
                     <execution>
+                        <phase>compile</phase>
                         <goals>
                             <goal>prepare-frontend</goal>
                         </goals>
