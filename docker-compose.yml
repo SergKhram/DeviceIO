@@ -1,4 +1,7 @@
 version: "3.9"
+configs:
+  mongo-init.js:
+    external: true
 services:
   adb-fastboot:
     container_name: adb-fastboot
@@ -14,14 +17,15 @@ services:
     container_name: mongodb
     image: mongo:5.0.14
     privileged: true
+    restart: "always"
     ports:
       - "27017:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: "root"
-      MONGO_INITDB_ROOT_PASSWORD: "rootpassword"
+      MONGO_INITDB_ROOT_PASSWORD: "password"
       MONGO_INITDB_DATABASE: "DeviceIO"
     volumes:
-      - "mongodb_data_container:/data/db"
+      - "./docker-entrypoint-initdb.d/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro"
   device-io:
     container_name: device-io
     build:
@@ -31,5 +35,3 @@ services:
     ports:
       - "9900:9900"
       - "9901:9901"
-volumes:
-  mongodb_data_container:
