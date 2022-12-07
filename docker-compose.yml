@@ -1,0 +1,37 @@
+version: "3.9"
+configs:
+  mongo-init.js:
+    external: true
+services:
+  adb-fastboot:
+    container_name: adb-fastboot
+    image: alexandreoda/adb-fastboot
+    restart: "no"
+    privileged: true
+    volumes:
+      - "${HOME}:/home/adb"
+      - "/dev/bus/usb:/dev/bus/usb"
+    ports:
+      - "5037:5037"
+  mongodb:
+    container_name: mongodb
+    image: mongo:5.0.14
+    privileged: true
+    restart: "always"
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "root"
+      MONGO_INITDB_ROOT_PASSWORD: "password"
+      MONGO_INITDB_DATABASE: "DeviceIO"
+    volumes:
+      - "./docker-entrypoint-initdb.d/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro"
+  device-io:
+    container_name: device-io
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    image: deviceio:latest
+    ports:
+      - "9900:9900"
+      - "9901:9901"
