@@ -6,7 +6,7 @@ import io.github.sergkhram.data.entity.DeviceDirectoryElement;
 import io.github.sergkhram.data.enums.IOSPackageType;
 import io.github.sergkhram.data.enums.OsType;
 import io.github.sergkhram.managers.adb.AdbManager;
-import io.github.sergkhram.managers.idb.IdbManager;
+import io.github.sergkhram.managers.idb.IdbKtManager;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -22,10 +22,10 @@ import static io.github.sergkhram.utils.Const.DEFAULT_DOWNLOAD_PATH;
 @Slf4j
 public class DownloadService {
     AdbManager adbManager;
-    IdbManager idbManager;
+    IdbKtManager idbManager;
     private static final String ZIP_EXTENSION = ".zip";
 
-    public DownloadService(AdbManager adbManager, IdbManager idbManager) {
+    public DownloadService(AdbManager adbManager, IdbKtManager idbManager) {
         this.adbManager = adbManager;
         this.idbManager = idbManager;
     }
@@ -84,11 +84,18 @@ public class DownloadService {
             DEFAULT_DOWNLOAD_PATH
         );
         if (directory.exists()) {
-            File zipFile = new File(directory + ZIP_EXTENSION);
-            ZipUtil.pack(directory, zipFile);
-            InputStream inputStream = new FileInputStream(
-                zipFile);
-            FileUtils.deleteDirectory(directory);
+            File zipFile;
+            InputStream inputStream;
+            if(downloadRequestData.getDevice().getOsType().equals(OsType.ANDROID)) {
+                zipFile = new File(directory + ZIP_EXTENSION);
+                ZipUtil.pack(directory, zipFile);
+                inputStream = new FileInputStream(zipFile);
+                FileUtils.deleteDirectory(directory);
+            } else {
+                zipFile = directory;
+                inputStream = new FileInputStream(zipFile);
+                FileUtils.deleteQuietly(directory);
+            }
             return DownloadResponseData
                 .builder()
                 .file(zipFile)

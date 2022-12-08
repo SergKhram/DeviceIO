@@ -4,7 +4,7 @@ import io.github.sergkhram.data.entity.Host;
 import io.github.sergkhram.data.service.CrmService;
 import io.github.sergkhram.managers.Manager;
 import io.github.sergkhram.managers.adb.AdbManager;
-import io.github.sergkhram.managers.idb.IdbManager;
+import io.github.sergkhram.managers.idb.IdbKtManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,15 +17,29 @@ import java.util.NoSuchElementException;
 @Service
 @Slf4j
 public class HostRequestsService {
-    @Autowired
     CrmService crmService;
     List<Manager> managers;
 
     public HostRequestsService(
         AdbManager adbManager,
-        IdbManager idbManager
+        IdbKtManager idbManager,
+        CrmService crmService
     ) {
         managers = List.of(adbManager, idbManager);
+        this.crmService = crmService;
+        this.crmService.findAllHosts("").forEach(
+            host -> managers
+                .parallelStream()
+                .forEach(
+                    it -> {
+                        try {
+                            connect(host);
+                        } catch (Exception e) {
+                            log.info(e.getLocalizedMessage(), e);
+                        }
+                    }
+                )
+        );
     }
 
     public Host getHostInfo(String id)

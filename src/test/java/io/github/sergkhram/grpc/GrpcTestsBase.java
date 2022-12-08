@@ -3,7 +3,7 @@ package io.github.sergkhram.grpc;
 import io.github.sergkhram.data.repository.DeviceRepository;
 import io.github.sergkhram.data.repository.HostRepository;
 import io.github.sergkhram.managers.adb.AdbManager;
-import io.github.sergkhram.managers.idb.IdbManager;
+import io.github.sergkhram.managers.idb.IdbKtManager;
 import net.devh.boot.grpc.client.autoconfigure.GrpcClientAutoConfiguration;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +42,7 @@ public abstract class GrpcTestsBase {
     DeviceRepository deviceRepository;
 
     @MockBean
-    IdbManager idbManager;
+    IdbKtManager idbManager;
 
     @MockBean
     AdbManager adbManager;

@@ -23,6 +23,7 @@ import io.github.sergkhram.data.entity.AppDescription
 import io.github.sergkhram.data.entity.DeviceDirectoryElement
 import io.github.sergkhram.data.entity.Host
 import io.github.sergkhram.data.enums.OsType
+import io.github.sergkhram.managers.Logger
 import io.github.sergkhram.managers.Manager
 import io.github.sergkhram.utils.Const
 import io.github.sergkhram.utils.Const.LOCAL_HOST
@@ -58,7 +59,7 @@ open class AdbManager: Manager {
         }
     }
 
-    fun startAdb(androidHomePath: String? = null): Boolean {
+    private fun startAdb(androidHomePath: String? = null): Boolean {
         return runBlocking {
             log.info("Starting adb")
             val isSuccessfulStart = (
@@ -70,7 +71,7 @@ open class AdbManager: Manager {
         }
     }
 
-    fun initAdbClient() {
+    private fun initAdbClient() {
         adb = AndroidDebugBridgeClientFactory().build()
     }
 
@@ -136,8 +137,8 @@ open class AdbManager: Manager {
     private fun List<Device>.convert(host: Host? = null): List<DeviceEntity> {
         val list = this
         return runBlocking(Dispatchers.Default) {
-            list.pmap {
-                return@pmap DeviceEntity().apply {
+            list.pMap {
+                return@pMap DeviceEntity().apply {
                     this.host = host
                     this.isActive = true
                     this.serial = it.serial
@@ -191,7 +192,7 @@ open class AdbManager: Manager {
         return if(response!!.exitCode == 0) response!!.stdout else response!!.stderr
     }
 
-    fun getDeviceMonitoringChannel(): ReceiveChannel<List<Device>>? {
+    private fun getDeviceMonitoringChannel(): ReceiveChannel<List<Device>>? {
         return adb?.execute(
             request = AsyncDeviceMonitorRequest(),
             scope = GlobalScope
@@ -224,7 +225,7 @@ open class AdbManager: Manager {
                 serial = device.serial
             )?.toBufferedImage()
 
-            val imageFile = File(filePath);
+            val imageFile = File(filePath)
             if (!ImageIO.write(image, "png", imageFile)) {
                 throw IOException("Failed to find png writer")
             }
@@ -367,7 +368,7 @@ open class AdbManager: Manager {
         val appPackageName: String
     )
 
-    suspend fun <A, B> Iterable<A>.pmap(f: suspend (A) -> B): List<B> = coroutineScope {
+    private suspend fun <A, B> Iterable<A>.pMap(f: suspend (A) -> B): List<B> = coroutineScope {
         map { async { f(it) } }.awaitAll()
     }
 }

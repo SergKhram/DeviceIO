@@ -1,7 +1,6 @@
 package io.github.sergkhram.api;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.github.sergkhram.api.controllers.device.ShellResult;
 import io.github.sergkhram.api.requests.DevicesRequests;

@@ -3,7 +3,7 @@ package io.github.sergkhram.api;
 import io.github.sergkhram.data.repository.DeviceRepository;
 import io.github.sergkhram.data.repository.HostRepository;
 import io.github.sergkhram.managers.adb.AdbManager;
-import io.github.sergkhram.managers.idb.IdbManager;
+import io.github.sergkhram.managers.idb.IdbKtManager;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -37,7 +37,7 @@ public abstract class ApiTestsBase {
     DeviceRepository deviceRepository;
 
     @MockBean
-    IdbManager idbManager;
+    IdbKtManager idbManager;
 
     @MockBean
     AdbManager adbManager;
