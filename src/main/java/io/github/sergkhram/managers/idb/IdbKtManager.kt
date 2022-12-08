@@ -20,7 +20,7 @@ import io.github.sergkhram.idbClient.requests.files.PullRequest
 import io.github.sergkhram.idbClient.requests.media.ScreenshotRequest
 import io.github.sergkhram.idbClient.util.exportFile
 import io.github.sergkhram.managers.Manager
-import io.github.sergkhram.managers.adb.Logger
+import io.github.sergkhram.managers.Logger
 import kotlinx.coroutines.*
 import lombok.extern.slf4j.Slf4j
 import org.springframework.stereotype.Service

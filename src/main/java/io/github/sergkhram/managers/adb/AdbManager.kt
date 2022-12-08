@@ -23,6 +23,7 @@ import io.github.sergkhram.data.entity.AppDescription
 import io.github.sergkhram.data.entity.DeviceDirectoryElement
 import io.github.sergkhram.data.entity.Host
 import io.github.sergkhram.data.enums.OsType
+import io.github.sergkhram.managers.Logger
 import io.github.sergkhram.managers.Manager
 import io.github.sergkhram.utils.Const
 import io.github.sergkhram.utils.Const.LOCAL_HOST
