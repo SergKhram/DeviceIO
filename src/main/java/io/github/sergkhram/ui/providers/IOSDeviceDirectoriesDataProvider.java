@@ -6,7 +6,9 @@ import io.github.sergkhram.data.entity.Device;
 import io.github.sergkhram.data.entity.DeviceDirectoryElement;
 import io.github.sergkhram.data.enums.IOSPackageType;
 import io.github.sergkhram.logic.DeviceRequestsService;
+import io.grpc.StatusException;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -59,8 +61,16 @@ public class IOSDeviceDirectoriesDataProvider extends AbstractBackEndHierarchica
 
     private List<DeviceDirectoryElement> getChildrenElements(DeviceDirectoryElement deviceDirectoryElement) {
         String parentPath = deviceDirectoryElement.path + "/";
-        return deviceRequestsService.getListFiles(
-            device, parentPath + deviceDirectoryElement.name, iosPackageType
-        );
+        try {
+            return deviceRequestsService.getListFiles(
+                device, parentPath + deviceDirectoryElement.name, iosPackageType
+            );
+        } catch (Exception e) {
+            if(e instanceof StatusException && e.getMessage().contains("Not a directory")) {
+                return Collections.emptyList();
+            } else {
+                throw e;
+            }
+        }
     }
 }

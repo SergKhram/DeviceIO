@@ -9,7 +9,7 @@ import io.github.sergkhram.data.service.CrmService;
 import io.github.sergkhram.data.service.DownloadService;
 import io.github.sergkhram.managers.Manager;
 import io.github.sergkhram.managers.adb.AdbManager;
-import io.github.sergkhram.managers.idb.IdbManager;
+import io.github.sergkhram.managers.idb.IdbKtManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,7 +35,7 @@ public class DeviceRequestsService {
 
     public DeviceRequestsService(
         AdbManager adbManager,
-        IdbManager idbManager
+        IdbKtManager idbManager
     ) {
         managers = List.of(adbManager, idbManager);
     }
@@ -87,7 +87,7 @@ public class DeviceRequestsService {
     public void reboot(Device device) {
         switch (device.getOsType()) {
             case ANDROID: getManagerByType(managers, AdbManager.class).rebootDevice(device);
-            case IOS: getManagerByType(managers, IdbManager.class).rebootDevice(device);
+            case IOS: getManagerByType(managers, IdbKtManager.class).rebootDevice(device);
         }
     }
 
@@ -111,7 +111,7 @@ public class DeviceRequestsService {
     public List<DeviceDirectoryElement> getListFiles(Device device, String path, IOSPackageType iosPackageType) {
         switch (device.getOsType()) {
             case ANDROID: return getManagerByType(managers, AdbManager.class).getListFiles(device, path);
-            case IOS: return getManagerByType(managers, IdbManager.class).getListFiles(device, path, iosPackageType);
+            case IOS: return getManagerByType(managers, IdbKtManager.class).getListFiles(device, path, iosPackageType);
             default: return Collections.emptyList();
         }
     }
@@ -130,7 +130,7 @@ public class DeviceRequestsService {
     public File makeScreenshot(Device device, String path) {
         switch (device.getOsType()) {
             case ANDROID: return getManagerByType(managers, AdbManager.class).makeScreenshot(device, path);
-            case IOS: return getManagerByType(managers, IdbManager.class).makeScreenshot(device, path);
+            case IOS: return getManagerByType(managers, IdbKtManager.class).makeScreenshot(device, path);
             default: return null;
         }
     }
@@ -138,7 +138,7 @@ public class DeviceRequestsService {
     public List<AppDescription> getAppsList(Device device) {
         switch (device.getOsType()) {
             case ANDROID: return getManagerByType(managers, AdbManager.class).getAppsList(device);
-            case IOS: return getManagerByType(managers, IdbManager.class).getAppsList(device);
+            case IOS: return getManagerByType(managers, IdbKtManager.class).getAppsList(device);
             default: return List.of();
         }
     }
