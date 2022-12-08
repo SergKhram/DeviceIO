@@ -29,7 +29,7 @@ import java.util.stream.Collectors
 
 @Service
 @Slf4j
-class IdbKtManager: Manager {
+open class IdbKtManager: Manager {
     val idb: IOSDebugBridgeClient = IOSDebugBridgeClient()
 
     companion object : Logger()
@@ -126,7 +126,7 @@ class IdbKtManager: Manager {
         }.collect(Collectors.toList())
     }
 
-    fun downloadFile(
+    open fun downloadFile(
         device: Device,
         deviceDirectoryElement: DeviceDirectoryElement,
         iosPackageType: IOSPackageType,
@@ -146,7 +146,7 @@ class IdbKtManager: Manager {
         }
     }
 
-    fun downloadFolder(
+    open fun downloadFolder(
         device: Device,
         deviceDirectoryElement: DeviceDirectoryElement,
         iosPackageType: IOSPackageType,
@@ -166,7 +166,7 @@ class IdbKtManager: Manager {
         }
     }
 
-    fun getListFiles(device: Device,
+    open fun getListFiles(device: Device,
                      path: String,
                      iosPackageType: IOSPackageType
     ): List<DeviceDirectoryElement> {
