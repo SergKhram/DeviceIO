@@ -80,13 +80,13 @@ open class IdbKtManager: Manager {
         TODO("Not yet implemented")
     }
 
-    override fun makeScreenshot(device: Device?, filePath: String?): File {
+    override fun makeScreenshot(device: Device?, filePath: String): File {
         device?.let {
             runBlocking {
                 idb.execute(
                     ScreenshotRequest(),
                     it.serial
-                ).exportFile(filePath!!)
+                ).exportFile(filePath)
             }
         }
         return File(filePath)
