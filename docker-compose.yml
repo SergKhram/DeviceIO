@@ -3,16 +3,6 @@ configs:
   mongo-init.js:
     external: true
 services:
-  adb-fastboot:
-    container_name: adb-fastboot
-    image: alexandreoda/adb-fastboot
-    restart: "no"
-    privileged: true
-    volumes:
-      - "${HOME}:/home/adb"
-      - "/dev/bus/usb:/dev/bus/usb"
-    ports:
-      - "5037:5037"
   mongodb:
     container_name: mongodb
     image: mongo:5.0.14
@@ -32,6 +22,8 @@ services:
       context: ./
       dockerfile: Dockerfile
     image: deviceio:latest
+    privileged: true
     ports:
       - "9900:9900"
       - "9901:9901"
+      - "5005:5005"
