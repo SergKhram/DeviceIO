@@ -22,4 +22,4 @@ RUN set -xeo pipefail && \
 ADD target/deviceio-1.0.0-SNAPSHOT.jar app.jar
 EXPOSE 9900 9901 5037
 ENV PATH $PATH:/opt/platform-tools
-CMD java "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005" -jar -Dspring.profiles.active=production -DinDocker=true -Djava.security.egd=file:/dev/./urandom app.jar
+CMD java "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005" -jar -Dspring.profiles.active=production -DinDocker=true -Dspring.data.mongodb.uri="mongodb://root:password@host.docker.internal:27017/DeviceIO?authMechanism=SCRAM-SHA-1&authSource=admin" -Djava.security.egd=file:/dev/./urandom app.jar
