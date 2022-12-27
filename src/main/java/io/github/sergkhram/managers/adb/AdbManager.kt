@@ -87,9 +87,9 @@ open class AdbManager: Manager {
                 if(host != LOCAL_HOST) {
                     withTimeoutOrNull(Const.TIMEOUT.toLong()) {
                         val processUuid = UUID.randomUUID()
-                        log.info("[$processUuid] Connecting to host ${host + port} process started")
+                        log.info("[$processUuid] Connecting to host ${"$host:$port"} process started")
                         adb?.execute(ConnectDeviceRequest(host, port ?: DEFAULT_PORT))
-                        log.info("[$processUuid] Connecting to host ${host + port} process finished")
+                        log.info("[$processUuid] Connecting to host ${"$host:$port"} process finished")
                     }
                 }
             }
@@ -102,9 +102,9 @@ open class AdbManager: Manager {
                 if(host != LOCAL_HOST) {
                     withTimeoutOrNull(Const.TIMEOUT.toLong()) {
                         val processUuid = UUID.randomUUID()
-                        log.info("[$processUuid] Disconnecting host ${host + port} process started")
+                        log.info("[$processUuid] Disconnecting host ${"$host:$port"} process started")
                         adb?.execute(DisconnectDeviceRequest(host, port ?: DEFAULT_PORT))
-                        log.info("[$processUuid] Disconnecting host ${host + port} process finished")
+                        log.info("[$processUuid] Disconnecting host ${"$host:$port"} process finished")
                     }
                 }
             }
