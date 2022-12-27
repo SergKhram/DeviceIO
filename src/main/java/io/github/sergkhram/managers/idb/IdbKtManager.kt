@@ -21,11 +21,14 @@ import io.github.sergkhram.idbClient.requests.media.ScreenshotRequest
 import io.github.sergkhram.idbClient.util.exportFile
 import io.github.sergkhram.managers.Manager
 import io.github.sergkhram.managers.Logger
+import io.github.sergkhram.utils.Const
 import kotlinx.coroutines.*
 import lombok.extern.slf4j.Slf4j
 import org.springframework.stereotype.Service
 import java.io.File
+import java.util.*
 import java.util.stream.Collectors
+import kotlin.collections.HashMap
 
 @Service
 @Slf4j
@@ -54,18 +57,26 @@ open class IdbKtManager: Manager {
     override fun connectToHost(host: String?, port: Int?) {
         runBlocking {
             host?.let {
-                idb.connectToCompanion(
-                    TcpAddress(host, port ?: 0)
-                )
+                withTimeoutOrNull(Const.TIMEOUT.toLong()) {
+                    val processUuid = UUID.randomUUID()
+                    log.info("[$processUuid] Connecting to host ${"$host:$port"} process started")
+                    idb.connectToCompanion(
+                        TcpAddress(host, port ?: 0)
+                    )
+                    log.info("[$processUuid] Connecting to host ${"$host:$port"} process finished")
+                }
             }
         }
     }
 
     override fun disconnectHost(host: String?, port: Int?) {
         if(host!=null && port!=null) {
+            val processUuid = UUID.randomUUID()
+            log.info("[$processUuid] Disconnecting host ${"$host:$port"} process started")
             idb.disconnectCompanion(
                 TcpAddress(host, port)
             )
+            log.info("[$processUuid] Disconnecting host ${"$host:$port"} process finished")
         }
     }
 
