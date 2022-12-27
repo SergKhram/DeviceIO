@@ -47,7 +47,9 @@ open class AdbManager: Manager {
 
     init {
         initAdbClient()
-        val isSuccessfulAdbStart = startAdb()
+        val isSuccessfulAdbStart = startAdb(
+            if(System.getProperty("inDocker")?.toBoolean() == true) "/opt/platform-tools/adb" else null
+        )
         log.info("Adb starting finished with $isSuccessfulAdbStart")
     }
 
@@ -59,12 +61,12 @@ open class AdbManager: Manager {
         }
     }
 
-    private fun startAdb(androidHomePath: String? = null): Boolean {
+    private fun startAdb(androidBin: String? = null): Boolean {
         return runBlocking {
             log.info("Starting adb")
             val isSuccessfulStart = (
-                    androidHomePath?.let {
-                        return@let StartAdbInteractor().execute(androidHome = File(androidHomePath))
+                    androidBin?.let {
+                        return@let StartAdbInteractor().execute(adbBinary = File(androidBin))
                     } ?: StartAdbInteractor().execute()
                 )
             return@runBlocking isSuccessfulStart

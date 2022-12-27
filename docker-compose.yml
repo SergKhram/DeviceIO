@@ -27,3 +27,7 @@ services:
       - "9900:9900"
       - "9901:9901"
       - "5005:5005"
+      - "5037:5037"
+    volumes:
+      - "/dev/bus/usb:/dev/bus/usb"
+      - "./files:/files"
