@@ -157,6 +157,8 @@ open class AdbManager: Manager {
                             name = it["ro.config.marketing_name"]
                         } else if (keys.contains("ro.kernel.qemu.avd_name")) {
                             name = it["ro.kernel.qemu.avd_name"]
+                        } else if (keys.contains("ro.boot.qemu.avd_name")) {
+                            name = it["ro.boot.qemu.avd_name"]
                         }
                         this.osVersion = it["ro.build.version.sdk"].orEmpty()
                     }
